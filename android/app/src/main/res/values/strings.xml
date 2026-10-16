@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Rodix Football</string>
+    <string name="title_activity_main">Rodix Football</string>
+    <string name="package_name">com.rodix.football</string>
+    <string name="custom_url_scheme">com.rodix.football</string>
+</resources>

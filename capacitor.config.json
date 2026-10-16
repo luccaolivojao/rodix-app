@@ -1,0 +1,9 @@
+{
+  "appId": "com.rodix.football",
+  "appName": "Rodix Football",
+  "webDir": "www",
+  "backgroundColor": "#070d1a",
+  "ios": { "contentInset": "never" },
+  "android": { "allowMixedContent": false },
+  "plugins": { "SplashScreen": { "launchShowDuration": 0 } }
+}

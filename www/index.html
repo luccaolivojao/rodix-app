@@ -3378,6 +3378,8 @@ function confettiBurst(cols, n) {
   const w = innerWidth, h = innerHeight;
   for (let i = 0; i < n; i++) { const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.4, v = 260 + Math.random() * 520; FXP.push({ x: w / 2 + (Math.random() - 0.5) * w * 0.3, y: h * 0.62, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: 4 + Math.random() * 5, c: cols[i % cols.length], rot: Math.random() * 6, vr: (Math.random() - 0.5) * 12, life: 2.6 + Math.random() * 1.4 }); }
 }
+let FXDIRTY = false;
+function clearFx() { FXDIRTY = false; FXP = []; const c = $('#fxc'); if (c) { const x = c.getContext('2d'); x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, c.width, c.height); } }
 function drawFx(dt) {
   const c = $('#fxc'); if (!c) return; const w = innerWidth, h = innerHeight;
   if (c.width !== Math.round(w * DPR) || c.height !== Math.round(h * DPR)) { c.width = Math.round(w * DPR); c.height = Math.round(h * DPR); }
@@ -3755,7 +3757,7 @@ function loopBody(ts) {
     else if (MU.phase === 'pause') { MU.pT -= dt; if (MU.pT <= 0) { MU.phase = 'ticker'; const f = MU.after; MU.after = null; if (f) f(); } }
     renderMatch();
   }
-  if (curScreen === 's-match' || !$('#cintro').hidden) drawFx(dt);
+  if (curScreen === 's-match' || !$('#cintro').hidden) { drawFx(dt); FXDIRTY = true; } else if (FXDIRTY) clearFx();
 }
 
 /* ---------- TUTORIAL ---------- */
@@ -4100,7 +4102,7 @@ function showTitles(sum, after) {
   el.hidden = false; sfx('fanfare'); FXP = []; const cols = [c2, '#ffffff', c1, '#ffd23f'];
   const burst = () => { if (el.hidden) return; const w = innerWidth, h = innerHeight; for (let i = 0; i < 70; i++) { const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.6, v = 280 + Math.random() * 520; FXP.push({ x: w / 2, y: h * 0.7, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: 4 + Math.random() * 5, c: cols[i % 4], rot: Math.random() * 6, vr: (Math.random() - 0.5) * 12, life: 3 }); } };
   burst(); const iv = setInterval(() => { if (el.hidden) clearInterval(iv); else burst(); }, 1400);
-  $('#ci-go').onclick = () => { el.hidden = true; clearInterval(iv); sfx('ok'); after(); };
+  $('#ci-go').onclick = () => { el.hidden = true; clearInterval(iv); clearFx(); sfx('ok'); after(); };
 }
 </script>
 <script>

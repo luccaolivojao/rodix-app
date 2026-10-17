@@ -3088,7 +3088,7 @@ function vHome() {
   const sub = { me: `Overall ${p.ovr}`, club: c ? c.name : 'Sem clube', comp: c ? LDEF[c.lg].n : '—', cal: `Semana ${Math.min(G.week + 1, totalWeeks())}`, market: G.offers.length ? G.offers.length + ' proposta(s)' : 'Sem propostas', train: u.trained ? 'Feito nesta semana' : p.inj > 0 ? 'Lesionado' : 'Treino disponível', stats: 'Artilharia e prêmios', nat: G.pendingIntl ? 'Convocado!' : NATIONS[p.nat].n, hist: `${u.history.length} temporada(s)`, news: 'O que rolou no mundo' };
   const bd = { market: G.offers.length || '', train: !u.trained && p.inj === 0 && p.club ? '!' : '', nat: G.pendingIntl ? '!' : '' };
   const tiles = TILES.map(([k, n, ic]) => `<button class="tile" data-tab="${k}"><i>${ico(ic, 30)}</i><span><b>${n}</b><small>${esc(sub[k])}</small></span>${bd[k] ? `<em class="tbadge">${bd[k]}</em>` : ''}</button>`).join('');
-  return `<div class="home-top">${nextCard()}${depthCard()}</div><div class="tilegrid">${tiles}</div><div class="card stack" style="margin-top:20px"><div class="row" style="justify-content:space-between"><span class="lbl">Notícias</span><button class="btn" data-tab="news">Ver todas</button></div>${newsHtml(6)}</div>`;
+  return `<div class="home-top">${nextCard()}${depthCard()}</div><div class="tilegrid">${tiles}</div>`;
 }
 function vMe() {
   const p = up(), u = G.user, a = p.a; const S = u.season; const avg = S.ap ? (S.rsum / S.ap).toFixed(2) : '—';

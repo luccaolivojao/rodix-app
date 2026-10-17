@@ -1,0 +1,24 @@
+name: Windows EXE
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["www/**", "desktop/**", ".github/workflows/windows.yml"]
+jobs:
+  exe:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Copiar jogo
+        shell: bash
+        run: cp -r www desktop/www
+      - name: Build
+        working-directory: desktop
+        shell: bash
+        run: npm install && npx electron-builder --win portable
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Rodix-Football-exe
+          path: desktop/dist/Rodix-Football.exe

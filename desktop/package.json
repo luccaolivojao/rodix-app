@@ -1,0 +1,15 @@
+{
+  "name": "rodix-football",
+  "version": "1.0.0",
+  "description": "Rodix Football",
+  "main": "main.js",
+  "author": "Rodix",
+  "devDependencies": { "electron": "33.2.1", "electron-builder": "25.1.8" },
+  "build": {
+    "appId": "br.com.rodix.football",
+    "productName": "Rodix Football",
+    "files": ["main.js", "www/**/*"],
+    "directories": { "output": "dist" },
+    "win": { "target": [{ "target": "portable", "arch": ["x64"] }], "icon": "icon.png", "artifactName": "Rodix-Football.exe" }
+  }
+}

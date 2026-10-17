@@ -1438,7 +1438,7 @@ function puskasAward(elig, A) {
   const pool = elig.filter(p => !p.u && p.club).sort((a, b) => b.s.g - a.s.g).slice(0, 40);
   while (noms.length < 4 && pool.length) {
     const p = pool.splice(Math.floor(rnd() * Math.min(pool.length, 25)), 1)[0]; const c = club(p.club); const opps = G.leagues[c.lg].clubs.filter(x => x !== c.id); if (!opps.length) continue;
-    noms.push({ name: fullName(p), club: c.name, opp: club(pick(opps)).name, m: ri(5, 90), style: pick(GOAL_STYLES), q: ri(62, 97) });
+    const oc = club(pick(opps)); noms.push({ name: fullName(p), club: c.name, opp: oc.name, k: [c.c1, c.c2], ok: [oc.c1, oc.c2], m: ri(5, 90), style: pick(GOAL_STYLES), q: ri(62, 97) });
   }
   const best = (u.clips || []).slice().sort((a, b) => b.q - a.q)[0];
   if (best && best.q >= 55) noms.push({ u: 1, name: fullName(me), club: me.club ? club(me.club).name : '—', opp: best.opp, m: best.m, style: best.q >= 85 ? 'jogada individual espetacular' : best.q >= 70 ? 'chute de longe' : 'finalização precisa', q: best.q, cid: best.id });
@@ -3343,9 +3343,9 @@ function movesList(d) {
   return `${ups.length ? `<p class="mut" style="margin:0 0 6px"><b style="color:var(--good)">Subiram para a ${esc(d)}:</b> ${ups.map(esc).join(', ')}</p>` : ''}${dn.length ? `<p class="mut" style="margin:0"><b style="color:var(--bad)">Rebaixados da ${esc(d)}:</b> ${dn.map(esc).join(', ')}</p>` : ''}`;
 }
 function puskasHtml(A) {
-  const N = A && A.puskas; if (!N || !N.length) return ''; const W = N.find(n => n.win), U = N.find(n => n.u);
-  const line = n => `<div class="gol-nom ${n.win ? 'win' : ''}"><div><b class="n">${n.win ? '🏆 ' : ''}${esc(n.name)}${n.u ? ' (' + esc(tr('você')) + ')' : ''}</b><div class="mut" style="font-size:13px">${esc(n.club)} × ${esc(n.opp)} · ${n.m}' · ${esc(tr(n.style))}</div></div>${n.u && galFind(n.cid) ? `<button class="btn" data-act="gal-view" data-id="${n.cid}">Ver o gol</button>` : ''}</div>`;
-  return `<div class="card stack" style="${U && U.win ? 'border-color:var(--acc)' : ''}"><span class="lbl">Gol do Ano</span>${U ? `<p style="margin:0">${U.win ? '<b class="acc">Seu gol foi eleito o Gol do Ano!</b>' : 'Seu gol foi um dos 5 indicados ao Gol do Ano.'}</p>` : `<p class="mut" style="margin:0">Vencedor: <b style="color:var(--fg)">${esc(W.name)}</b> (${esc(W.club)}) · ${esc(tr(W.style))}</p>`}${U && galFind(U.cid) ? `<button class="btn" data-act="gal-view" data-id="${U.cid}">Ver o gol</button>` : ''}<details class="mvbox"><summary class="btn">Ver indicados</summary><div style="margin-top:8px">${N.map(line).join('')}</div></details></div>`;
+  const N = A && A.puskas; if (!N || !N.length) return ''; window.CURPUSK = N; const W = N.find(n => n.win), U = N.find(n => n.u);
+  const line = n => `<div class="gol-nom ${n.win ? 'win' : ''}"><div><b class="n">${n.win ? '🏆 ' : ''}${esc(n.name)}${n.u ? ' (' + esc(tr('você')) + ')' : ''}</b><div class="mut" style="font-size:13px">${esc(n.club)} × ${esc(n.opp)} · ${n.m}' · ${esc(tr(n.style))}</div></div><button class="btn" data-act="gol-ano" data-i="${N.indexOf(n)}">Ver o gol</button></div>`;
+  return `<div class="card stack" style="${U && U.win ? 'border-color:var(--acc)' : ''}"><span class="lbl">Gol do Ano</span>${U ? `<p style="margin:0">${U.win ? '<b class="acc">Seu gol foi eleito o Gol do Ano!</b>' : 'Seu gol foi um dos 5 indicados ao Gol do Ano.'}</p>` : `<p class="mut" style="margin:0">Vencedor: <b style="color:var(--fg)">${esc(W.name)}</b> (${esc(W.club)}) · ${esc(tr(W.style))}</p>`}<button class="btn" data-act="gol-ano" data-i="${N.indexOf(W)}">Ver o gol</button><details class="mvbox"><summary class="btn">Ver indicados</summary><div style="margin-top:8px">${N.map(line).join('')}</div></details></div>`;
 }
 function galFind(id) { return ((G.user && G.user.gallery) || []).find(x => x.id === id); }
 function showSeasonSummary(sum) { if (sum.titles && sum.titles.length && !sum._shown) { sum._shown = true; showTitles(sum, () => showSeasonSummary(sum)); return; }
@@ -3868,6 +3868,82 @@ function tryReplay() {
   const sc = G.players[clip.scorer]; repStart(clip, { tag: 'REPLAY', sub: (sc ? shortName(sc) + ' ' : '') + (MU.ev ? MU.ev.m : MC.min) + "'", onEnd: () => { if (MU) { MU.phase = 'moment'; momentDone(); } } });
   return true;
 }
+/* ---------- Recriação aleatória do Gol do Ano ---------- */
+function synthClip(n) {
+  const hz = REC_HZ, T = 6.4, N = Math.round(T * hz) + 1, st = n.style || '';
+  const trk = pts => t => { if (t <= pts[0][0]) return pts[0].slice(1); for (let i = 1; i < pts.length; i++) if (t <= pts[i][0]) { const a = pts[i - 1], b = pts[i], k = (t - a[0]) / (b[0] - a[0] || 1), e = k * k * (3 - 2 * k); return a.slice(1).map((v, j) => v + (b[j + 1] - v) * e); } return pts[pts.length - 1].slice(1); };
+  const side = rnd() < 0.5 ? 1 : -1, yS = GC + side * ri(5, 11), tS = 4.4, gx = FL;
+  let kind = 'long';
+  if (/arrancada|drible|espetacular/.test(st)) kind = 'solo'; else if (/bicicleta|cabeçada/.test(st)) kind = 'cross'; else if (/voleio/.test(st)) kind = 'volley'; else if (/chapéu/.test(st)) kind = 'lob'; else if (/falta/.test(st)) kind = 'fk'; else if (/olímpico/.test(st)) kind = 'corner';
+  const mk = (team, pos, num, tr) => ({ team, pos, num, tr });
+  const sc = mk(0, 'ATA', 9, null), gk = mk(1, 'GOL', 1, trk([[0, 103.5, GC], [9, 103.5, GC]]));
+  const defs = [], mates = [];
+  let ball, own = () => -1, jumpT = -9;
+  if (kind === 'solo') {
+    const x0 = ri(26, 34), y0 = GC - side * ri(12, 18), nz = /drible/.test(st) ? 4 : 3, ps = [[0, x0, y0]];
+    for (let i = 1; i <= nz; i++) ps.push([3.9 * i / (nz + 0.4), x0 + (84 - x0) * i / (nz + 0.4), y0 + (yS - y0) * i / nz + (i % 2 ? 4 : -4)]);
+    ps.push([tS, 86, yS], [tS + 0.9, 90, yS]); sc.tr = trk(ps);
+    ball = t => { const p = sc.tr(Math.min(t, tS)); if (t <= tS) return [p[0] + 1.1, p[1], 0]; const k = Math.min(1, (t - tS) / 0.5); return [p[0] + 1.1 + (gx + 0.8 - p[0] - 1.1) * k, p[1] + (GC - side * 2.6 - p[1]) * k, 0.3]; };
+    own = t => (t <= tS ? 0 : -1);
+    for (let i = 0; i < nz; i++) { const q = ps[i + 1], sg = i % 2 ? -1 : 1; defs.push(mk(1, 'ZAG', 4 + i, trk([[0, q[1] + 6, q[2] + sg * 7], [q[0] - 0.4, q[1] + 1, q[2] + sg * 1.5], [q[0] + 0.6, q[1] - 2, q[2] - sg * 3], [8, q[1] - 6, q[2] + 3]]))); }
+    for (let i = 0; i < 3; i++) mates.push(mk(0, 'MEI', 8 + i, trk([[0, x0 - 6 + i * 3, GC + (i - 1) * 14], [6, 70 + i * 5, GC + (i - 1) * 12]])));
+  } else if (kind === 'lob') {
+    sc.tr = trk([[0, 52, yS], [3.4, 90, GC + side], [tS, 94, GC + side * 0.5], [tS + 1, 98, GC]]);
+    ball = t => { const p = sc.tr(Math.min(t, tS)); if (t <= tS) return [p[0] + 1, p[1], 0]; const k = Math.min(1, (t - tS) / 0.75); return [p[0] + 1 + (gx + 0.8 - p[0] - 1) * k, p[1] + (GC - p[1]) * k, Math.sin(k * Math.PI * 0.82) * 3.2 + 0.3 * (1 - k)]; };
+    own = t => (t <= tS ? 0 : -1);
+    gk.tr = trk([[0, 103.5, GC], [tS - 1.3, 98.5, GC], [tS + 0.15, 97.2, GC + side], [tS + 1.2, 98.5, GC - side * 2]]);
+    for (let i = 0; i < 2; i++) defs.push(mk(1, 'ZAG', 4 + i, trk([[0, 62 + i * 4, GC + (i ? 7 : -7)], [4, 86, GC + (i ? 9 : -9)]])));
+    for (let i = 0; i < 2; i++) mates.push(mk(0, 'MEI', 8 + i, trk([[0, 45, GC + (i ? 14 : -14)], [6, 82, GC + (i ? 16 : -16)]])));
+  } else if (kind === 'fk' || kind === 'corner') {
+    const cor = kind === 'corner', bx = cor ? FL - 0.6 : 79, by = cor ? (side > 0 ? 66.5 : 1.5) : GC - side * ri(7, 10);
+    sc.tr = trk([[0, bx - 6, by - side * 4], [tS - 0.5, bx - 4, by - side * 2.5], [tS, bx - 0.8, by], [tS + 1, bx + 2, by + side * 0.8]]);
+    ball = t => { if (t <= tS) return [bx, by, 0]; const k = Math.min(1, (t - tS) / (cor ? 1.15 : 0.95)), ty = GC - side * 3; return [bx + (gx + 0.8 - bx) * k, by + (ty - by) * k + (cor ? 0 : Math.sin(k * Math.PI) * side * 3), Math.sin(k * Math.PI) * (cor ? 4.5 : 3.2) * (1 - k) + (cor ? 1.3 : 2.1) * k]; };
+    gk.tr = trk([[0, 103.5, GC], [tS + 0.2, 103.5, GC - side], [tS + 1.2, 103.5, GC + side * 3.5]]);
+    const k0 = cor ? 6 : 4;
+    for (let i = 0; i < k0; i++) defs.push(mk(1, 'ZAG', 2 + i, trk(cor ? [[0, 97 + (i % 2) * 2, 26 + i * 3.2], [6, 98 + (i % 2) * 2, 26.5 + i * 3.2]] : [[0, 89.5, by + (GC - by) * 0.55 - 3.4 + i * 2.4], [6, 89.5, by + (GC - by) * 0.55 - 3.4 + i * 2.4]])));
+    for (let i = 0; i < 3; i++) mates.push(mk(0, 'ZAG', 3 + i, trk([[0, 92 + i, 27 + i * 6], [tS + 0.4, 96 + (i % 2), 28 + i * 5]])));
+  } else {
+    const vol = kind === 'volley', bici = /bicicleta/.test(st), header = /cabeçada/.test(st);
+    if (vol) {
+      const s0 = side > 0 ? 52 : 12;
+      sc.tr = trk([[0, 56, yS], [3.0, 70, GC + side * 5], [tS - 0.2, 76.5, GC + side * 1.5], [tS + 1, 80, GC]]);
+      ball = t => { if (t < 1.6) { const k = t / 1.6, s = trk([[0, 62, s0], [1.6, 77, GC + side * 1.5]])(t); return [s[0], s[1], Math.sin(k * Math.PI) * 5.5]; } if (t <= tS) { const k = (t - 1.6) / (tS - 1.6); return [77 + k * 0.5, GC + side * 1.5, 3.4 * (1 - k) + 0.5 * k]; } const k = Math.min(1, (t - tS) / 0.9); return [77.5 + (gx + 0.8 - 77.5) * k, GC + side * 1.5 - side * 4.5 * k, 0.9 + Math.sin(k * 2.1) * 1.4 * (1 - k) + 1.2 * k]; };
+      mates.push(mk(0, 'MEI', 8, trk([[0, 54, 12], [1.4, 62, s0]])));
+    } else {
+      const wy = side > 0 ? 6 : 62, bx = 86, tK = 2.9, ty = GC + side * ri(1, 3);
+      sc.tr = trk([[0, 62, GC - side * 4], [tK, 88, ty - side], [tS - 0.2, 94, ty], [tS + 1.2, 97, ty]]);
+      const w = mk(0, 'MEI', 7, trk([[0, 56, wy - side * 4], [2.3, bx, wy], [tK, bx, wy], [tK + 2, bx - 3, wy + side * 2]])); mates.push(w);
+      ball = t => { if (t <= 2.3) { const p = w.tr(t); return [p[0] + 1, p[1], 0]; } if (t <= tS) { const k = (t - 2.3) / (tS - 2.3); return [bx + 1 + (94 - bx - 1) * k, wy + (ty - wy) * k, Math.sin(k * Math.PI) * (bici ? 4.2 : 3)]; } const k = Math.min(1, (t - tS) / 0.45), z0 = bici ? 2.6 : 2; return [94 + (gx + 0.8 - 94) * k, ty + (GC - side * 2.5 - ty) * k, z0 + (1.1 - z0) * k * 0.7]; };
+      own = t => (t <= 2.3 ? 7 : -1); jumpT = tS - 0.15;
+    }
+    gk.tr = trk([[0, 103.5, GC], [tS + 0.1, 103.5, GC - side * 0.5], [tS + 0.9, 103.5, GC - side * 2.6]]);
+    for (let i = 0; i < 4; i++) defs.push(mk(1, 'ZAG', 2 + i, trk([[0, 76 + i * 4, GC + (i - 1.5) * 8], [6, 92 + (i % 2) * 3, GC + (i - 1.5) * 6]])));
+    for (let i = 0; i < 2; i++) mates.push(mk(0, 'ATA', 10 + i, trk([[0, 60, GC + (i ? 16 : -16)], [5, 86, GC + (i ? 14 : -12)]])));
+  }
+  const all = [sc].concat(mates, defs, [gk]);
+  while (all.filter(p => p.team === 0).length < 5) all.splice(1, 0, mk(0, 'MEI', 14 + all.length, trk([[0, 40, 14 + all.length * 6], [6, 62, 16 + all.length * 6]])));
+  while (all.filter(p => p.team === 1).length < 5) all.splice(all.length - 1, 0, mk(1, 'ZAG', 15 + all.length, trk([[0, 86, 10 + all.length * 6], [6, 94, 12 + all.length * 6]])));
+  const f = [];
+  for (let i = 0; i < N; i++) {
+    const t = i / hz, b = ball(t), ow = own(t), oi = ow === 0 ? 0 : ow > 0 ? all.findIndex(p => p.num === ow && p.team === 0) : -1;
+    f.push([r2(b[0]), r2(b[1]), r2(b[2]), oi, all.map((p, j) => {
+      const q = p.tr(t), q2 = p.tr(Math.min(T, t + 0.15)), dx = q2[0] - q[0], dy = q2[1] - q[1], l = Math.hypot(dx, dy);
+      let fx = l > 0.02 ? dx / l : (p.team === 0 ? 1 : -1), fy = l > 0.02 ? dy / l : 0; if (p.pos === 'GOL') { fx = -1; fy = 0; }
+      const kk = j === 0 && t >= tS && t < tS + 0.25 ? 0.25 - (t - tS) : 0, jp = j === 0 && jumpT > 0 && t >= jumpT && t < jumpT + 0.4 ? 0.4 - (t - jumpT) : 0;
+      let dv = 0; if (p.pos === 'GOL' && t > tS + 0.15 && t < tS + 0.9) dv = kind === 'lob' ? 1 : (side > 0 ? -1 : 1);
+      return [Math.round(q[0] * 10), Math.round(q[1] * 10), Math.round(fx * 10), Math.round(fy * 10), 2 * (dv + 1), Math.round(jp * 10), Math.round(kk * 10)];
+    })]);
+  }
+  const ks = n.k || ['#f2cf1d', '#13843f'], ko = n.ok || ['#ffffff', '#1d3a8a'];
+  const k0 = { c1: ks[0], c2: ks[1] }, k1 = { c1: ko[0], c2: ko[1] }, k1b = kitClash(k0.c1, k1.c1) ? { c1: k1.c2, c2: k1.c1 } : k1;
+  const meta = all.map((p, j) => [p.team, p.pos, p.num, 0, { skin: ri(0, 5), hair: ri(0, 5), hairC: ri(0, 4) }, 'x' + j]);
+  return { hz, meta, f, gi: Math.round((tS + 0.5) * hz), scorer: 'x0', kits: [k0, k1b], gk: [gkKit(k0, k1b), gkKit(k1b, k0)] };
+}
+function goalOfYear(n) {
+  if (!n) return; const g = n.cid && galFind(n.cid);
+  if (g) { repStart(g.clip, { tag: 'GOL DO ANO', sub: g.s + ' · ' + g.m + "' · " + g.opp, skippable: true }); return; }
+  repStart(synthClip(n), { tag: 'GOL DO ANO', sub: n.name + ' · ' + n.m + "' · " + n.opp, skippable: true });
+}
 function repStart(clip, o) {
   const players = clip.meta.map(m => ({ team: m[0], pos: m[1], num: m[2], user: !!m[3], look: m[4], id: m[5], x: 0, y: 0, vx: 0, vy: 0, fx: 1, fy: 0, phase: 0, dive: null, down: 0, slide: false, jump: 0, kickA: 0 }));
   const f0 = clip.f[0];
@@ -4008,6 +4084,7 @@ async function act(a, el) {
     case 'pad-edit': openPadEdit(); break;
     case 'controls': openControls(); break;
     case 'about': openAbout(); break;
+    case 'gol-ano': { const N = window.CURPUSK; goalOfYear(N && N[+el.dataset.i]); break; }
     case 'gal-view': { const g = galFind(el.dataset.id); if (g) repStart(g.clip, { tag: 'GOL DO ANO', sub: g.s + ' · ' + g.m + "' · " + g.opp, skippable: true }); break; }
     case 'rp-skip': repEnd(); break;
     case 'var-skip': varFinish(); break;

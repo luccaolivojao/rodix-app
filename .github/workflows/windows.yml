@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
     paths: ["www/**", "desktop/**", ".github/workflows/windows.yml"]
+permissions:
+  contents: write
 jobs:
   exe:
     runs-on: windows-latest
@@ -22,3 +24,7 @@ jobs:
         with:
           name: Rodix-Football-exe
           path: desktop/dist/Rodix-Football.exe
+      - name: Publicar na aba Releases
+        shell: bash
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: gh release delete windows-latest --yes --cleanup-tag || true; gh release create windows-latest desktop/dist/Rodix-Football.exe --title "Rodix Football (Windows .exe)" --notes "Arquivo .exe portátil para Windows. Baixe e execute."

@@ -3005,7 +3005,7 @@ const ICONS = {
 };
 function ico(n, s) { s = s || 28; return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n] || ICONS.ball}</svg>`; }
 function paintIcons(root) { (root || document).querySelectorAll('i[data-ico]').forEach(el => { el.innerHTML = ico(el.dataset.ico, 30); }); }
-const TILES = [['me', 'Meu jogador', 'user'], ['club', 'Clube', 'shield'], ['comp', 'Competições', 'table'], ['cal', 'Calendário', 'calendar'], ['market', 'Transferências', 'swap'], ['train', 'Treinamento', 'dumbbell'], ['stats', 'Estatísticas', 'chart'], ['nat', 'Seleção', 'flag'], ['hist', 'Histórico', 'history'], ['news', 'Notícias', 'news']];
+const TILES = [['me', 'Meu jogador', 'user'], ['club', 'Clube', 'shield'], ['comp', 'Competições', 'table'], ['cal', 'Calendário', 'calendar'], ['market', 'Transferências', 'swap'], ['train', 'Treinamento', 'dumbbell'], ['stats', 'Estatísticas', 'chart'], ['nat', 'Seleção', 'flag'], ['hist', 'Histórico', 'history']];
 function openHub() { applyClubTheme(); show('s-hub'); renderHub(); setTimeout(maybeIntro, 250); }
 function userKit() { const c = userClub(); return c ? { c1: c.c1, c2: c.c2 } : { c1: '#888888', c2: '#ffffff' }; }
 function renderHub() {
@@ -3014,7 +3014,7 @@ function renderHub() {
   $('#hub-sub').innerHTML = `<span>${POSN[p.pos]}</span> · <b>${p.ovr}</b> OVR · ${c ? esc(c.name) : 'Sem clube'}${u.loan ? ' (empréstimo)' : ''}`;
   $('#hub-season').textContent = 'Temporada ' + genSeasonLabel() + ' · Semana ' + Math.min(G.week + 1, totalWeeks()) + '/' + totalWeeks();
   drawAvatar($('#hub-av'), p.look, userKit(), p.num, false);
-  const f = { home: vHome, me: vMe, club: vClub, comp: vComp, cal: vCal, market: vMarket, train: vTrain, stats: vStats, nat: vNat, hist: vHist, news: vNews }[hubTab] || vHome;
+  const f = { home: vHome, me: vMe, club: vClub, comp: vComp, cal: vCal, market: vMarket, train: vTrain, stats: vStats, nat: vNat, hist: vHist }[hubTab] || vHome;
   $('#view').innerHTML = f();
   if (hubTab === 'me') { const cvs = $('#me-av'); if (cvs) drawAvatar(cvs, p.look, userKit(), p.num, true); }
 }
@@ -3076,19 +3076,12 @@ function depthCard() {
     <p style="margin:0">${verdict}</p>
     <p class="fine" style="margin:0">Para subir: jogue bem (nota 7+ dá muita confiança), faça gols e assistências, e complete o treino da semana jogando o minijogo. Os rivais são avaliados pelo overall e pela fase deles.</p></div>`;
 }
-function vNews() {
-  const my = userClub(); let L = allNews();
-  if (newsSub === 'me') L = L.filter(x => x.tag === 'me'); else if (newsSub === 'mine') L = L.filter(x => my && x.lid === my.lg); else if (newsSub === 'tr') L = L.filter(x => x.tag === 'tr'); else if (newsSub === 'good') L = L.filter(x => x.k === 'good' && x.tag !== 'me');
-  const subs = [['all', 'Tudo'], ['me', 'Você'], ['mine', 'Minha liga'], ['tr', 'Transferências'], ['good', 'Campeões']];
-  const body = L.slice(0, 60).map(newsItem).join('') || '<span class="mut">Ainda não há notícias. Avance algumas semanas.</span>';
-  return head('Notícias') + `<div class="card"><div class="tabs">${subs.map(([k, n]) => `<button data-nsub="${k}" aria-pressed="${newsSub === k}">${n}</button>`).join('')}</div><div class="news" style="margin-top:12px">${body}</div></div>`;
-}
 function vHome() {
   const p = up(), u = G.user, c = userClub();
-  const sub = { me: `Overall ${p.ovr}`, club: c ? c.name : 'Sem clube', comp: c ? LDEF[c.lg].n : '—', cal: `Semana ${Math.min(G.week + 1, totalWeeks())}`, market: G.offers.length ? G.offers.length + ' proposta(s)' : 'Sem propostas', train: u.trained ? 'Feito nesta semana' : p.inj > 0 ? 'Lesionado' : 'Treino disponível', stats: 'Artilharia e prêmios', nat: G.pendingIntl ? 'Convocado!' : NATIONS[p.nat].n, hist: `${u.history.length} temporada(s)`, news: 'O que rolou no mundo' };
+  const sub = { me: `Overall ${p.ovr}`, club: c ? c.name : 'Sem clube', comp: c ? LDEF[c.lg].n : '—', cal: `Semana ${Math.min(G.week + 1, totalWeeks())}`, market: G.offers.length ? G.offers.length + ' proposta(s)' : 'Sem propostas', train: u.trained ? 'Feito nesta semana' : p.inj > 0 ? 'Lesionado' : 'Treino disponível', stats: 'Artilharia e prêmios', nat: G.pendingIntl ? 'Convocado!' : NATIONS[p.nat].n, hist: `${u.history.length} temporada(s)` };
   const bd = { market: G.offers.length || '', train: !u.trained && p.inj === 0 && p.club ? '!' : '', nat: G.pendingIntl ? '!' : '' };
   const tiles = TILES.map(([k, n, ic]) => `<button class="tile" data-tab="${k}"><i>${ico(ic, 30)}</i><span><b>${n}</b><small>${esc(sub[k])}</small></span>${bd[k] ? `<em class="tbadge">${bd[k]}</em>` : ''}</button>`).join('');
-  return `<div class="home-top">${nextCard()}${depthCard()}</div><div class="tilegrid">${tiles}</div>`;
+  return `<div class="home-top">${nextCard()}${depthCard()}</div><div class="tilegrid">${tiles}</div><div class="card stack" style="margin-top:20px"><span class="lbl">Notícias</span>${newsHtml(10)}</div>`;
 }
 function vMe() {
   const p = up(), u = G.user, a = p.a; const S = u.season; const avg = S.ap ? (S.rsum / S.ap).toFixed(2) : '—';

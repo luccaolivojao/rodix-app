@@ -2955,7 +2955,7 @@ function doBegin(slot) {
   SLOT = slot; const cfg = Object.assign({}, CR, { fn: (CR.fn || 'Jogador').trim(), ln: (CR.ln || 'Novo').trim() });
   const p = startCareer(cfg, CP.club); G.user.diff = DF;
   saveGame(true); hubTab = 'home'; openHub();
-  modal(`<h2>Bem-vindo ao ${esc(club(CP.club).name)}</h2><p>${esc(fullName(p))}, ${p.age} anos, ${POSN[p.pos].toLowerCase()}. Overall inicial <b>${p.ovr}</b>. Os olheiros estimam seu potencial entre <b>${Math.max(p.ovr, p.pot - 4)} e ${Math.min(99, p.pot + 4)}</b>.</p><p class="mut">Seu contrato: ${G.user.contract.years} temporadas, ${money(G.user.contract.wage)} por semana. Ganhe a confiança do treinador para virar titular.</p><button class="btn pri" data-act="close-modal">Vamos lá</button>`);
+  modal(`<h2>Bem-vindo ao ${esc(club(CP.club).name)}</h2><p>${esc(fullName(p))}, ${p.age} anos, ${esc(tr(POSN[p.pos]).toLowerCase())}. Overall inicial <b>${p.ovr}</b>. Os olheiros estimam seu potencial entre <b>${Math.max(p.ovr, p.pot - 4)} e ${Math.min(99, p.pot + 4)}</b>.</p><p class="mut">Seu contrato: ${G.user.contract.years} temporadas, ${money(G.user.contract.wage)} por semana. Ganhe a confiança do treinador para virar titular.</p><button class="btn pri" data-act="close-modal">Vamos lá</button>`);
 }
 
 /* ---------- HUB DA CARREIRA ---------- */

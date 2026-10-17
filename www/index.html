@@ -3358,7 +3358,7 @@ function setHint(k) {
 }
 function holdFor(sec) { if (MU) MU.hold = Math.max(MU.hold || 0, sec); }
 function feedMsg(t, g) { MU.feed.unshift({ t, g }); MU.feed = MU.feed.slice(0, 5); $('#feed').innerHTML = MU.feed.map(f => `<div class="${f.g ? 'g' : ''}">${esc(f.t)}</div>`).join(''); }
-function updateHud() { if (MU.drill) { const Dr = MU.drill; $('#score').textContent = (Math.round(Dr.score * 10) / 10 + '').replace('.', ',') + ' pts'; $('#minute').textContent = Dr.i + '/' + Dr.n; $('#veil').hidden = MU.phase === 'moment'; $('#b-skip').disabled = MU.phase !== 'moment'; return; } const MC = MU.MC; $('#score').textContent = MC.score[0] + ' – ' + MC.score[1]; hudSub(); const m = MC.min; $('#minute').textContent = m > 90 ? "90+" + (m - 90) + "'" : m + "'"; const mom = MU.phase === 'moment'; $('#veil').hidden = mom; $('#b-skip').disabled = !mom; }
+function updateHud() { if (MU.drill) { const Dr = MU.drill; $('#hud-sub').innerHTML = ''; $('#score').textContent = (Math.round(Dr.score * 10) / 10 + '').replace('.', ',') + ' pts'; $('#minute').textContent = Dr.i + '/' + Dr.n; $('#veil').hidden = MU.phase === 'moment'; $('#b-skip').disabled = MU.phase !== 'moment'; return; } const MC = MU.MC; $('#score').textContent = MC.score[0] + ' – ' + MC.score[1]; hudSub(); const m = MC.min; $('#minute').textContent = m > 90 ? "90+" + (m - 90) + "'" : m + "'"; const mom = MU.phase === 'moment'; $('#veil').hidden = mom; $('#b-skip').disabled = !mom; }
 
 /* ---------- apresentação da partida: gols, confete, intervalo, abertura ---------- */
 let FXP = [];

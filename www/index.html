@@ -865,7 +865,7 @@ function newWorld() {
   G = { v: 1, season: 2026, startSeason: 2026, week: 0, nextP: 1, nextC: 1, clubs: {}, players: {}, leagues: {}, champions: {}, news: [], offers: [], awards: [], records: { season: null, nextId: 1 }, user: null, pendingIntl: null, tlog: [] };
   for (const L of LEAGUE_DEFS) {
     G.leagues[L.id] = { id: L.id, clubs: [], rounds: [] }; G.champions[L.id] = [];
-    for (const c of L.clubs) { const id = 'c' + (G.nextC++); G.clubs[id] = { id, name: c[0], sh: c[1], rep: c[2], c1: c[3], c2: c[4], lg: L.id, co: L.co, sq: [], tt: {} }; G.leagues[L.id].clubs.push(id); }
+    for (const c of L.clubs) { const id = 'c' + (G.nextC++); G.clubs[id] = { id, name: c[0], sh: c[1], rep: c[2], rep0: c[2], c1: c[3], c2: c[4], lg: L.id, co: L.co, sq: [], tt: {} }; G.leagues[L.id].clubs.push(id); }
   }
   for (const id in G.clubs) fillSquad(G.clubs[id]);
   for (const lid in G.leagues) makeFixtures(lid);
@@ -1464,7 +1464,7 @@ function endSeason() {
   u.history.push({ s: label, club: myc ? myc.name : 'Sem clube', lg: myc ? LDEF[myc.lg].n : '—', pos: myPos, ap: S.ap, st: S.st, min: S.min, g: S.g, a: S.a, avg: S.ap ? Math.round(S.rsum / S.ap * 100) / 100 : 0, ovr: me.ovr, age: me.age, loan: !!u.loan, aw: aw.mine.slice() });
   sum.user = { pos: myPos, avg: S.ap ? S.rsum / S.ap : 0 };
   // reputação dos clubes
-  for (const lid in tables) { const t = tables[lid]; t.forEach((r, i) => { const c = club(r.c); if (i === 0) c.rep += 2; else if (i < 3) c.rep += 1; else if (i >= t.length - 4) c.rep -= 1; c.rep = clamp(c.rep, 30, 95); }); }
+  for (const lid in tables) { const t = tables[lid]; t.forEach((r, i) => { const c = club(r.c); if (c.rep0 == null) c.rep0 = c.rep; { const dv = (c.rep0 - c.rep) * 0.15; c.rep += Math.trunc(dv) + (rnd() < Math.abs(dv % 1) ? Math.sign(dv) : 0); } if (i === 0) c.rep += 2; else if (i < 3) c.rep += 1; else if (i >= t.length - 4) c.rep -= 1; c.rep = clamp(c.rep, 30, 95); }); }
   // acesso e rebaixamento (Brasil A/B/C)
   for (const L of LEAGUE_DEFS) {
     if (!L.down) continue; const t = tables[L.id]; const B = LDEF[L.below];

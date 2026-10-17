@@ -2515,7 +2515,7 @@ function checkEnd(dt) {
   }
 }
 /* carrinho do usuário */
-function userSlide() {
+function userSlide() { if (typeof MU !== 'undefined' && MU && MU.paused) return; 
   const u = E.user, b = E.ball; if (!u || u.slide || u.down > 0 || u.dive || u.pos === 'GOL' || E.frozen) return false;
   const car = b.owner; let dx, dy;
   if (car && car.team !== u.team) { dx = car.x + car.vx * 0.25 - u.x; dy = car.y + car.vy * 0.25 - u.y; } else if (!car) { dx = b.x - u.x; dy = b.y - u.y; } else { dx = u.fx; dy = u.fy; }
@@ -2647,7 +2647,7 @@ function classifyKick(dir, power) {
   if (u.x > 56 && cos > 0.84 && gl < 36) return 'shot';
   return power > 0.72 ? 'lob' : 'pass';
 }
-function userKick(dir, power, force) {
+function userKick(dir, power, force) { if (typeof MU !== 'undefined' && MU && MU.paused) return; 
   const u = E.user; const kind = force || classifyKick(dir, power); const a = u.a;
   if (kind === 'shot' || kind === 'pen') {
     const skill = kind === 'pen' ? a.pen : a.fin; const speed = 13 + power * 20;
@@ -2673,7 +2673,7 @@ function penKeeper(dir) {
 }
 function setTimeoutEngine(t, f) { E.timers = E.timers || []; E.timers.push({ at: E.t + t, f }); }
 function runTimers() { if (!E.timers) return; const now = E.t; E.timers = E.timers.filter(x => { if (now >= x.at) { x.f(); return false; } return true; }); }
-function userTap(wx, wy) {
+function userTap(wx, wy) { if (typeof MU !== 'undefined' && MU && MU.paused) return; 
   const u = E.user; if (!u || u.down > 0) return;
   const b = E.ball;
   if (u.pos === 'GOL' && b.owner !== u) { u.tgt = [clamp(wx, -1, FL + 1), clamp(wy, 0, FW)]; u.manualT = 1.2; return; }
@@ -2685,7 +2685,7 @@ function userTap(wx, wy) {
   if (b.owner && b.owner.team !== u.team && D(wx, wy, b.owner.x, b.owner.y) < 3.5) { u.chase = b.owner; u.manualT = 3; u.urg = 1; return; }
   u.tgt = [clamp(wx, 0, FL), clamp(wy, 0, FW)]; u.manualT = 2.5; u.urg = 1; u.chase = null;
 }
-function userSwipe(dir, power) {
+function userSwipe(dir, power) { if (typeof MU !== 'undefined' && MU && MU.paused) return; 
   const u = E.user; if (!u) return null; const b = E.ball;
   if (u.pos === 'GOL' && E.awaitDive > 0 && !E.diveDone) {
     const lat = dir[1]; if (Math.abs(lat) < 0.35) { E.diveDone = true; E.awaitDive = 0; return 'stay'; }
@@ -3729,7 +3729,7 @@ const inp = { down: false, sx: 0, sy: 0, cx: 0, cy: 0, t: 0, id: null };
 function screenToWorld(sx, sy) { const S = pitchScale(); return [(sx - innerWidth / 2) / S + E.cx, (sy - innerHeight / 2) / (S * TILT) + E.cy]; }
 function bindPitch() {
   const c = cv();
-  c.addEventListener('pointerdown', e => { if (padOn() || !MU || MU.phase !== 'moment' || !E || E.over) return; c.setPointerCapture(e.pointerId); inp.down = true; inp.id = e.pointerId; inp.sx = inp.cx = e.clientX; inp.sy = inp.cy = e.clientY; inp.t = performance.now(); E.aimHold = true; e.preventDefault(); });
+  c.addEventListener('pointerdown', e => { if (padOn() || !MU || MU.paused || MU.phase !== 'moment' || !E || E.over) return; c.setPointerCapture(e.pointerId); inp.down = true; inp.id = e.pointerId; inp.sx = inp.cx = e.clientX; inp.sy = inp.cy = e.clientY; inp.t = performance.now(); E.aimHold = true; e.preventDefault(); });
   c.addEventListener('pointermove', e => { if (!inp.down || e.pointerId !== inp.id) return; inp.cx = e.clientX; inp.cy = e.clientY; });
   const up2 = e => {
     if (!inp.down || e.pointerId !== inp.id) return; inp.down = false; if (E) E.aimHold = false;
@@ -4015,7 +4015,7 @@ function bindPad() {
   document.querySelectorAll('.tb').forEach(b => {
     const kind = b.dataset.k; let bid = null;
     b.addEventListener('pointerdown', e => {
-      e.preventDefault(); b.setPointerCapture(e.pointerId); bid = e.pointerId; b.classList.add('on'); KB.used = true; vib('tap');
+      e.preventDefault(); if (MU && MU.paused) return; b.setPointerCapture(e.pointerId); bid = e.pointerId; b.classList.add('on'); KB.used = true; vib('tap');
       if (kind === 'sprint') { sprintBtn = true; KB.keys.sprint = true; return; }
       if (!kbActive() || E.pause > 0 || KB.ch) return;
       KB.ch = { kind, t0: performance.now(), btn: b }; E.aimHold = true;

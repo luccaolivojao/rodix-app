@@ -263,7 +263,7 @@ main#view{min-width:0;padding-bottom:40px}
 .shopcard b{font-family:var(--display);font-size:20px;letter-spacing:.02em} .shopcard .mut{font-size:13px;flex:1}
 .shopcard.soon{opacity:.62}
 .shopic{position:relative;width:62px;height:62px;border-radius:16px;display:grid;place-items:center;color:#fff}
-.shopic.kit{background:linear-gradient(145deg,#f06262,#b8323a)} .shopic.turbo{background:linear-gradient(145deg,#4cc38a,#1f8f5c)} .shopic.coin{background:linear-gradient(145deg,#ffd23f,#d99a12);color:#3a2a00}
+.shopic.kit{background:linear-gradient(145deg,#f06262,#b8323a)} .shopic.turbo{background:linear-gradient(145deg,#4cc38a,#1f8f5c)} .shopic.coin{background:radial-gradient(circle at 50% 38%,#4a3708,#16120a);border:1px solid #8a6d12;box-shadow:0 0 18px rgba(255,200,40,.18)}
 .shopic em{position:absolute;top:-6px;right:-8px;background:#fff;color:#1c2a22;font-style:normal;font-weight:800;font-size:12px;border-radius:999px;min-width:24px;height:24px;display:grid;place-items:center;padding:0 5px}
 .coinbig,.shopcard .btn.pri svg,.chip svg{color:#ffd23f} .shopcard .btn.pri{background:linear-gradient(180deg,#2a2208,#1b1604);color:#ffd23f;border-color:#8a6d12;font-weight:800} .shopcard .btn.pri:disabled svg{color:#8a7a3a} .shopcard .btn:disabled{opacity:.45;cursor:not-allowed}
 .tilegrid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px 26px;width:100%}
@@ -512,6 +512,7 @@ input[type=text],input[type=number],select,textarea{border-radius:0;border:0;bor
 @media (orientation:landscape) and (max-height:430px){#s-menu .logo{font-size:clamp(30px,13vh,50px)}#s-menu .logo em{width:auto;white-space:nowrap}#s-menu .logo span{margin-top:4px}#s-menu .menu-body{gap:8px}#s-menu .tilegrid3 .tile>i{width:42px}#s-menu .tilegrid3 .tile b{font-size:18px}}
 </style>
 
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="cgR" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe98a"/><stop offset=".55" stop-color="#f5b400"/><stop offset="1" stop-color="#c77f00"/></linearGradient><linearGradient id="cgI" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#f2a300"/><stop offset="1" stop-color="#ffd84a"/></linearGradient></defs></svg>
 <div id="rot" aria-live="polite"><svg width="84" height="84" viewBox="0 0 24 24" fill="none" stroke="#ffd23f" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18.5h2"/></svg><b>Gire o celular</b><span>Rodix Football é jogado na horizontal.</span></div>
 <div id="s-menu" class="screen gamebg">
   <div class="menu-body">
@@ -3206,14 +3207,15 @@ function depthCard() {
     <p style="margin:0">${verdict}</p>
     <p class="fine" style="margin:0">Para subir: jogue bem (nota 7+ dá muita confiança), faça gols e assistências, e complete o treino da semana jogando o minijogo. Os rivais são avaliados pelo overall e pela fase deles.</p></div>`;
 }
+function coinIco(s) { s = s || 20; return `<svg width="${s}" height="${s}" viewBox="0 0 64 64" aria-hidden="true" style="flex:none"><circle cx="32" cy="32" r="30" fill="url(#cgR)" stroke="#a86a00" stroke-width="2"/><circle cx="32" cy="32" r="24.5" fill="url(#cgI)" stroke="#fff1a8" stroke-opacity=".85" stroke-width="1.6"/><path fill="#fff0a6" fill-rule="evenodd" d="M24 17h11.5a9.2 9.2 0 0 1 3.4 17.7L47 46h-9.4l-6.6-9.2h-.9V46H24zM31.1 24.2v6.6h3.7a3.3 3.3 0 0 0 0-6.6z" transform="translate(1.1 1.3)"/><path fill="#8d5400" fill-rule="evenodd" d="M24 17h11.5a9.2 9.2 0 0 1 3.4 17.7L47 46h-9.4l-6.6-9.2h-.9V46H24zM31.1 24.2v6.6h3.7a3.3 3.3 0 0 0 0-6.6z"/><path d="M13 22a21 21 0 0 1 12-9" fill="none" stroke="#fff" stroke-opacity=".75" stroke-width="3" stroke-linecap="round"/></svg>`; }
 function shopBody(career) {
   const w = wal(), coins = coinsOf(), p = career ? up() : null;
   const card = id => { const it = SHOP_ITEMS[id]; const can = coins >= it.price;
-    return `<div class="shopcard"><i class="shopic ${it.kind}">${ico(it.ic, 34)}${it.q > 1 ? `<em>${it.q}</em>` : ''}</i><b>${tr(it.n)}</b><span class="mut">${tr(it.d)}</span><button class="btn pri sm" data-act="shop-buy" data-id="${id}"${can ? '' : ' disabled'}>${ico('coin', 16)} ${it.price}</button></div>`; };
+    return `<div class="shopcard"><i class="shopic ${it.kind}">${ico(it.ic, 34)}${it.q > 1 ? `<em>${it.q}</em>` : ''}</i><b>${tr(it.n)}</b><span class="mut">${tr(it.d)}</span><button class="btn pri sm" data-act="shop-buy" data-id="${id}"${can ? '' : ' disabled'}>${coinIco(16)} ${it.price}</button></div>`; };
   const nat = !!iapPlugin();
-  const packs = COIN_PACKS.map(([n, pr, c, pid]) => { const live = nat && IAP.prices[pid]; return `<div class="shopcard${nat ? '' : ' soon'}"><i class="shopic coin">${ico('coin', 34)}</i><b>${c.toLocaleString('pt-BR')} Coins</b><span class="mut">${tr('Pacote')} ${tr(n)}</span><button class="btn sm${live ? ' pri' : ''}" data-act="iap-buy" data-id="${pid}"${live ? '' : ' disabled'}>${live || (nat && IAP.tried ? tr('Indisponível') : pr)}</button></div>`; }).join('');
+  const packs = COIN_PACKS.map(([n, pr, c, pid]) => { const live = nat && IAP.prices[pid]; return `<div class="shopcard${nat ? '' : ' soon'}"><i class="shopic coin">${coinIco(44)}</i><b>${c.toLocaleString('pt-BR')} Coins</b><span class="mut">${tr('Pacote')} ${tr(n)}</span><button class="btn sm${live ? ' pri' : ''}" data-act="iap-buy" data-id="${pid}"${live ? '' : ' disabled'}>${live || (nat && IAP.tried ? tr('Indisponível') : pr)}</button></div>`; }).join('');
   return `<div class="stack">
-    <div class="card row" style="justify-content:space-between;flex-wrap:wrap"><div class="row" style="gap:12px"><span class="coinbig">${ico('coin', 30)}</span><div><b style="font-family:var(--display);font-size:30px">${coins}</b> <span class="mut">Rodix Coins</span></div></div>
+    <div class="card row" style="justify-content:space-between;flex-wrap:wrap"><div class="row" style="gap:12px"><span class="coinbig">${coinIco(34)}</span><div><b style="font-family:var(--display);font-size:30px">${coins}</b> <span class="mut">Rodix Coins</span></div></div>
       <div class="row" style="gap:8px"><span class="chip">${ico('medkit', 14)} ${w.kits || 0} ${tr('kits')}</span><span class="chip">${ico('bolt', 14)} ${w.turbos || 0} ${tr('turbos')}</span></div></div>
     <p class="mut" style="margin:0">${tr('Você ganha 15 Rodix Coins ao fechar cada temporada.')}</p>
     <div class="card stack"><span class="lbl">${tr('Itens')}</span><div class="shopgrid">${['kit1', 'kit10', 'turbo1', 'turbo10'].map(card).join('')}</div>
@@ -4374,7 +4376,7 @@ function bindPad() {
 }
 
 setTimeout(() => { iapInit().then(() => refreshMenuCoins()); }, 1500);
-bindPad(); bindCreate(); bindClubPick(); bindSettings(); bindPitch(); paintIcons(); $('#ico-play').innerHTML = ico('play', 40); $('#hub-ico').innerHTML = ico('coin', 16); refreshMenuCoins();
+bindPad(); bindCreate(); bindClubPick(); bindSettings(); bindPitch(); paintIcons(); $('#ico-play').innerHTML = ico('play', 40); $('#hub-ico').innerHTML = coinIco(18); refreshMenuCoins();
 (async () => { await Store.open(); refreshSaves(); requestAnimationFrame(loop); })();
 
 /* ---------- telas de apresentação de campeonatos ---------- */

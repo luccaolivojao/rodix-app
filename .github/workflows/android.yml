@@ -18,7 +18,7 @@ jobs:
         env:
           KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           KS_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-        run: keytool -list -v -keystore "$RUNNER_TEMP/upload.jks" -alias "$KS_ALIAS" -storepass "$KS_PASS" | grep -E "SHA1|SHA256" | sed 's/^ *//' | tee -a "$GITHUB_STEP_SUMMARY"
+        run: keytool -list -v -keystore "$RUNNER_TEMP/upload.jks" -alias "$KS_ALIAS" -storepass "$KS_PASS" | grep -E "SHA1|SHA256" | sed 's/^ *//' | tee -a "$GITHUB_STEP_SUMMARY" "$RUNNER_TEMP/sha.txt"
       - name: Build release AAB
         working-directory: android
         env:
@@ -35,4 +35,4 @@ jobs:
       - name: Publica AAB na aba Releases
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release delete aab-latest --yes --cleanup-tag || true; gh release create aab-latest android/app/build/outputs/bundle/release/app-release.aab --title "Rodix Football (Android AAB)" --notes "Arquivo .aab assinado para enviar ao Google Play Console."
+        run: gh release delete aab-latest --yes --cleanup-tag || true; gh release create aab-latest android/app/build/outputs/bundle/release/app-release.aab --title "Rodix Football (Android AAB)" --notes "Arquivo .aab assinado para enviar ao Google Play Console. Chave de upload: $(tr '\n' ' ' < $RUNNER_TEMP/sha.txt)"

@@ -14,6 +14,11 @@ jobs:
       - run: npm ci && npx cap sync android
       - name: Decode keystore
         run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/upload.jks"
+      - name: Mostrar SHA-1 da chave de upload
+        env:
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KS_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: keytool -list -v -keystore "$RUNNER_TEMP/upload.jks" -alias "$KS_ALIAS" -storepass "$KS_PASS" | grep -E "SHA1|SHA256" | sed 's/^ *//' | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Build release AAB
         working-directory: android
         env:

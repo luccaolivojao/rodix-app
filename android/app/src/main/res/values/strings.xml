@@ -4,5 +4,5 @@
     <string name="title_activity_main">Rodix Football</string>
     <string name="package_name">com.rodix.football</string>
     <string name="custom_url_scheme">com.rodix.football</string>
-    <string name="game_services_project_id" translatable="false">0</string>
+    <string name="game_services_project_id" translatable="false">513624031186</string>
 </resources>

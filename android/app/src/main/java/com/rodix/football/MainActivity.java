@@ -7,10 +7,16 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 import com.getcapacitor.BridgeActivity;
+import com.google.android.gms.games.PlayGamesSdk;
 
 public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        registerPlugin(RodixGamesPlugin.class);
+        try {
+            String gid = getString(R.string.game_services_project_id).trim();
+            if (!gid.isEmpty() && !gid.equals("0")) PlayGamesSdk.initialize(this);
+        } catch (Throwable t) { }
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         hideBars();

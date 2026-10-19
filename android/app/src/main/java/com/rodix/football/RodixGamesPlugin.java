@@ -57,4 +57,14 @@ public class RodixGamesPlugin extends Plugin {
             });
         } catch (Throwable e) { call.reject("falhou"); }
     }
+
+    @PluginMethod
+    public void showAchievements(final PluginCall call) {
+        if (!enabled()) { call.reject("indisponivel"); return; }
+        try {
+            PlayGames.getAchievementsClient(getActivity()).getAchievementsIntent()
+                .addOnSuccessListener(intent -> { getActivity().startActivityForResult(intent, 9003); call.resolve(); })
+                .addOnFailureListener(e -> call.reject("falhou"));
+        } catch (Throwable e) { call.reject("falhou"); }
+    }
 }

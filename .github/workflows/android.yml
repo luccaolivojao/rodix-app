@@ -35,4 +35,7 @@ jobs:
       - name: Publica AAB na aba Releases
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release delete aab-latest --yes --cleanup-tag || true; gh release create aab-latest android/app/build/outputs/bundle/release/app-release.aab --title "Rodix Football (Android AAB)" --notes "Arquivo .aab assinado para enviar ao Google Play Console. Chave de upload: $(tr '\n' ' ' < $RUNNER_TEMP/sha.txt)"
+        run: |
+          SHA=$(tr '\n' ' ' < "$RUNNER_TEMP/sha.txt")
+          gh release delete aab-latest --yes --cleanup-tag || true
+          gh release create aab-latest android/app/build/outputs/bundle/release/app-release.aab --title "Rodix Football (Android AAB)" --notes "Arquivo .aab assinado para enviar ao Google Play Console. Chave de upload - $SHA"

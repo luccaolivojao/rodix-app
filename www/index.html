@@ -204,6 +204,7 @@ main#view{min-width:0;padding-bottom:40px}
 .ci-leg{display:flex;flex-wrap:wrap;gap:10px;font-size:12.5px;color:#cfe2d3}.ci-leg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
 .banner{position:absolute;left:50%;top:26%;transform:translate(-50%,-50%);font-family:var(--display);font-weight:800;font-size:clamp(28px,6vw,60px);color:#fff;text-shadow:0 3px 0 rgba(0,0,0,.35),0 0 30px rgba(0,0,0,.4);text-transform:uppercase;pointer-events:none;text-align:center;width:min(92%,900px);line-height:1}
 .feed{position:absolute;right:12px;bottom:calc(70px + env(safe-area-inset-bottom,0px));width:min(340px,calc(100% - 24px));display:flex;flex-direction:column;gap:4px;pointer-events:none}
+.feed[hidden]{display:none!important}
 .feed div{background:rgba(9,20,14,.82);color:#e9f2eb;padding:6px 10px;border-radius:7px;font-size:13.5px}
 .feed div.g{background:var(--acc);color:var(--acc-ink);font-weight:700}
 .hud-bot{position:absolute;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));display:flex;gap:8px;justify-content:space-between;align-items:center;flex-wrap:wrap}
@@ -3661,7 +3662,9 @@ function setHint(k) {
   $('#hint').textContent = t;
 }
 function holdFor(sec) { if (MU) MU.hold = Math.max(MU.hold || 0, sec); }
-function feedMsg(t, g) { MU.feed.unshift({ t, g }); MU.feed = MU.feed.slice(0, 5); $('#feed').innerHTML = MU.feed.map(f => `<div class="${f.g ? 'g' : ''}">${esc(f.t)}</div>`).join(''); }
+function feedMsg(t, g) { MU.feed.unshift({ t, g }); MU.feed = MU.feed.slice(0, 5); $('#feed').innerHTML = MU.feed.map(f => `<div class="${f.g ? 'g' : ''}">${esc(f.t)}</div>`).join(''); feedVis(); }
+/* A faixa de texto da partida só aparece quando o jogador está no banco (ou expulso); em campo ela some. */
+function feedVis() { const f = $('#feed'); if (!f) return; const MC = MU && MU.MC; f.hidden = !!(MC && !MU.drill && MC.userIn && !MC.red); }
 function updateHud() { if (MU.drill) { const Dr = MU.drill; $('#hud-sub').innerHTML = ''; $('#score').textContent = (Math.round(Dr.score * 10) / 10 + '').replace('.', ',') + ' pts'; $('#minute').textContent = Dr.i + '/' + Dr.n; $('#veil').hidden = MU.phase === 'moment'; $('#b-skip').disabled = MU.phase !== 'moment'; return; } const MC = MU.MC; $('#score').textContent = MC.score[0] + ' – ' + MC.score[1]; hudSub(); const m = MC.min; $('#minute').textContent = m > 90 ? "90+" + (m - 90) + "'" : m + "'"; const mom = MU.phase === 'moment'; $('#veil').hidden = mom; $('#b-skip').disabled = !mom; }
 
 /* ---------- apresentação da partida: gols, confete, intervalo, abertura ---------- */

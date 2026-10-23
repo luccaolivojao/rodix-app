@@ -47,16 +47,17 @@ jobs:
             <key>signingStyle</key><string>automatic</string>
           </dict></plist>
           EOF
+          set -o pipefail
           xcodebuild -exportArchive -archivePath $RUNNER_TEMP/App.xcarchive \
             -exportOptionsPlist $RUNNER_TEMP/export.plist -allowProvisioningUpdates \
             -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8 \
             -authenticationKeyID ${{ secrets.ASC_KEY_ID }} \
-            -authenticationKeyIssuerID ${{ secrets.ASC_ISSUER_ID }}
+            -authenticationKeyIssuerID ${{ secrets.ASC_ISSUER_ID }} 2>&1 | tee $RUNNER_TEMP/export.log
       - name: Publica resumo do erro
         if: failure()
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          grep -E "error:|warning: .*(sign|provision|entitle)|\*\* ARCHIVE FAILED|No (account|profile|signing)|Provisioning|Failed" $RUNNER_TEMP/archive.log | sort -u | head -40 > $RUNNER_TEMP/err.txt || true
+          grep -E "error:|warning: .*(sign|provision|entitle)|\*\* ARCHIVE FAILED|No (account|profile|signing)|Provisioning|Failed" $RUNNER_TEMP/archive.log $RUNNER_TEMP/export.log 2>/dev/null | sort -u | head -40 > $RUNNER_TEMP/err.txt || true
           gh release delete ios-log --yes --cleanup-tag || true
           gh release create ios-log --title "iOS log" --notes-file $RUNNER_TEMP/err.txt

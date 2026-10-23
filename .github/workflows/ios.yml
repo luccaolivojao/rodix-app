@@ -9,9 +9,17 @@ jobs:
         with: { node-version: 22 }
       - run: npm ci && npx cap sync ios
       - name: App Store Connect API key
+        env:
+          KEY_TEXT: ${{ secrets.ASC_KEY_P8_BASE64 }}
         run: |
           mkdir -p ~/.appstoreconnect/private_keys
-          echo "${{ secrets.ASC_KEY_P8_BASE64 }}" | base64 -d > ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
+          OUT=~/.appstoreconnect/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
+          # aceita o texto do .p8 (-----BEGIN ...) ou o mesmo texto em base64
+          case "$KEY_TEXT" in
+            *"BEGIN PRIVATE KEY"*) printf '%s\n' "$KEY_TEXT" > "$OUT" ;;
+            *) printf '%s' "$KEY_TEXT" | base64 -d > "$OUT" ;;
+          esac
+          head -1 "$OUT" | cut -c1-27
       - name: Archive
         working-directory: ios/App
         run: |

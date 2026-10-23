@@ -1,5 +1,7 @@
 name: iOS TestFlight
 on: workflow_dispatch
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: macos-15
@@ -23,6 +25,7 @@ jobs:
       - name: Archive
         working-directory: ios/App
         run: |
+          set -o pipefail
           xcodebuild archive -project App.xcodeproj -scheme App -configuration Release \
             -destination 'generic/platform=iOS' -archivePath $RUNNER_TEMP/App.xcarchive \
             -allowProvisioningUpdates \
@@ -30,7 +33,7 @@ jobs:
             -authenticationKeyID ${{ secrets.ASC_KEY_ID }} \
             -authenticationKeyIssuerID ${{ secrets.ASC_ISSUER_ID }} \
             DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM_ID }} CODE_SIGN_STYLE=Automatic \
-            CURRENT_PROJECT_VERSION=${{ github.run_number }}
+            CURRENT_PROJECT_VERSION=${{ github.run_number }} 2>&1 | tee $RUNNER_TEMP/archive.log
       - name: Export and upload to App Store Connect
         working-directory: ios/App
         run: |
@@ -49,3 +52,11 @@ jobs:
             -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8 \
             -authenticationKeyID ${{ secrets.ASC_KEY_ID }} \
             -authenticationKeyIssuerID ${{ secrets.ASC_ISSUER_ID }}
+      - name: Publica resumo do erro
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          grep -E "error:|warning: .*(sign|provision|entitle)|\*\* ARCHIVE FAILED|No (account|profile|signing)|Provisioning|Failed" $RUNNER_TEMP/archive.log | sort -u | head -40 > $RUNNER_TEMP/err.txt || true
+          gh release delete ios-log --yes --cleanup-tag || true
+          gh release create ios-log --title "iOS log" --notes-file $RUNNER_TEMP/err.txt

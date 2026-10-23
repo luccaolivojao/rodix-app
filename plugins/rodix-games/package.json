@@ -1,0 +1,9 @@
+{
+  "name": "rodix-games",
+  "version": "1.0.0",
+  "description": "Game Center (iOS) para o Rodix Football",
+  "private": true,
+  "files": ["ios/Sources", "Package.swift"],
+  "capacitor": { "ios": { "src": "ios" } },
+  "peerDependencies": { "@capacitor/core": ">=8.0.0" }
+}

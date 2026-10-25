@@ -19,7 +19,7 @@ def api(m,path,body=None,ok=(200,201,204),quiet=False):
         if r.status_code in ok: return r.json() if r.content else {}
         if r.status_code>=500: time.sleep(3);continue
         break
-    if not quiet: L('ERR',m,path,r.status_code,r.text[:600])
+    if not quiet: L('ERR',m,path,r.status_code,' '.join(r.text.split())[:350])
     return None
 def upload(res_path,rtype,fpath,patch_path):
     data=open(fpath,'rb').read()
@@ -33,7 +33,7 @@ def do_upload(created,fpath,patch_path,rtype):
         chunk=data[o['offset']:o['offset']+o['length']]
         r=requests.request(o['method'],o['url'],headers=h,data=chunk,timeout=120)
         if r.status_code>=300: L('UPLOAD ERR',r.status_code,r.text[:200]);return False
-    return api('PATCH',patch_path+'/'+created['data']['id'],{'data':{'type':rtype,'id':created['data']['id'],'attributes':{'uploaded':True,'sourceFileChecksum':hashlib.md5(data).hexdigest()}}}) is not None
+    return api('PATCH',patch_path+'/'+created['data']['id'],{'data':{'type':rtype,'id':created['data']['id'],'attributes':({'uploaded':True} if rtype=='gameCenterAchievementImages' else {'uploaded':True,'sourceFileChecksum':hashlib.md5(data).hexdigest()})}}) is not None
 
 import traceback
 sys.excepthook=lambda t,v,tb:L('EXC',''.join(traceback.format_exception(t,v,tb))[-1500:])

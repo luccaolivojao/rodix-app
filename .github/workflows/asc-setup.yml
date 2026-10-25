@@ -17,6 +17,6 @@ jobs:
           ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
           GH_TOKEN: ${{ github.token }}
         run: |
-          python3 scripts/asc_setup.py "${{ inputs.what }}" || true
+          rm -f /tmp/asc_log.txt; python3 scripts/asc_setup.py "${{ inputs.what }}" || true; touch /tmp/asc_log.txt
           gh release delete asc-log -y --cleanup-tag 2>/dev/null || true
           gh release create asc-log --title asc-log --notes-file /tmp/asc_log.txt

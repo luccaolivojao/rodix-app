@@ -6,7 +6,7 @@ def tok(): return jwt.encode({'iss':iss,'exp':int(time.time())+1100,'aud':'appst
 B='https://api.appstoreconnect.apple.com'
 log=[]
 def L(*a):
-    s=' '.join(str(x) for x in a);print(s,flush=True);log.append(s)
+    s=' '.join(str(x) for x in a);print(s,flush=True);log.append(s);open('/tmp/asc_log.txt','a').write(s+'\n')
 def api(m,path,body=None,ok=(200,201,204),quiet=False):
     for i in range(3):
         r=requests.request(m,B+path if path.startswith('/') else path,headers={'Authorization':'Bearer '+tok(),'Content-Type':'application/json'},data=json.dumps(body) if body is not None else None,timeout=60)
@@ -29,6 +29,8 @@ def do_upload(created,fpath,patch_path,rtype):
         if r.status_code>=300: L('UPLOAD ERR',r.status_code,r.text[:200]);return False
     return api('PATCH',patch_path+'/'+created['data']['id'],{'data':{'type':rtype,'id':created['data']['id'],'attributes':{'uploaded':True,'sourceFileChecksum':hashlib.md5(data).hexdigest()}}}) is not None
 
+import traceback
+sys.excepthook=lambda t,v,tb:L('EXC',''.join(traceback.format_exception(t,v,tb))[-1500:])
 what=sys.argv[1] if len(sys.argv)>1 else 'all'
 
 # ---------- Game Center ----------

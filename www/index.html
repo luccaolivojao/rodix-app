@@ -516,6 +516,25 @@ input[type=text],input[type=number],select,textarea{border-radius:0;border:0;bor
 @media (orientation:landscape) and (max-height:430px){#s-menu .logo{font-size:clamp(30px,13vh,50px)}#s-menu .logo em{width:auto;white-space:nowrap}#s-menu .logo span{margin-top:4px}#s-menu .menu-body{gap:8px}#s-menu .tilegrid3 .tile>i{width:42px}#s-menu .tilegrid3 .tile b{font-size:18px}}
 #modal-box.wide{max-width:min(900px,100%)}
 #s-menu .logo span{align-self:center}
+/* iPhone deitado: sem aumento automático de texto, respeita o notch e alinha o menu */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+#s-menu .menu-body{max-width:min(980px,100%);padding:10px calc(18px + env(safe-area-inset-right,0px)) 10px calc(18px + env(safe-area-inset-left,0px))}
+#s-menu .tile.big{width:100%}
+.band-in{padding-left:calc(20px + env(safe-area-inset-left,0px));padding-right:calc(20px + env(safe-area-inset-right,0px))}
+.hubmain{padding-left:calc(20px + env(safe-area-inset-left,0px));padding-right:calc(20px + env(safe-area-inset-right,0px))}
+@media (orientation:landscape) and (max-height:430px){#s-menu .menu-body{max-width:min(760px,100%)}
+.hubmain{padding-top:10px;padding-bottom:30px}
+#s-hub .band.slim .band-in{flex-wrap:nowrap;gap:10px;padding-top:calc(6px + env(safe-area-inset-top,0px));padding-bottom:6px}
+#s-hub .band .brand.sm{display:none}
+#s-hub .pchip{flex:1 1 auto;min-width:0} #s-hub .pchip canvas{width:34px;height:34px}
+#s-hub .band .pchip #hub-name{font-size:18px} #s-hub .band .pchip #hub-sub{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+#s-hub .bandbtns{flex:none;flex-wrap:nowrap;gap:6px} #s-hub #hub-season{font-size:12px;white-space:nowrap}
+#s-hub .bandbtns .btn.sm{font-size:15px;min-height:32px;padding:4px 14px}
+#s-hub .card{padding:10px 14px} #s-hub .card.next{padding-top:14px}
+#s-hub .fixture{gap:6px} #s-hub .fixture .tm b{font-size:21px} #s-hub .fixture .tm svg{width:46px;height:auto} #s-hub .vs{font-size:28px}
+#s-hub .pagehead h2{font-size:30px} #s-hub .pagehead{margin-bottom:8px}
+#s-hub .btn{font-size:17px;min-height:38px;padding:6px 20px}
+}
 @media (orientation:landscape) and (max-height:430px){.shopgrid{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.shopcard{padding:10px 6px 9px;gap:4px}.shopcard b{font-size:16px}.shopcard .mut{font-size:11px;line-height:1.25}.shopic{width:44px;height:44px;border-radius:12px}.shopic svg{width:26px;height:26px}.shopic em{min-width:20px;height:20px;font-size:11px;top:-5px;right:-7px}.shopcard .btn.sm{min-height:34px;padding:6px 10px}.coinbig svg{width:28px;height:28px}#modal-box.wide{padding:14px;gap:10px}}
 
 .shopcard{padding:12px 10px 11px;gap:6px}.shopcard b{font-size:18px}.shopic{width:52px;height:52px;border-radius:14px}.shopic svg{width:30px;height:30px}

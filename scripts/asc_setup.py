@@ -6,7 +6,7 @@ def tok(): return jwt.encode({'iss':iss,'exp':int(time.time())+1100,'aud':'appst
 B='https://api.appstoreconnect.apple.com'
 log=[]
 def L(*a):
-    s=' '.join(str(x) for x in a);print(s,flush=True);log.append(s);open('/tmp/asc_log.txt','a').write(s+'\n')
+    s=' '.join(str(x) for x in a);print(s,flush=True);log.append(s)
 def api(m,path,body=None,ok=(200,201,204),quiet=False):
     for i in range(3):
         r=requests.request(m,B+path if path.startswith('/') else path,headers={'Authorization':'Bearer '+tok(),'Content-Type':'application/json'},data=json.dumps(body) if body is not None else None,timeout=60)
@@ -116,4 +116,4 @@ if what in('all','iap'):
         st=api('GET',f'/v2/inAppPurchases/{iid}?fields[inAppPurchases]=state',quiet=True)
         L(pid,'state',st and st['data']['attributes']['state'])
     L('IAP done')
-open('/tmp/asc_log.txt','w').write('\n'.join(log))
+

@@ -89,7 +89,7 @@ if what in('all','iap'):
             iid=c['data']['id'];L('created',pid)
         locs=api('GET',f'/v2/inAppPurchases/{iid}/inAppPurchaseLocalizations',quiet=True) or {'data':[]}
         lh={l['attributes']['locale'] for l in locs['data']}
-        for loc,n,d in (('pt-BR',f'{cn} Rodix Coins',f'Pacote {nm}: {cn} Rodix Coins para usar na loja do jogo.'),('en-US',f'{cn} Rodix Coins',f'{nm} pack: {cn} Rodix Coins to spend in the in-game shop.')):
+        for loc,n,d in (('pt-BR',f'{cn} Rodix Coins',f'Pacote {nm} de moedas para a loja do jogo.'),('en-US',f'{cn} Rodix Coins',f'{nm} pack of coins for the in-game shop.')):
             if loc in lh: continue
             api('POST','/v1/inAppPurchaseLocalizations',{'data':{'type':'inAppPurchaseLocalizations','attributes':{'locale':loc,'name':n,'description':d[:45] if False else d},'relationships':{'inAppPurchaseV2':{'data':{'type':'inAppPurchases','id':iid}}}}})
         # price

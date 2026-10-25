@@ -42,7 +42,7 @@ what=sys.argv[1] if len(sys.argv)>1 else 'all'
 # ---------- Game Center ----------
 if what in('all','gc'):
     gd=api('GET',f'/v1/apps/{APP}/gameCenterDetail',quiet=True)
-    if not gd:
+    if not (gd and gd.get('data')):
         gd=api('POST','/v1/gameCenterDetails',{'data':{'type':'gameCenterDetails','attributes':{},'relationships':{'app':{'data':{'type':'apps','id':APP}}}}})
     gid=gd['data']['id'];L('GC detail',gid)
     ex=api('GET',f'/v1/gameCenterDetails/{gid}/gameCenterAchievements?limit=200&fields[gameCenterAchievements]=vendorIdentifier')

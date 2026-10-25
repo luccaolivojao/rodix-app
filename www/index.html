@@ -952,11 +952,11 @@ function maxRounds() { let m = 0; for (const lid in G.leagues) m = Math.max(m, G
 
 /* ---------- Escalação e força ---------- */
 let strCache = { key: '', m: {} };
-function scoreParts(p) { const u = G.user; return { ovr: p.ovr, trust: (u.trust - 40) / 3, form: u.form * 2.5, young: p.age <= 20 ? 1.5 : 0 }; }
-function trustUp(x) { const t = G.user ? G.user.trust : 45; return x * 0.36 * Math.max(0.15, 1.05 - t / 100); }
+function scoreParts(p) { const u = G.user; return { ovr: p.ovr, trust: (u.trust - 40) / 2.2, form: u.form * 2.5, young: p.age <= 20 ? 1.5 : 0, bench: Math.min(6, (u.benchRun || 0) * 1.2) }; }
+function trustUp(x) { const t = G.user ? G.user.trust : 45; return x * 0.55 * Math.max(0.2, 1.05 - t / 100); }
 function trustLabel(t) { return t < 25 ? 'Desconfiado' : t < 45 ? 'Neutro' : t < 65 ? 'Confia em você' : t < 85 ? 'Aposta em você' : 'Intocável'; }
 function selScore(p) {
-  if (p.u) { const q = scoreParts(p); return q.ovr + q.trust + q.form + q.young; }
+  if (p.u) { const q = scoreParts(p); return q.ovr + q.trust + q.form + q.young + q.bench; }
   return p.ovr + dfx().rival + (p.s.ap >= 3 ? clamp((p.s.r / p.s.ap - 6.6) * 2, -3, 3) : 0) + hash(p.n * 7 + G.week * 13) * 2.5;
 }
 function pickXI(cid, excludeUser) {
@@ -1241,7 +1241,7 @@ function startCareer(cfg, cid) {
   c.sq.push(p.id);
   const wage = Math.max(250, Math.round(wageFor(p.ovr, c.rep) * 0.7 / 10) * 10);
   G.user = {
-    pid: p.id, trust: cfg.rec ? 62 : 45, form: 0, ratings: [], prog: {}, gains: {}, trained: false, focus: TRAIN_DEFAULT(p.pos), inten: 'normal',
+    pid: p.id, trust: cfg.rec ? 62 : 50, form: 0, ratings: [], prog: {}, gains: {}, trained: false, focus: TRAIN_DEFAULT(p.pos), inten: 'normal',
     contract: { club: cid, years: 3, wage, since: G.season }, loan: null, requested: false,
     season: newSeasonStats(), career: { ap: 0, g: 0, a: 0, min: 0, rsum: 0, motm: 0 },
     history: [], trophies: [], transfers: [{ season: genSeasonLabel(), from: null, to: c.name, fee: 0, type: 'Início' }], awards: [],
@@ -1466,6 +1466,7 @@ function finishMatch(MC) {
       const S = u.season; if (MC.kind === 'cup') S.cap = (S.cap || 0) + 1; S.ap++; if (MC.starter) S.st++; S.min += mins; for (const k of ['g', 'a', 'sh', 'sot', 'pa', 'pc', 'tkw', 'sv', 'yc', 'rc']) S[k] += st[k] || 0; S.rsum += rating;
       if (['GOL', 'ZAG', 'LAT'].includes(p.pos) && ga === 0 && mins >= 60) S.cs++;
       if (MC.kind === 'league') { p.s.ap++; p.s.g += st.g; p.s.a += st.a; p.s.r += rating; p.t.ap++; p.t.g += st.g; p.t.a += st.a; }
+      if (MC.kind === 'league') u.benchRun = MC.starter ? 0 : (u.benchRun || 0) + 1;
       u.career.ap++; u.career.g += st.g; u.career.a += st.a; u.career.min += mins; u.career.rsum += rating;
       { const dT = 0.6 + (rating - 6.2) * 3 + st.g * 1 + st.a * 0.7; u.trust = clamp(u.trust + (dT > 0 ? trustUp(dT * dfx().trust) : dT / dfx().trust), 0, 100); }
     } else {
@@ -1475,7 +1476,7 @@ function finishMatch(MC) {
     u.form = u.ratings.length ? (u.ratings.reduce((s, x) => s + x, 0) / u.ratings.length - 6.6) : 0;
     if (rnd() < 0.025 * dfx().hurt * (mins / 90)) { p.inj = ri(1, 6); addNews('Lesão na partida: ' + p.inj + ' semana(s) de recuperação.'); }
     if (p.ovr > u.peakOvr) u.peakOvr = p.ovr;
-  } else if (!isNat(MC.kind)) { u.trust = clamp(u.trust - 0.3, 0, 100); }
+  } else if (!isNat(MC.kind)) { u.trust = clamp(u.trust - 0.1, 0, 100); if (MC.kind === 'league') u.benchRun = (u.benchRun || 0) + 1; }
   if (MC.kind === 'league') {
     MC.fx.hg = MC.score[0]; MC.fx.ag = MC.score[1]; MC.fx.sc = MC.goals[0].concat(MC.goals[1]).map(g => g.s);
     MC.fx.ur = rating || null;
@@ -3666,7 +3667,8 @@ function setHint(k) {
 function holdFor(sec) { if (MU) MU.hold = Math.max(MU.hold || 0, sec); }
 function feedMsg(t, g) { MU.feed.unshift({ t, g }); MU.feed = MU.feed.slice(0, 5); $('#feed').innerHTML = MU.feed.map(f => `<div class="${f.g ? 'g' : ''}">${esc(f.t)}</div>`).join(''); feedVis(); }
 /* A faixa de texto da partida só aparece quando o jogador está no banco (ou expulso); em campo ela some. */
-function feedVis() { const f = $('#feed'); if (!f) return; const MC = MU && MU.MC; f.hidden = !!(MC && !MU.drill && MC.userIn && !MC.red); }
+let feedT = 0;
+function feedVis() { const f = $('#feed'); if (!f) return; const MC = MU && MU.MC; f.hidden = !!(MC && !MU.drill && MC.userIn && !MC.red); clearTimeout(feedT); if (MU && MU.drill) feedT = setTimeout(() => { if (MU && MU.drill) f.hidden = true; }, 2500); }
 function updateHud() { if (MU.drill) { const Dr = MU.drill; $('#hud-sub').innerHTML = ''; $('#score').textContent = (Math.round(Dr.score * 10) / 10 + '').replace('.', ',') + ' pts'; $('#minute').textContent = Dr.i + '/' + Dr.n; $('#veil').hidden = MU.phase === 'moment'; $('#b-skip').disabled = MU.phase !== 'moment'; return; } const MC = MU.MC; $('#score').textContent = MC.score[0] + ' – ' + MC.score[1]; hudSub(); const m = MC.min; $('#minute').textContent = m > 90 ? "90+" + (m - 90) + "'" : m + "'"; const mom = MU.phase === 'moment'; $('#veil').hidden = mom; $('#b-skip').disabled = !mom; }
 
 /* ---------- apresentação da partida: gols, confete, intervalo, abertura ---------- */
@@ -3965,10 +3967,12 @@ function renderMatch() {
   const S = pitchScale(), T = TILT; const b = E.ball;
   let tx = b.x + (b.vx || 0) * 0.25, ty = b.y + (b.vy || 0) * 0.15;
   if (E.frozen && (E.type === 'pen' || E.type === 'fk' || E.type === 'gkpen')) { tx = (b.x + (E.type === 'gkpen' ? 0 : FL)) / 2; ty = (b.y + GC) / 2; }
+  const PADC = padOn(); if (E.drill === 'fin' || E.drill === 'fk') { tx = (b.x + FL) / 2 + (PADC ? 4 : 0); ty = (b.y + GC) / 2; }
+  else if (PADC && !E.frozen) { if (b.x > 58) tx += Math.min(12, (b.x - 58) * 0.45); else if (b.x < 47) tx -= Math.min(10, (47 - b.x) * 0.4); }
   if (E.cele > 0 && E.celeP) { tx = E.celeP.x; ty = E.celeP.y; if (!E.fxOn && MU && MU.MC && !MU.drill) { E.fxOn = true; const MC = MU.MC; goalFx(MC, E.celeTeam === 0 ? MC.uSide : 1 - MC.uSide, E.celeP, MC.min, false); } }
   E.cx += (tx - E.cx) * 0.08; E.cy += (ty - E.cy) * 0.08;
   const hw = w / 2 / S, hh = h / 2 / (S * T);
-  E.cx = hw * 2 > FL + 10 ? FL / 2 : clamp(E.cx, hw - 6, FL - hw + 6); E.cy = hh * 2 > FW + 10 ? FW / 2 : clamp(E.cy, hh - 6, FW - hh + 6);
+  E.cx = hw * 2 > FL + 10 ? FL / 2 : clamp(E.cx, hw - (PADC ? 14 : 6), FL - hw + (PADC ? 18 : 6)); E.cy = hh * 2 > FW + 10 ? FW / 2 : clamp(E.cy, hh - 6, FW - hh + 6);
   const X = x => (x - E.cx) * S + w / 2, Y = (y, z) => (y - E.cy) * S * T + h / 2 - (z || 0) * S * 0.95;
   ctx.fillStyle = '#25763a'; ctx.fillRect(0, 0, w, h);
   for (let i = -3; i < 18; i++) { ctx.fillStyle = i % 2 ? '#2b8a43' : '#2f9549'; const x0 = X(i * 7.5), x1 = X(i * 7.5 + 7.5); ctx.fillRect(x0, Y(-1.5), x1 - x0 + 1, Y(FW + 1.5) - Y(-1.5)); }
@@ -4409,14 +4413,21 @@ window.addEventListener('resize', () => { if (curScreen === 's-match') resizePit
 /* ---------- teclado (PC) ---------- */
 const KB = { keys: {}, ch: null, used: false, aimY: 0 };
 const KMAP = { KeyW: 'up', ArrowUp: 'up', KeyS: 'down', ArrowDown: 'down', KeyA: 'left', ArrowLeft: 'left', KeyD: 'right', ArrowRight: 'right', ShiftLeft: 'sprint', ShiftRight: 'sprint', Space: 'pass', KeyJ: 'pass', KeyF: 'shot', KeyK: 'shot', KeyE: 'lob', KeyL: 'lob' };
-function kbDir() { const k = KB.keys; let dx = (k.right ? 1 : 0) - (k.left ? 1 : 0), dy = (k.down ? 1 : 0) - (k.up ? 1 : 0); const L = Math.hypot(dx, dy); return L ? [dx / L, dy / L] : null; }
+function kbDir() { if (KB.joy) return KB.joy; const k = KB.keys; let dx = (k.right ? 1 : 0) - (k.left ? 1 : 0), dy = (k.down ? 1 : 0) - (k.up ? 1 : 0); const L = Math.hypot(dx, dy); return L ? [dx / L, dy / L] : null; }
 function kbActive() { return curScreen === 's-match' && MU && MU.phase === 'moment' && E && !E.over && !MU.paused; }
 function kbPower() { return KB.ch ? clamp((performance.now() - KB.ch.t0) / 900, 0.15, 1) : 0; }
 function setPieceAim() { const b = E.ball; const gx = E.type === 'gkpen' ? 0 : FL; const dx = gx - b.x, dy = GC + KB.aimY - b.y, L = Math.hypot(dx, dy) || 1; return [dx / L, dy / L]; }
 function shotDir() { const u = E.user; const d = kbDir(); const vy = d && Math.abs(d[1]) > 0.3 ? Math.sign(d[1]) : 0; const ty = GC + vy * 2.9; const dx = FL - u.x, dy = ty - u.y, L = Math.hypot(dx, dy) || 1; return [dx / L, dy / L]; }
 function snapMate(dir) {
-  const u = E.user; let best = null, bs = -1;
-  for (const m of E.players) { if (m.team !== u.team || m === u || m.pos === 'GOL') continue; const vx = m.x - u.x, vy = m.y - u.y, d = Math.hypot(vx, vy); if (d < 3 || d > 45) continue; const cos = (vx * dir[0] + vy * dir[1]) / d; if (cos < 0.8) continue; const sc = cos * 2 - d / 60; if (sc > bs) { bs = sc; best = m; } }
+  // mira assistida: companheiro no cone da direção, preferindo quem está livre e com a linha de passe limpa
+  const u = E.user; let best = null, bs = -1e9;
+  for (const m of E.players) {
+    if (m.team !== u.team || m === u || m.pos === 'GOL') continue; const vx = m.x - u.x, vy = m.y - u.y, d = Math.hypot(vx, vy); if (d < 3 || d > 45) continue;
+    const cos = (vx * dir[0] + vy * dir[1]) / d; if (cos < 0.72) continue;
+    const lane = laneSafety(u.x, u.y, m.x, m.y, 1 - u.team); const [open] = nearestOpp(m);
+    const sc = cos * 4 - d / 30 + Math.min(lane, 4) * 0.45 + Math.min(open, 6) * 0.15 - (lane < 1.2 ? 2 : 0);
+    if (sc > bs) { bs = sc; best = m; }
+  }
   return best;
 }
 function kbUpdate(dt) {
@@ -4443,9 +4454,11 @@ function kbRelease(kind, held) {
   if (kind === 'shot') { userKick(shotDir(), Math.max(power, 0.35), 'shot'); E.slowT = 0.6; return; }
   const dir = kbDir() || [u.fx || 1, u.fy || 0]; const m = snapMate(dir); const quick = !KB.ch || performance.now() - KB.ch.t0 < 200;
   if (m) {
-    const tx = m.x + m.vx * 0.45, ty = m.y + m.vy * 0.45, dd = Math.hypot(tx - u.x, ty - u.y);
-    if (kind === 'lob') { const vh = clamp(11 + dd * 0.22, 12, 22); kick(u, tx - u.x, ty - u.y, vh, 4.9 * (dd / vh) * 0.95 * (quick ? 1 : 0.7 + power * 0.5), 'pass', 0.01 + (1 - u.a.pas / 99) * 0.05); }
-    else kick(u, tx - u.x, ty - u.y, quick ? passSpeed(dd) : 5 + power * 21, 0, 'pass', 0.008 + (1 - u.a.pas / 99) * 0.045);
+    // antecipa a corrida do companheiro pelo tempo de viagem da bola (como a IA faz)
+    const d0 = Math.hypot(m.x - u.x, m.y - u.y), lead = clamp(0.3 + d0 / 40, 0.35, 0.95);
+    const tx = m.x + m.vx * lead, ty = m.y + m.vy * lead, dd = Math.hypot(tx - u.x, ty - u.y); const pn = 0.005 + (1 - u.a.pas / 99) * 0.03;
+    if (kind === 'lob') { const vh = clamp(11 + dd * 0.22, 12, 22); kick(u, tx - u.x, ty - u.y, vh, 4.9 * (dd / vh) * 0.95 * (quick ? 1 : 0.85 + power * 0.3), 'pass', pn + 0.004); }
+    else kick(u, tx - u.x, ty - u.y, clamp(passSpeed(dd) * (quick ? 1 : 0.95 + power * 0.25), 6, 28), 0, 'pass', pn);
     E.ball.intended = m; m.recv = 2.5; return;
   }
   userKick(dir, quick ? 0.45 : power, kind === 'lob' ? 'lob' : 'pass');
@@ -4494,7 +4507,7 @@ function padSync() {
 }
 function bindPad() {
   const joy = $('#joy'), knob = $('#joyk'); let jid = null;
-  const setKeys = (dx, dy) => { const k = KB.keys, T = 0.32; k.left = dx < -T; k.right = dx > T; k.up = dy < -T; k.down = dy > T; k.sprint = sprintBtn || Math.hypot(dx, dy) > 0.88; };
+  const setKeys = (dx, dy) => { const k = KB.keys, T = 0.32; { const L = Math.hypot(dx, dy); KB.joy = L > 0.25 ? [dx / L, dy / L] : null; } k.left = dx < -T; k.right = dx > T; k.up = dy < -T; k.down = dy > T; k.sprint = sprintBtn || Math.hypot(dx, dy) > 0.88; };
   const jm = e => { const r = joy.getBoundingClientRect(), R = r.width / 2; let dx = e.clientX - (r.left + R), dy = e.clientY - (r.top + R); const L = Math.hypot(dx, dy); if (L > R) { dx *= R / L; dy *= R / L; } knob.style.transform = `translate(${dx}px,${dy}px)`; setKeys(dx / R, dy / R); };
   joy.addEventListener('pointerdown', e => { jid = e.pointerId; joy.setPointerCapture(jid); KB.used = true; jm(e); e.preventDefault(); });
   joy.addEventListener('pointermove', e => { if (e.pointerId === jid) jm(e); });

@@ -518,8 +518,7 @@ input[type=text],input[type=number],select,textarea{border-radius:0;border:0;bor
 #s-menu .logo span{align-self:center}
 /* iPhone deitado: sem aumento automático de texto, respeita o notch e alinha o menu */
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
-#s-menu .menu-body{max-width:min(980px,100%);padding:10px calc(18px + env(safe-area-inset-right,0px)) 10px calc(18px + env(safe-area-inset-left,0px))}
-#s-menu .tile.big{width:100%}
+@media (orientation:landscape) and (max-height:430px){#s-menu .menu-body{padding:10px calc(18px + env(safe-area-inset-right,0px)) 10px calc(18px + env(safe-area-inset-left,0px))}#s-menu .tile.big{width:100%}}
 .band-in{padding-left:calc(20px + env(safe-area-inset-left,0px));padding-right:calc(20px + env(safe-area-inset-right,0px))}
 .hubmain{padding-left:calc(20px + env(safe-area-inset-left,0px));padding-right:calc(20px + env(safe-area-inset-right,0px))}
 @media (orientation:landscape) and (max-height:430px){#s-menu .menu-body{max-width:min(760px,100%)}

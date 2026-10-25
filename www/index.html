@@ -27,6 +27,8 @@
   color-scheme:dark;
 }
 *{box-sizing:border-box}
+html,body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
 html,body{height:100%}
 body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45;overflow:hidden;-webkit-tap-highlight-color:transparent}
 button,input,select,textarea{font:inherit;color:inherit}
@@ -1833,10 +1835,29 @@ function autoShootout(MC) {
 
 /* ---------- efeitos sonoros (WebAudio, sem arquivos) ---------- */
 let AC = null, NOISE = null, MASTER = null;
+/* iOS: ao sair do app ou receber ligação o áudio fica "interrupted"/"suspended" e não volta sozinho.
+   Suspende ao esconder; ao voltar (ou no próximo toque) retoma, e se não retomar recria o contexto. */
+function audioWake(fromTouch) {
+  if (!AC || document.hidden) return;
+  if (AC.state === 'running') return;
+  AC.resume().catch(() => { });
+  setTimeout(() => {
+    if (!AC || AC.state === 'running' || document.hidden) return;
+    if (!fromTouch) return; // recriar só com toque do usuário (exigência do iOS)
+    try { if (typeof musicStop === 'function') musicStop(); if (typeof crowdStop === 'function') crowdStop(); AC.close(); } catch (e) { }
+    AC = null; MASTER = null; sfxCtx(); try { const inMatch = typeof curScreen !== 'undefined' && curScreen === 's-match'; if (inMatch) { if (MU && MU.MC && !MU.drill && typeof crowdStart === 'function') crowdStart(); } else if (typeof musicSync === 'function') musicSync(); } catch (e) { }
+  }, 350);
+}
+document.addEventListener('visibilitychange', () => { try { if (document.hidden) { if (AC && AC.state === 'running') AC.suspend(); } else audioWake(false); } catch (e) { } });
+window.addEventListener('pageshow', () => audioWake(false));
+window.addEventListener('focus', () => audioWake(false));
+document.addEventListener('pointerdown', () => audioWake(true), true);
+document.addEventListener('touchend', () => audioWake(true), true);
+document.addEventListener('contextmenu', e => { if (!e.target.closest || !e.target.closest('input,textarea,select,[contenteditable]')) e.preventDefault(); });
 function sfxOut(c) { if (!MASTER || MASTER.context !== c) { MASTER = c.createGain(); MASTER.connect(c.destination); } MASTER.gain.value = (typeof CFG !== 'undefined' && CFG.vol != null) ? CFG.vol : 1; return MASTER; }
 function sfxCtx() {
   if (typeof CFG !== 'undefined' && CFG.sound === false) return null;
-  try { if (!AC) { const C = window.AudioContext || window.webkitAudioContext; if (!C) return null; AC = new C(); } if (AC.state === 'suspended') AC.resume(); return AC; } catch (e) { return null; }
+  try { if (AC && AC.state === 'closed') { AC = null; MASTER = null; } if (!AC) { const C = window.AudioContext || window.webkitAudioContext; if (!C) return null; AC = new C(); } if (AC.state !== 'running' && !document.hidden) AC.resume().catch(() => { }); return AC; } catch (e) { return null; }
 }
 function sfxTone(c, f0, f1, t0, dur, type, vol) { const o = c.createOscillator(), g = c.createGain(); o.type = type || 'sine'; o.frequency.setValueAtTime(f0, t0); if (f1) o.frequency.exponentialRampToValueAtTime(f1, t0 + dur); g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur); o.connect(g); g.connect(sfxOut(c)); o.start(t0); o.stop(t0 + dur + 0.02); }
 function sfxNoise(c, t0, dur, vol, f0, f1) {

@@ -1,7 +1,13 @@
 import os,sys,time,json,csv,hashlib,base64,jwt,requests
 APP='6826431094'
 kid=os.environ['ASC_KEY_ID'];iss=os.environ['ASC_ISSUER_ID']
-p8=base64.b64decode(os.environ['ASC_KEY_P8_BASE64']).decode()
+raw=os.environ['ASC_KEY_P8_BASE64']
+if 'BEGIN' in raw: p8=raw
+else:
+    d=base64.b64decode(raw)
+    if b'BEGIN' in d: p8=d.decode()
+    else:
+        b=base64.b64encode(d).decode(); p8='-----BEGIN PRIVATE KEY-----\n'+'\n'.join(b[i:i+64] for i in range(0,len(b),64))+'\n-----END PRIVATE KEY-----\n'
 def tok(): return jwt.encode({'iss':iss,'exp':int(time.time())+1100,'aud':'appstoreconnect-v1'},p8,algorithm='ES256',headers={'kid':kid})
 B='https://api.appstoreconnect.apple.com'
 log=[]

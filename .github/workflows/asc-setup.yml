@@ -1,0 +1,22 @@
+name: ASC setup (Game Center + IAP)
+on:
+  workflow_dispatch:
+    inputs:
+      what: { description: 'all | gc | iap', default: 'all' }
+permissions: { contents: write }
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install pyjwt cryptography requests
+      - name: Run
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 scripts/asc_setup.py "${{ inputs.what }}" || true
+          gh release delete asc-log -y --cleanup-tag 2>/dev/null || true
+          gh release create asc-log --title asc-log --notes-file /tmp/asc_log.txt

@@ -1,0 +1,60 @@
+﻿Ordem,Chave,Nome (pt-BR),Descrição (pt-BR),Nome (en),Descrição (en),Pontos,Arquivo do ícone
+1,first_match,Estreia,Dispute sua primeira partida como profissional.,Debut,Play your first professional match.,5,first_match.png
+2,starter,Titular,Comece uma partida entre os titulares.,In the Starting XI,Start a match in the starting lineup.,5,starter.png
+3,first_goal,Primeiro gol,Marque seu primeiro gol na carreira.,First goal,Score your first career goal.,5,first_goal.png
+4,goals_10,10 gols,Chegue a 10 gols na carreira.,10 goals,Reach 10 career goals.,5,goals_10.png
+5,goals_50,50 gols,Chegue a 50 gols na carreira.,50 goals,Reach 50 career goals.,5,goals_50.png
+6,goals_100,Centenário,Chegue a 100 gols na carreira.,Centurion,Reach 100 career goals.,15,goals_100.png
+7,goals_250,Máquina de gols,Chegue a 250 gols na carreira.,Goal machine,Reach 250 career goals.,20,goals_250.png
+8,goals_500,Lenda dos gols,Chegue a 500 gols na carreira.,Goal legend,Reach 500 career goals.,35,goals_500.png
+9,hat_trick,Hat-trick,Marque 3 gols em uma única partida.,Hat-trick,Score 3 goals in a single match.,5,hat_trick.png
+10,poker,Pôquer,Marque 4 gols em uma única partida.,Four-goal haul,Score 4 goals in a single match.,15,poker.png
+11,five_goals,Chuva de gols,Marque 5 gols em uma única partida.,Goal rain,Score 5 goals in a single match.,20,five_goals.png
+12,assists_10,Garçom,Dê 10 assistências na carreira.,Provider,Make 10 career assists.,5,assists_10.png
+13,assists_50,Maestro,Dê 50 assistências na carreira.,Maestro,Make 50 career assists.,10,assists_50.png
+14,assists_100,Mestre das assistências,Dê 100 assistências na carreira.,Assist master,Make 100 career assists.,15,assists_100.png
+15,apps_50,50 jogos,Dispute 50 partidas na carreira.,50 matches,Play 50 career matches.,5,apps_50.png
+16,apps_200,200 jogos,Dispute 200 partidas na carreira.,200 matches,Play 200 career matches.,15,apps_200.png
+17,apps_500,500 jogos,Dispute 500 partidas na carreira.,500 matches,Play 500 career matches.,25,apps_500.png
+18,rating_9,Show de bola,"Tire nota 9,0 ou mais em uma partida.",Top form,Get a match rating of 9.0 or higher.,5,rating_9.png
+19,rating_10,Partida perfeita,Tire nota 10 em uma partida.,Perfect match,Get a perfect 10 match rating.,15,rating_10.png
+20,ovr_80,Craque em ascensão,Chegue a 80 de overall.,Rising star,Reach an overall of 80.,5,ovr_80.png
+21,ovr_85,Estrela,Chegue a 85 de overall.,Star player,Reach an overall of 85.,15,ovr_85.png
+22,ovr_90,Fora de série,Chegue a 90 de overall.,World class,Reach an overall of 90.,20,ovr_90.png
+23,ovr_95,Lenda viva,Chegue a 95 de overall.,Living legend,Reach an overall of 95.,35,ovr_95.png
+24,transfer,Nova casa,Mude de clube pela primeira vez.,New home,Move to a new club for the first time.,5,transfer.png
+25,clubs_3,Trotamundo,Jogue em 3 clubes diferentes.,Globetrotter,Play for 3 different clubs.,10,clubs_3.png
+26,clubs_5,Cigano da bola,Jogue em 5 clubes diferentes.,Journeyman,Play for 5 different clubs.,15,clubs_5.png
+27,loan,Por empréstimo,Seja emprestado a outro clube.,On loan,Go out on loan to another club.,5,loan.png
+28,fee_50,Transferência milionária,Seja contratado por € 50 mi ou mais.,Big-money move,Sign for €50M or more.,15,fee_50.png
+29,fee_100,Contratação recorde,Seja contratado por € 100 mi ou mais.,Record signing,Sign for €100M or more.,25,fee_100.png
+30,title_1,Primeiro título,Conquiste seu primeiro título.,First trophy,Win your first trophy.,5,title_1.png
+31,titles_5,Colecionador,Conquiste 5 títulos.,Collector,Win 5 trophies.,15,titles_5.png
+32,titles_10,Sala de troféus,Conquiste 10 títulos.,Trophy room,Win 10 trophies.,25,titles_10.png
+33,t_league,Campeão nacional,Seja campeão de uma liga nacional.,League champion,Win a national league title.,10,t_league.png
+34,t_UCL,Campeão da Champions,Vença a Champions League.,Champions League winner,Win the Champions League.,35,t_UCL.png
+35,t_LIB,Campeão da Libertadores,Vença a Libertadores.,Libertadores winner,Win the Copa Libertadores.,25,t_LIB.png
+36,t_SUD,Campeão da Sul-Americana,Vença a Copa Sul-Americana.,Sudamericana winner,Win the Copa Sudamericana.,15,t_SUD.png
+37,t_CWC,Campeão do Mundo,Vença o Mundial de Clubes.,Club World Cup winner,Win the Club World Cup.,25,t_CWC.png
+38,t_ICC,Campeão Intercontinental,Vença a Copa Intercontinental.,Intercontinental winner,Win the Intercontinental Cup.,15,t_ICC.png
+39,t_ACL,Rei da Ásia,Vença a Champions da Ásia.,King of Asia,Win the Asian Champions League.,15,t_ACL.png
+40,t_CCC,Campeão da Concacaf,Vença a Copa Concacaf.,Concacaf winner,Win the Concacaf Cup.,15,t_CCC.png
+41,t_WC,Campeão do Mundo!,Vença a Copa do Mundo com a seleção.,World Cup winner,Win the World Cup with your national team.,50,t_WC.png
+42,t_EUR,Campeão da Europa,Vença a Eurocopa com a seleção.,European champion,Win the European Championship with your national team.,25,t_EUR.png
+43,t_COPA,Campeão da América,Vença a Copa América com a seleção.,Copa América winner,Win the Copa América with your national team.,25,t_COPA.png
+44,caps_1,Convocado,Dispute sua primeira partida pela seleção.,Called up,Play your first match for your national team.,5,caps_1.png
+45,caps_25,Camisa da seleção,Dispute 25 partidas pela seleção.,National hero,Play 25 matches for your national team.,15,caps_25.png
+46,caps_75,Capitão da pátria,Dispute 75 partidas pela seleção.,National icon,Play 75 matches for your national team.,20,caps_75.png
+47,wc_goal,Gol em Copa,Marque um gol em uma Copa do Mundo.,World Cup goal,Score a goal at a World Cup.,15,wc_goal.png
+48,aw_puskas,Gol do Ano,Vença o prêmio de Gol do Ano.,Goal of the Year,Win the Goal of the Year award.,15,aw_puskas.png
+49,aw_ballon,Melhor do Mundo,Seja eleito o melhor jogador do mundo.,World Player of the Year,Be named the best player in the world.,40,aw_ballon.png
+50,aw_ballon3,Tricampeão mundial,Seja eleito melhor do mundo 3 vezes.,Three-time world best,Be named best in the world 3 times.,35,aw_ballon3.png
+51,aw_boot,Chuteira de Ouro,Vença a Chuteira de Ouro.,Golden Boot,Win the Golden Boot.,20,aw_boot.png
+52,aw_young,Promessa mundial,Seja eleito o melhor jovem do mundo.,Best young player,Be named the best young player in the world.,10,aw_young.png
+53,aw_gk,Melhor goleiro,Seja eleito o melhor goleiro do mundo.,Best goalkeeper,Be named the best goalkeeper in the world.,10,aw_gk.png
+54,aw_team,Seleção da temporada,Entre na seleção da temporada.,Team of the Season,Make the Team of the Season.,5,aw_team.png
+55,aw_top,Artilheiro,Seja artilheiro de uma liga.,Top scorer,Finish as a league top scorer.,10,aw_top.png
+56,seasons_5,5 temporadas,Complete 5 temporadas.,5 seasons,Complete 5 seasons.,5,seasons_5.png
+57,seasons_10,10 temporadas,Complete 10 temporadas.,10 seasons,Complete 10 seasons.,15,seasons_10.png
+58,seasons_15,15 temporadas,Complete 15 temporadas.,15 seasons,Complete 15 seasons.,20,seasons_15.png
+59,retire,Fim de uma lenda,Complete uma carreira até a aposentadoria.,End of a legend,Complete a career through to retirement.,15,retire.png

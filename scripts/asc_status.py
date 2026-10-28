@@ -47,5 +47,8 @@ r=api('GET',f'/v1/apps/{APP}/inAppPurchasesV2?limit=10&fields[inAppPurchases]=pr
 for v in (r or {}).get('data',[]): L('IAP',v['attributes'].get('productId'),v['attributes'].get('state'))
 r=api('GET',f'/v1/apps/{APP}/reviewSubmissions?limit=5')
 for v in (r or {}).get('data',[]): L('SUBMISSION',json.dumps(v['attributes']))
-r=api('GET',f'/v1/apps/{APP}/appPreOrder',quiet=True)
-L('PREORDER',json.dumps((r or {}).get('data',{}).get('attributes')))
+for pth in [f'/v1/apps/{APP}/preOrder',f'/v1/apps/{APP}/appAvailabilityV2']:
+    r=api('GET',pth,quiet=True); L('AVAIL',pth,json.dumps((r or {}).get('data',{}).get('attributes')))
+r=api('GET',f'/v1/apps/{APP}/appStoreVersions?limit=1',quiet=True)
+vid=(r or {}).get('data',[{}])[0].get('id')
+r=api('GET',f'/v1/appStoreVersions/{vid}/appStoreVersionPhasedRelease',quiet=True); L('PHASED',json.dumps(r)[:200])

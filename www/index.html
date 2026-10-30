@@ -1085,6 +1085,8 @@ const SHOP_ITEMS = {
 };
 const COIN_PACKS = [['Mini', 'R$ 1,29', 200, 'rodix_coins_200'], ['Básico', 'R$ 4,99', 900, 'rodix_coins_900'], ['Médio', 'R$ 11,99', 2350, 'rodix_coins_2350'], ['Grande', 'R$ 22,99', 6500, 'rodix_coins_6500'], ['Supremo', 'R$ 39,99', 12000, 'rodix_coins_12000']];
 /* ---------- Compras reais (Google Play / App Store via plugin nativo) ---------- */
+/* Pacotes de moedas ficam ocultos no iOS até o Acordo de Apps Pagos estar ativo e as compras aprovadas. */
+const HIDE_PACKS = (function () { try { return !!(window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform() === 'ios'); } catch (e) { return false; } })();
 const IAP = { prices: {}, ready: false, tried: false, busy: false };
 function iapPlugin() { try { const C = window.Capacitor; if (C && C.isNativePlatform && C.isNativePlatform() && C.Plugins && C.Plugins.NativePurchases) return C.Plugins.NativePurchases; } catch (e) { } return null; }
 async function iapLoad() {
@@ -3400,7 +3402,7 @@ function shopBody(career) {
     <p class="mut shopnote" style="margin:0">${tr('Você ganha 15 Rodix Coins ao fechar cada temporada.')}</p>
     <div class="card stack shopsec"><span class="lbl">${tr('Itens')}</span><div class="shopgrid">${['kit1', 'kit10', 'turbo1', 'turbo10'].map(card).join('')}</div>
       ${career && p.inj > 0 && (w.kits || 0) > 0 ? `<button class="btn" data-act="kit-use">${ico('medkit', 16)} ${tr('Usar Kit Médico agora')} (${w.kits})</button>` : ''}</div>
-    <div class="card stack shopsec"><span class="lbl">${tr('Pacotes de Coins')}${nat ? '' : ' · ' + tr('Só no app')}</span><div class="shopgrid packs">${packs}</div><p class="fine" style="margin:0">${nat ? tr('Pagamento seguro pela loja do seu aparelho. Compras não são reembolsáveis pelo jogo.') : tr('As compras com dinheiro real estão disponíveis no app para Android e iOS.')}</p></div>
+    ${HIDE_PACKS ? '' : `<div class="card stack shopsec"><span class="lbl">${tr('Pacotes de Coins')}${nat ? '' : ' · ' + tr('Só no app')}</span><div class="shopgrid packs">${packs}</div><p class="fine" style="margin:0">${nat ? tr('Pagamento seguro pela loja do seu aparelho. Compras não são reembolsáveis pelo jogo.') : tr('As compras com dinheiro real estão disponíveis no app para Android e iOS.')}</p></div>`}
     <div class="card stack shopsec"><span class="lbl">${tr('Apoiar o jogo')} · ${tr('Em breve')}</span><p class="mut" style="margin:0">${tr('Uma compra única para apoiar o desenvolvimento, com extras visuais exclusivos. O jogo não tem anúncios.')}</p></div></div>`;
 }
 function vShop() { return head('Loja') + shopBody(true); }

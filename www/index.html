@@ -1109,6 +1109,8 @@ const SHOP_ITEMS = {
 const COIN_PACKS = [['Mini', 'R$ 1,29', 200, 'rodix_coins_200'], ['Básico', 'R$ 4,99', 900, 'rodix_coins_900'], ['Médio', 'R$ 11,99', 2350, 'rodix_coins_2350'], ['Grande', 'R$ 22,99', 6500, 'rodix_coins_6500'], ['Supremo', 'R$ 39,99', 12000, 'rodix_coins_12000']];
 /* ---------- Compras reais (Google Play / App Store via plugin nativo) ---------- */
 /* Pacotes de moedas ficam ocultos no iOS até o Acordo de Apps Pagos estar ativo e as compras aprovadas. */
+/* Modo gravação: recurso interno (só para o criador). Ativa apenas com localStorage rodix_dev_rec = '1'. */
+const REC_MODE_OK = (function () { try { return localStorage.getItem('rodix_dev_rec') === '1'; } catch (e) { return false; } })();
 const HIDE_PACKS = (function () { try { return !!(window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform() === 'ios'); } catch (e) { return false; } })();
 const IAP = { prices: {}, ready: false, tried: false, busy: false };
 function iapPlugin() { try { const C = window.Capacitor; if (C && C.isNativePlatform && C.isNativePlatform() && C.Plugins && C.Plugins.NativePurchases) return C.Plugins.NativePurchases; } catch (e) { } return null; }
@@ -1266,14 +1268,14 @@ function useKit() { const u = G.user; if (!u) return false; const p = up(); if (
 /* ---------- Carreira: criação ---------- */
 function startOvr(age) { return [48, 52, 55, 57, 59, 61, 63, 64][clamp(age - 15, 0, 7)]; }
 function makeUserPlayer(cfg, cid) {
-  const target = cfg.rec ? clamp(Math.round(clubAvg(cid)) - 1, 75, 80) : startOvr(cfg.age) + ri(-1, 2);
+  const target = (REC_MODE_OK && cfg.rec) ? clamp(Math.round(clubAvg(cid)) - 1, 75, 80) : startOvr(cfg.age) + ri(-1, 2);
   const n = G.nextP;
   const a = genAttrs(target, cfg.pos, 99991 + Math.floor(rnd() * 1000));
   const st = STYLES[cfg.style] || {}; for (const k in st) a[k] = clamp(a[k] + st[k], 5, 99);
   const hb = (cfg.height - 180) / 5, wb = (cfg.weight - 75) / 6;
   a.for = clamp(Math.round(a.for + hb * 1.5 + wb * 2), 5, 99); a.vel = clamp(Math.round(a.vel - wb * 1.2 - Math.max(0, hb) * 0.6), 5, 99); a.ace = clamp(Math.round(a.ace - hb * 1.2), 5, 99);
   if (cfg.pos === 'GOL') a.gol = clamp(Math.round(a.gol + hb * 1.2), 5, 99);
-  if (cfg.rec) { for (let i = 0; i < 40; i++) { const o = ovrOf(a, cfg.pos); if (o >= target - 1 && o <= target) break; const d = o > target ? -1 : 1; for (const k in a) a[k] = clamp(a[k] + d, 5, 99); } }
+  if ((REC_MODE_OK && cfg.rec)) { for (let i = 0; i < 40; i++) { const o = ovrOf(a, cfg.pos); if (o >= target - 1 && o <= target) break; const d = o > target ? -1 : 1; for (const k in a) a[k] = clamp(a[k] + d, 5, 99); } }
   const ovr = ovrOf(a, cfg.pos);
   const pot = clamp(ovr + ri(18, 38) - (cfg.age - 15) * 2.2, ovr + 5, 95);
   const p = newPlayer({ fn: cfg.fn, ln: cfg.ln, nat: cfg.nat, age: cfg.age, pos: cfg.pos, ovr, pot: Math.round(pot), club: cid, a, u: 1, look: cfg.look, num: cfg.num, foot: cfg.foot, height: cfg.height, weight: cfg.weight, style: cfg.style });
@@ -1286,7 +1288,7 @@ function startCareer(cfg, cid) {
   c.sq.push(p.id);
   const wage = Math.max(250, Math.round(wageFor(p.ovr, c.rep) * 0.7 / 10) * 10);
   G.user = {
-    pid: p.id, trust: cfg.rec ? 62 : 50, form: 0, ratings: [], prog: {}, gains: {}, trained: false, focus: TRAIN_DEFAULT(p.pos), inten: 'normal',
+    pid: p.id, trust: (REC_MODE_OK && cfg.rec) ? 62 : 50, form: 0, ratings: [], prog: {}, gains: {}, trained: false, focus: TRAIN_DEFAULT(p.pos), inten: 'normal',
     contract: { club: cid, years: 3, wage, since: G.season }, loan: null, requested: false,
     season: newSeasonStats(), career: { ap: 0, g: 0, a: 0, min: 0, rsum: 0, motm: 0 },
     history: [], trophies: [], transfers: [{ season: genSeasonLabel(), from: null, to: c.name, fee: 0, type: 'Início' }], awards: [],
@@ -3227,7 +3229,7 @@ function renderCreate() {
       </div>
       <div class="card stack"><span class="lbl">Posição</span><div class="seg" id="seg-pos">${posBtns}</div>
         <div class="field"><label class="lbl" for="f-style">Estilo de jogo</label><select id="f-style">${styles.map(s => `<option ${s === c.style ? 'selected' : ''}>${s}</option>`).join('')}</select></div></div>
-      <label class="card row" style="gap:12px;cursor:pointer"><input type="checkbox" id="f-rec" ${c.rec ? 'checked' : ''}><span><b>Modo gravação</b><span class="fine" style="display:block">Começa com overall 75–80 e já perto da vaga de titular. Ideal para vídeos.</span></span></label>
+      ${REC_MODE_OK ? `<label class="card row" style="gap:12px;cursor:pointer"><input type="checkbox" id="f-rec" ${c.rec ? 'checked' : ''}><span><b>Modo gravação</b><span class="fine" style="display:block">Começa com overall 75–80 e já perto da vaga de titular. Ideal para vídeos.</span></span></label>` : ''}
       <div class="card stack"><span class="lbl">Aparência</span>
         <div class="row" id="sw-skin" aria-label="Cor da pele">${SKINS.map((s, i) => `<button class="sw" type="button" data-skin="${i}" style="background:${s}" aria-label="Tom de pele ${i + 1}" aria-pressed="${c.look.skin === i}"></button>`).join('')}</div>
         <div class="seg" id="seg-hair">${HAIRS.map((h, i) => `<button type="button" data-hair="${i}" aria-pressed="${c.look.hair === i}">${h}</button>`).join('')}</div>
@@ -3236,7 +3238,7 @@ function renderCreate() {
     </div>
     <div><div class="card prev"><canvas id="cr-av" width="360" height="440"></canvas><b style="font-family:var(--display);font-size:26px" id="cr-name">${esc(c.fn + ' ' + c.ln)}</b>
       <div class="row">${flagChip(c.nat)}<span class="chip">${POSN[c.pos]}</span><span class="chip">${c.age} anos</span></div>
-      <dl class="kv" style="width:100%"><dt>Overall inicial (estimado)</dt><dd>${c.rec ? '75–80' : (est - 1) + '–' + (est + 3)}</dd><dt>Potencial</dt><dd>revelado ao começar</dd><dt>Estilo</dt><dd>${esc(c.style)}</dd></dl>
+      <dl class="kv" style="width:100%"><dt>Overall inicial (estimado)</dt><dd>${(REC_MODE_OK && c.rec) ? '75–80' : (est - 1) + '–' + (est + 3)}</dd><dt>Potencial</dt><dd>revelado ao começar</dd><dt>Estilo</dt><dd>${esc(c.style)}</dd></dl>
       <p class="fine">Altura e peso alteram força, velocidade e aceleração. O estilo dá bônus a atributos específicos. O potencial muda com o seu desempenho ao longo da carreira.</p></div></div>
   </div>`;
   drawAvatar($('#cr-av'), c.look, NATIONS[c.nat], c.num, true);

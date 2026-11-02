@@ -4810,7 +4810,7 @@ initLang();
 <script>
 /* ===== Co-op online (modo live): host roda a partida, convidado joga um companheiro ===== */
 const COOP = (function () {
-  const C = { mode: 'both', role: null, ready: false, tr: null, code: '', peer: null, conn: null, g2: null, lastE: null, tSnap: 0, tHud: 0, tIn: 0, seq: 0, tgt: null, hud: null, gin: { keys: {}, joy: null, aimY: 0, ch: null } };
+  const C = { mode: 'both', eff: 'both', bench: null, role: null, ready: false, tr: null, code: '', peer: null, conn: null, g2: null, lastE: null, tSnap: 0, tHud: 0, tIn: 0, seq: 0, tgt: null, hud: null, gin: { keys: {}, joy: null, aimY: 0, ch: null } };
   const r1 = v => Math.round(v * 10) / 10, r2 = v => Math.round(v * 100) / 100;
   const send = m => { try { if (C.tr) C.tr.send(m); } catch (e) {} };
   const $c = s => document.querySelector(s);
@@ -4845,7 +4845,7 @@ const COOP = (function () {
     try { if (C.conn) C.conn.close(); } catch (e) {} try { if (C.peer) C.peer.destroy(); } catch (e) {}
     const wasGuest = C.role === 'guest';
     C.role = null; C.ready = false; C.tr = null; C.conn = null; C.peer = null; C.g2 = null; C.lastE = null; C.tgt = null;
-    C.gin = { keys: {}, joy: null, aimY: 0, ch: null };
+    C.gin = { keys: {}, joy: null, aimY: 0, ch: null }; C.bench = null; C.eff = 'both';
     const ov = $c('#coopov'); if (ov) ov.hidden = true; const mb = $c('#coopmode'); if (mb) mb.hidden = true;
     if (wasGuest && typeof MU !== 'undefined') { E = null; MU = null; }
   }
@@ -4896,6 +4896,7 @@ const COOP = (function () {
       else if (m.t === 's') guestSnap(m);
       else if (m.t === 'end') guestEnd();
       else if (m.t === 'hud') guestHud(m);
+      else if (m.t === 'msg') { try { toast(m.x); } catch (e) {} }
     }
   }
 
@@ -4909,12 +4910,25 @@ const COOP = (function () {
   function hostMoment() {
     const b = E.ball; C.g2 = null;
     const cand = E.players.filter(p => p.team === 0 && p.pos !== 'GOL' && p !== E.user && !p.user);
-    if (C.mode === 'guest' && E.user && !E.frozen && ['att', 'def', 'gk'].includes(E.type)) { C.g2 = E.user; C.g2.guest = true; }
-    else if (C.mode === 'both' && cand.length && !E.frozen && ['att', 'def', 'gk'].includes(E.type)) { cand.sort((a, c) => D(a.x, a.y, b.x, b.y) - D(c.x, c.y, b.x, b.y)); C.g2 = cand[0]; C.g2.user = true; C.g2.guest = true; }
+    let eff = C.mode;
+    if (eff === 'both') {
+      const mn = (MU.MC && MU.MC.min) || 0;
+      if (C.bench) { if (--C.bench.left <= 0) { say(C.bench.who === 'host' ? 'Você voltou ao jogo!' : 'Seu primo voltou ao jogo!', C.bench.who === 'guest' ? 'Você voltou ao jogo!' : 'Seu parceiro voltou ao jogo!'); C.bench = null; } }
+      else if (mn >= 50 && Math.random() < 0.22) {
+        const who = Math.random() < 0.5 ? 'host' : 'guest', why = ['foi substituído', 'se machucou', 'levou cartão vermelho'][Math.floor(Math.random() * 3)];
+        C.bench = { who, left: 2 + Math.floor(Math.random() * 3) };
+        say(who === 'host' ? 'Você ' + why + '! Fica no banco, seu primo segue jogando.' : 'Seu primo ' + why + '. Você segue jogando.', who === 'guest' ? 'Você ' + why + '! Fica no banco e acompanha.' : 'Seu parceiro ' + why + '. Você segue jogando.');
+      }
+      if (C.bench) eff = C.bench.who === 'host' ? 'guest' : 'host';
+    }
+    C.eff = eff;
+    if (eff === 'guest' && E.user && !E.frozen && ['att', 'def', 'gk'].includes(E.type)) { C.g2 = E.user; C.g2.guest = true; }
+    else if (eff === 'both' && cand.length && !E.frozen && ['att', 'def', 'gk'].includes(E.type)) { cand.sort((a, c) => D(a.x, a.y, b.x, b.y) - D(c.x, c.y, b.x, b.y)); C.g2 = cand[0]; C.g2.user = true; C.g2.guest = true; }
     C.gin = { keys: {}, joy: null, aimY: 0, ch: null };
     send({ t: 'start', kind: E.type, kits: MU.kits, gk: MU.gk, tn: [E.teams[0].name, E.teams[1].name], pl: E.players.map(p => [p.team, p.id, p.name, p.pos, p.num, p.look, p.user ? 1 : 0]), g2: C.g2 ? E.players.indexOf(C.g2) : -1, hu: E.user ? E.players.indexOf(E.user) : -1 });
     sendHud(true);
   }
+  function say(h, g) { try { toast(h); } catch (e) {} send({ t: 'msg', x: g }); }
   function sendHud(force) {
     if (!MU || !MU.MC || MU.drill) return; const MC = MU.MC;
     const h = { t: 'hud', sc: MC.score.slice(), min: MC.min, tn: [$c('#tn0') ? $c('#tn0').textContent : '', $c('#tn1') ? $c('#tn1').textContent : ''], ph: MU.phase, us: MC.uSide };
@@ -4926,7 +4940,7 @@ const COOP = (function () {
       p: E.players.map(p => [r1(p.x), r1(p.y), r1(p.vx), r1(p.vy), r2(p.fx), r2(p.fy), (p.down > 0 || p.slide) ? 1 : 0, p.dive ? Math.sign(p.dive.vy) : 0, r2(p.kickA || 0), r2(p.jump || 0)]),
       bn: E.bannerT > 0 && E.banner ? E.banner : '', ce: E.cele > 0 ? E.players.indexOf(E.celeP) : -1, ct: E.celeTeam || 0, ov: E.over ? 1 : 0, fr: E.frozen ? 1 : 0, pa: MU && MU.paused ? 1 : 0 };
   }
-  function hostPre(dt) { if (C.role === 'host' && C.ready && C.g2 && E === C.lastE) { asGuest(() => kbUpdate(dt)); if (C.mode === 'guest') { KB.keys = {}; KB.joy = null; KB.ch = null; } } }
+  function hostPre(dt) { if (C.role === 'host' && C.ready && C.g2 && E === C.lastE) { asGuest(() => kbUpdate(dt)); if (C.eff === 'guest') { KB.keys = {}; KB.joy = null; KB.ch = null; } } }
   function hostPost(dt) {
     if (C.role !== 'host' || !C.ready || !E || E !== C.lastE) return;
     C.tSnap += dt; if (C.tSnap >= 0.05) { C.tSnap = 0; send(snap()); }
@@ -4981,7 +4995,7 @@ const COOP = (function () {
     renderMatch(); return true;
   }
   /* o convidado não executa o chute: manda a soltura ao anfitrião */
-  kbRelease = function (kind, held) { if (C.role === 'host' && C.mode === 'guest' && C.g2 && E && C.g2 === E.user) return; if (C.role === 'guest') { if (C.ready) send({ t: 'rel', k: kind, h: held }); return; } return _kbRelease(kind, held); };
+  kbRelease = function (kind, held) { if (C.role === 'host' && C.eff === 'guest' && C.g2 && E && C.g2 === E.user) return; if (C.role === 'guest') { if (C.ready) send({ t: 'rel', k: kind, h: held }); return; } return _kbRelease(kind, held); };
 
   /* ---------- menu ---------- */
   function menu() {

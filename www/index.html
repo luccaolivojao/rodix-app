@@ -4861,11 +4861,11 @@ const COOP = (function () {
     try { if (C.conn) C.conn.close(); } catch (e) {} C.slots.forEach(s => { try { s.conn.close(); } catch (e) {} }); try { if (C.peer) C.peer.destroy(); } catch (e) {}
     const wasGuest = C.role === 'guest';
     C.role = null; C.ready = false; C.tr = null; C.conn = null; C.peer = null; C.slots = []; C.lastE = null; C.tgt = null; C.bench = null; C.hostOut = false;
-    const ov = $c('#coopov'); if (ov) ov.hidden = true; const mb = $c('#coopmode'); if (mb) mb.hidden = true;
+    const ov = $c('#coopov'); if (ov) ov.hidden = true; const hb = $c('#coophub'); if (hb) hb.hidden = true; const mb = $c('#coopmode'); if (mb) mb.hidden = true;
     if (wasGuest && typeof MU !== 'undefined') { E = null; MU = null; }
   }
   function onOpen(slot) {
-    if (C.role === 'host') { sendTo(slot, { t: 'hello' }); modeBtn(); lobby(); toast('Convidado ' + (C.slots.indexOf(slot) + 1) + ' conectado!'); }
+    if (C.role === 'host') { sendTo(slot, { t: 'hello' }); hubOn = false; modeBtn(); lobby(); toast('Convidado ' + (C.slots.indexOf(slot) + 1) + ' conectado!'); }
     else { lobby(); }
   }
   function onClose(slot) {
@@ -4920,6 +4920,7 @@ const COOP = (function () {
       else if (m.t === 'end') guestEnd();
       else if (m.t === 'hud') guestHud(m);
       else if (m.t === 'msg') { try { toast(m.x); } catch (e) {} }
+      else if (m.t === 'hub') guestHub(m);
     }
   }
 
@@ -4976,6 +4977,21 @@ const COOP = (function () {
     if (C.role !== 'host' || !C.ready || !E || E !== C.lastE) return;
     C.tSnap += dt; if (C.tSnap >= (OPT ? 0.08 : 0.05)) { C.tSnap = 0; send(snap()); }
   }
+  /* ---- espelho da tela de carreira (somente leitura) para os convidados ---- */
+  function hubHtml() {
+    const h = $c('#s-hub'); if (!h) return null;
+    const cp = n => { const c = n.cloneNode(true); const src = n.querySelectorAll('canvas'), dst = c.querySelectorAll('canvas'); src.forEach((cv, i) => { try { const im = document.createElement('img'); im.src = cv.toDataURL('image/png'); im.className = cv.className; im.style.cssText = cv.style.cssText; im.width = cv.width; im.height = cv.height; dst[i].replaceWith(im); } catch (e) {} }); return c.innerHTML; };
+    return { h: cp(h.querySelector('header')), m: cp(h.querySelector('#view')), st: document.documentElement.getAttribute('style') || '', cls: h.className.replace('screen', '').trim() };
+  }
+  let hubKey = '', hubOn = false;
+  function hubSync(force) {
+    if (C.role !== 'host' || !C.ready) return;
+    if (typeof curScreen !== 'undefined' && curScreen === 's-hub') {
+      const d = hubHtml(); if (!d) return; const k = d.h.length + ':' + d.m.length + ':' + d.m.slice(0, 400) + d.m.slice(-400) + d.h.slice(0, 300);
+      if (force || k !== hubKey || !hubOn) { hubKey = k; hubOn = true; send(Object.assign({ t: 'hub' }, d)); }
+    } else if (hubOn) { hubOn = false; hubKey = ''; send({ t: 'hub', off: 1 }); }
+  }
+  setInterval(() => { try { hubSync(false); } catch (e) {} }, 1000);
   function hostTick(dt) {
     if (C.role !== 'host' || !C.ready) return;
     const inM = MU && MU.phase === 'moment' && E && !MU.drill;
@@ -4993,6 +5009,15 @@ const COOP = (function () {
     ov.hidden = !on;
   }
   function waitTxt(t) { const w = $c('#coopwait'); if (!w) return; w.textContent = t; w.style.display = t ? '' : 'none'; }
+  function guestHub(m) {
+    let o = $c('#coophub');
+    if (m.off) { if (o) o.hidden = true; return; }
+    if (!o) { o = document.createElement('div'); o.id = 'coophub'; o.className = 'screen gamebg'; o.style.cssText = 'position:fixed;inset:0;z-index:55;display:block;overflow:auto'; document.body.appendChild(o); }
+    const nz = h => h.replace(/\sid="[^"]*"/g, '').replace(/\sdata-act="[^"]*"/g, '').replace(/\sdata-ico=/g, ' data-ico=');
+    if (m.st) document.documentElement.setAttribute('style', m.st);
+    o.innerHTML = '<header class="band slim">' + nz(m.h) + '</header><main class="hubmain">' + nz(m.m) + '</main><div style="position:sticky;bottom:0;text-align:center;padding:8px;background:rgba(7,13,26,.85);color:#eaf3ec;font:700 14px var(--body)">👀 Tela do anfitrião · aguardando ele iniciar a partida</div>';
+    o.hidden = false; try { paintIcons(o); } catch (e) {}
+  }
   function guestHud(m) {
     C.hudm = m;
     if (m.tn) { const a = $c('#tn0'), b = $c('#tn1'); if (a) a.textContent = m.tn[0]; if (b) b.textContent = m.tn[1]; }
@@ -5006,7 +5031,7 @@ const COOP = (function () {
     e0.ball = { x: 52.5, y: 34, z: 0, vx: 0, vy: 0, owner: null, lastTeam: 0 };
     m.pl.forEach(a => e0.players.push({ team: a[0], id: a[1], name: a[2], pos: a[3], num: a[4], look: a[5], user: !!a[6], x: 52, y: 34, vx: 0, vy: 0, fx: a[0] === 0 ? 1 : -1, fy: 0, phase: Math.random() * 6, down: 0, dive: null, kickA: 0, jump: 0, slide: false, tx: 52, ty: 34, wall: false, hold: 0, cd: 0 }));
     e0.players.forEach(p => { p.user = false; }); if (m.g2 >= 0) e0.players[m.g2].user = true; e0.user = m.g2 >= 0 ? e0.players[m.g2] : null;
-    C.tgt = null; E = e0; MU = Object.assign(MU || {}, { phase: 'moment', paused: false, kits: m.kits, gk: m.gk || m.kits, MC: null, drill: null }); waitTxt(m.g2 >= 0 ? '' : 'Seu parceiro joga este lance. Você está no banco.');
+    C.tgt = null; { const o = $c('#coophub'); if (o) o.hidden = true; } E = e0; MU = Object.assign(MU || {}, { phase: 'moment', paused: false, kits: m.kits, gk: m.gk || m.kits, MC: null, drill: null }); waitTxt(m.g2 >= 0 ? '' : 'Seu parceiro joga este lance. Você está no banco.');
     if (m.g2 >= 0) { waitTxt('Você joga: ' + e0.players[m.g2].name); setTimeout(() => { if (E === e0) waitTxt(''); }, 1200); }
     const v = $c('#veil'); if (v) v.hidden = true;
   }

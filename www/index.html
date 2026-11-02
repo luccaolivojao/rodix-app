@@ -4815,6 +4815,7 @@ const COOP = (function () {
   const send = m => { try { if (C.role === 'host') C.slots.forEach(s => { if (s.ready && s.tr) s.tr.send(m); }); else if (C.tr) C.tr.send(m); } catch (e) {} };
   const sendTo = (s, m) => { try { if (s.ready && s.tr) s.tr.send(m); } catch (e) {} };
   const $c = s => document.querySelector(s);
+  const BENCH = false; /* todos titulares; banco/revezamento desligado */
   /* ---- modo otimizar: menos resolução, sem efeitos, menos quadros ---- */
   let OPT = (function () { try { const v = localStorage.getItem('rodix_coop_opt'); if (v !== null) return v === '1'; } catch (e) {} return (navigator.hardwareConcurrency || 8) <= 4; })();
   const _resizePitch = resizePitch, _drawFx = drawFx;
@@ -4951,7 +4952,7 @@ const COOP = (function () {
   function hostMoment() {
     const b = E.ball; C.slots.forEach(s => { s.g = null; s.gin = newGin(); }); C.hostOut = false;
     const rd = C.slots.map((s, k) => k).filter(k => C.slots[k].ready);
-    if (C.mode === 'both') {
+    if (C.mode === 'both' && BENCH) {
       const mn = (MU.MC && MU.MC.min) || 0;
       if (rd.length >= 2) {
         const order = ['host'].concat(rd);

@@ -417,7 +417,7 @@ input[type=text],input[type=number],select,textarea{border-radius:0;border:0;bor
 .ki-comp{align-self:flex-start;margin:0 0 0 5vw;background:var(--acc);color:var(--acc-ink);font-size:clamp(15px,2.4vw,24px);font-weight:800;letter-spacing:0;padding:3px 24px 3px 28px;clip-path:polygon(0 0,100% 0,calc(100% - 12px) 100%,0 100%);margin-bottom:12px;text-transform:none}
 .ki-meta{padding:12px 5vw 4vh;font-size:clamp(14px,2vw,18px);color:#e8efe9;letter-spacing:0;display:flex;justify-content:space-between;gap:12px}.ki-go{position:absolute!important;right:5vw;bottom:4vh;letter-spacing:.04em;font-size:13px;color:var(--fg);opacity:.85}
 /* telas de campeonato: cor da competição + numerais gigantes */
-.cintro{background:var(--ci1,#14572f);background-image:linear-gradient(104deg,rgba(0,0,0,.34) 0 46%,transparent 46.2%),repeating-linear-gradient(90deg,transparent 0 92px,rgba(255,255,255,.045) 92px 184px);align-items:stretch;justify-content:flex-start;padding:0;overflow:hidden}
+.cintro{background:var(--ci1,#14572f);background-image:linear-gradient(104deg,rgba(0,0,0,.34) 0 46%,transparent 46.2%),repeating-linear-gradient(90deg,transparent 0 92px,rgba(255,255,255,.045) 92px 184px);align-items:stretch;justify-content:flex-start;padding:0;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .cintro::after{content:attr(data-big);position:absolute;right:-1vw;bottom:-6vw;font-family:var(--display);font-weight:900;font-size:clamp(160px,34vw,560px);line-height:.8;color:transparent;-webkit-text-stroke:2px rgba(255,255,255,.2);pointer-events:none;white-space:nowrap}
 .ci-box{width:100%;max-width:none;flex-direction:row;align-items:stretch;gap:clamp(18px,4vw,64px);text-align:left;padding:clamp(22px,6vh,64px) 5vw;margin:0;position:relative;z-index:2;flex-wrap:wrap}
 .ci-head{flex:1 1 360px;display:flex;flex-direction:column;justify-content:center;gap:10px;min-width:0}
@@ -431,6 +431,7 @@ input[type=text],input[type=number],select,textarea{border-radius:0;border:0;bor
 .ci-opp span{border-radius:0;clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%);padding:4px 16px}
 .ci-trophy{filter:none;animation:none;align-self:flex-start;margin-bottom:6px}
 #ci-go{align-self:flex-start;font-size:24px;padding:12px 40px;min-height:52px;background:var(--ci2,#ffd23f);color:#101417}
+@media (max-height:560px){.ci-box{padding:12px 4vw;gap:10px}.ci-head{gap:6px}.ci-side{gap:8px}#ci-go{font-size:20px;padding:8px 28px;min-height:44px}}
 @media (max-width:700px){.ci-box{padding:22px 18px}.cintro{background-image:linear-gradient(104deg,rgba(0,0,0,.3) 0 30%,transparent 30.2%)}.kickintro{background:linear-gradient(104deg,var(--k0) 0 50%,var(--k1) 50.2% 100%)}}
 /* celular na horizontal (telas baixas): layout compacto */
 @media (max-height:520px) and (orientation:landscape){

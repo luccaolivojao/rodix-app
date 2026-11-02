@@ -4815,6 +4815,13 @@ const COOP = (function () {
   const send = m => { try { if (C.role === 'host') C.slots.forEach(s => { if (s.ready && s.tr) s.tr.send(m); }); else if (C.tr) C.tr.send(m); } catch (e) {} };
   const sendTo = (s, m) => { try { if (s.ready && s.tr) s.tr.send(m); } catch (e) {} };
   const $c = s => document.querySelector(s);
+  /* ---- modo otimizar: menos resolução, sem efeitos, menos quadros ---- */
+  let OPT = (function () { try { const v = localStorage.getItem('rodix_coop_opt'); if (v !== null) return v === '1'; } catch (e) {} return (navigator.hardwareConcurrency || 8) <= 4; })();
+  const _resizePitch = resizePitch, _drawFx = drawFx;
+  resizePitch = function () { _resizePitch(); if (OPT) { const c = cv(); DPR = 0.7; c.width = Math.round(innerWidth * DPR); c.height = Math.round(innerHeight * DPR); } };
+  drawFx = function (dt) { if (!OPT) _drawFx(dt); };
+  function setOpt(v) { OPT = v; try { localStorage.setItem('rodix_coop_opt', v ? '1' : '0'); } catch (e) {} try { resizePitch(); } catch (e) {} }
+  const optBtn = () => `<button class="btn" data-act="coop-opt">⚡ Modo otimizar: ${OPT ? 'LIGADO' : 'desligado'}</button><p class="mut" style="text-align:center;font-size:12px">Ligue se o celular travar: reduz a resolução e tira efeitos.</p>`;
   const newGin = () => ({ keys: {}, joy: null, aimY: 0, ch: null });
   const nready = () => C.slots.filter(s => s.ready).length;
 
@@ -4881,11 +4888,11 @@ const COOP = (function () {
   function lobby() {
     if (C.role === 'host') {
       const n = nready();
-      modal(`<h2>Co-op online · Anfitrião</h2><p class="mut">Passe este código para até 2 amigos entrarem:</p><div style="font:800 54px var(--display);letter-spacing:.18em;text-align:center;color:var(--acc);margin:14px 0">${C.code}</div><p id="coopmsg" class="mut" style="text-align:center">${n ? '✅ ' + n + '/2 conectado(s). Pode fechar e jogar a partida normalmente. Nos lances, cada um controla um companheiro.' : 'Aguardando amigos entrarem…'}</p><div class="stack"><button class="btn" data-act="coop-close">${n ? 'Fechar e jogar' : 'Cancelar'}</button></div>`);
+      modal(`<h2>Co-op online · Anfitrião</h2><p class="mut">Passe este código para até 2 amigos entrarem:</p><div style="font:800 54px var(--display);letter-spacing:.18em;text-align:center;color:var(--acc);margin:14px 0">${C.code}</div><p id="coopmsg" class="mut" style="text-align:center">${n ? '✅ ' + n + '/2 conectado(s). Pode fechar e jogar a partida normalmente. Nos lances, cada um controla um companheiro.' : 'Aguardando amigos entrarem…'}</p><div class="stack"><button class="btn" data-act="coop-close">${n ? 'Fechar e jogar' : 'Cancelar'}</button>${optBtn()}</div>`);
     } else if (C.role === 'guest' && C.ready) {
-      modal(`<h2>Co-op online</h2><p id="coopmsg" class="mut" style="text-align:center">✅ Conectado! Aguarde o anfitrião começar a partida.</p><div class="stack"><button class="btn" data-act="coop-gstart">Ir para a tela da partida</button></div>`);
+      modal(`<h2>Co-op online</h2><p id="coopmsg" class="mut" style="text-align:center">✅ Conectado! Aguarde o anfitrião começar a partida.</p><div class="stack"><button class="btn" data-act="coop-gstart">Ir para a tela da partida</button>${optBtn()}</div>`);
     } else {
-      modal(`<h2>Co-op online</h2><p class="mut">Jogue junto com amigos nos lances da partida (até 3 pessoas).</p><div class="stack"><button class="btn primary" data-act="coop-host">Criar sala (anfitrião)</button><div class="card stack"><label class="mut" for="coopcode">Entrar com código</label><input id="coopcode" maxlength="4" autocapitalize="characters" placeholder="ABCD" style="font:800 32px var(--display);letter-spacing:.2em;text-align:center;text-transform:uppercase"><button class="btn" data-act="coop-join">Entrar</button></div><p id="coopmsg" class="mut" style="text-align:center"></p><button class="btn" data-act="coop-close">Fechar</button></div>`);
+      modal(`<h2>Co-op online</h2><p class="mut">Jogue junto com amigos nos lances da partida (até 3 pessoas).</p><div class="stack"><button class="btn primary" data-act="coop-host">Criar sala (anfitrião)</button><div class="card stack"><label class="mut" for="coopcode">Entrar com código</label><input id="coopcode" maxlength="4" autocapitalize="characters" placeholder="ABCD" style="font:800 32px var(--display);letter-spacing:.2em;text-align:center;text-transform:uppercase"><button class="btn" data-act="coop-join">Entrar</button></div><p id="coopmsg" class="mut" style="text-align:center"></p><button class="btn" data-act="coop-close">Fechar</button>${optBtn()}</div>`);
     }
   }
   document.addEventListener('click', e => {
@@ -4896,6 +4903,7 @@ const COOP = (function () {
     else if (a === 'coop-close') { closeModal(); if (!C.ready && C.role === 'host') reset(); }
     else if (a === 'coop-gstart') { closeModal(); guestEnter(); }
     else if (a === 'coop-mode') { C.mode = C.mode === 'both' ? 'host' : C.mode === 'host' ? 'guest' : 'both'; modeBtn(); toast('Valendo no próximo lance: ' + MODES[C.mode]); }
+    else if (a === 'coop-opt') { setOpt(!OPT); lobby(); }
     else if (a === 'coop-leave') { C.role === 'guest' ? guestLeave() : reset(); }
   }, true);
 
@@ -4966,7 +4974,7 @@ const COOP = (function () {
   function hostPre(dt) { if (C.role === 'host' && C.ready && E === C.lastE) { C.slots.forEach(s => { if (s.g) asGuest(s, () => kbUpdate(dt)); }); if (C.hostOut) { KB.keys = {}; KB.joy = null; KB.ch = null; } } }
   function hostPost(dt) {
     if (C.role !== 'host' || !C.ready || !E || E !== C.lastE) return;
-    C.tSnap += dt; if (C.tSnap >= 0.05) { C.tSnap = 0; send(snap()); }
+    C.tSnap += dt; if (C.tSnap >= (OPT ? 0.08 : 0.05)) { C.tSnap = 0; send(snap()); }
   }
   function hostTick(dt) {
     if (C.role !== 'host' || !C.ready) return;
@@ -5015,7 +5023,7 @@ const COOP = (function () {
     }
     E.ts = 1; E.t += dt;
     if (C.role === 'guest' && C.ready) { C.tIn += dt; if (C.tIn >= 0.05) { C.tIn = 0; send({ t: 'in', k: Object.assign({}, KB.keys), j: KB.joy || null, c: KB.ch ? KB.ch.kind : null }); } }
-    renderMatch(); return true;
+    if (!OPT || (C.fr = !C.fr)) renderMatch(); return true;
   }
   /* o convidado não executa o chute: manda a soltura ao anfitrião */
   kbRelease = function (kind, held) { if (C.role === 'host' && C.hostOut) return; if (C.role === 'guest') { if (C.ready) send({ t: 'rel', k: kind, h: held }); return; } return _kbRelease(kind, held); };

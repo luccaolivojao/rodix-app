@@ -4866,7 +4866,7 @@ const COOP = (function () {
   }
   function onOpen(slot) {
     if (C.role === 'host') { sendTo(slot, { t: 'hello' }); hubOn = false; modeBtn(); lobby(); toast('Convidado ' + (C.slots.indexOf(slot) + 1) + ' conectado!'); }
-    else { lobby(); }
+    else { sendProfile(); lobby(); }
   }
   function onClose(slot) {
     if (C.role === 'host') {
@@ -4890,7 +4890,7 @@ const COOP = (function () {
       const n = nready();
       modal(`<h2>Co-op online · Anfitrião</h2><p class="mut">Passe este código para até 2 amigos entrarem:</p><div style="font:800 54px var(--display);letter-spacing:.18em;text-align:center;color:var(--acc);margin:14px 0">${C.code}</div><p id="coopmsg" class="mut" style="text-align:center">${n ? '✅ ' + n + '/2 conectado(s). Pode fechar e jogar a partida normalmente. Nos lances, cada um controla um companheiro.' : 'Aguardando amigos entrarem…'}</p><div class="stack"><button class="btn" data-act="coop-close">${n ? 'Fechar e jogar' : 'Cancelar'}</button>${optBtn()}</div>`);
     } else if (C.role === 'guest' && C.ready) {
-      modal(`<h2>Co-op online</h2><p id="coopmsg" class="mut" style="text-align:center">✅ Conectado! Aguarde o anfitrião começar a partida.</p><div class="stack"><button class="btn" data-act="coop-gstart">Ir para a tela da partida</button>${optBtn()}</div>`);
+      modal(`<h2>Co-op online</h2><p id="coopmsg" class="mut" style="text-align:center">✅ Conectado! Fique na sua carreira: quando o anfitrião chamar a partida, aparece o botão Pronto.</p><div class="stack"><button class="btn" data-act="coop-close">Voltar para minha carreira</button>${optBtn()}</div>`);
     } else {
       modal(`<h2>Co-op online</h2><p class="mut">Jogue junto com amigos nos lances da partida (até 3 pessoas).</p><div class="stack"><button class="btn primary" data-act="coop-host">Criar sala (anfitrião)</button><div class="card stack"><label class="mut" for="coopcode">Entrar com código</label><input id="coopcode" maxlength="4" autocapitalize="characters" placeholder="ABCD" style="font:800 32px var(--display);letter-spacing:.2em;text-align:center;text-transform:uppercase"><button class="btn" data-act="coop-join">Entrar</button></div><p id="coopmsg" class="mut" style="text-align:center"></p><button class="btn" data-act="coop-close">Fechar</button>${optBtn()}</div>`);
     }
@@ -4903,6 +4903,8 @@ const COOP = (function () {
     else if (a === 'coop-close') { closeModal(); if (!C.ready && C.role === 'host') reset(); }
     else if (a === 'coop-gstart') { closeModal(); guestEnter(); }
     else if (a === 'coop-mode') { C.mode = C.mode === 'both' ? 'host' : C.mode === 'host' ? 'guest' : 'both'; modeBtn(); toast('Valendo no próximo lance: ' + MODES[C.mode]); }
+    else if (a === 'coop-yes') { closeModal(); send({ t: 'vote', ok: 1 }); toast('Pronto! Aguardando os outros…'); }
+    else if (a === 'coop-no') { closeModal(); send({ t: 'vote', ok: 0 }); }
     else if (a === 'coop-opt') { setOpt(!OPT); lobby(); }
     else if (a === 'coop-leave') { C.role === 'guest' ? guestLeave() : reset(); }
   }, true);
@@ -4912,7 +4914,9 @@ const COOP = (function () {
     if (!m || !m.t) return;
     if (C.role === 'host' && slot) {
       const g = slot.gin;
-      if (m.t === 'in') { g.keys = m.k || {}; g.joy = m.j || null; if (m.c && !(g.ch && g.ch.kind === m.c)) g.ch = { kind: m.c, t0: performance.now() }; else if (!m.c) g.ch = null; }
+      if (m.t === 'prof') { slot.prof = m.p || null; }
+      else if (m.t === 'vote') { if (C.vote) { C.vote.n++; if (m.ok) C.vote.ok++; if (!m.ok) { toast('Um convidado recusou.'); send({ t: 'vote-cancel' }); C.vote = null; } else if (C.vote.n >= C.vote.need) voteDone(); } }
+      else if (m.t === 'in') { g.keys = m.k || {}; g.joy = m.j || null; if (m.c && !(g.ch && g.ch.kind === m.c)) g.ch = { kind: m.c, t0: performance.now() }; else if (!m.c) g.ch = null; }
       else if (m.t === 'rel') { if (slot.g && E && E === C.lastE && MU && MU.phase === 'moment' && !MU.paused) { g.ch = { kind: m.k, t0: performance.now() - (m.h || 0) * 900 }; asGuest(slot, () => _kbRelease(m.k, m.h || 0.3)); g.ch = null; } }
     } else if (C.role === 'guest') {
       if (m.t === 'start') guestStart(m);
@@ -4920,7 +4924,10 @@ const COOP = (function () {
       else if (m.t === 'end') guestEnd();
       else if (m.t === 'hud') guestHud(m);
       else if (m.t === 'msg') { try { toast(m.x); } catch (e) {} }
-      else if (m.t === 'hub') guestHub(m);
+      else if (m.t === 'ask') guestAsk(m);
+      else if (m.t === 'go') guestGo(m);
+      else if (m.t === 'vote-cancel') { closeModal(); toast('O anfitrião cancelou.'); }
+      else if (m.t === 'leave') guestBack();
     }
   }
 
@@ -4956,7 +4963,7 @@ const COOP = (function () {
       const used = new Set(); let cand = E.players.filter(p => p.team === 0 && p.pos !== 'GOL' && p !== E.user && !p.user);
       cand.sort((a, c) => D(a.x, a.y, b.x, b.y) - D(c.x, c.y, b.x, b.y));
       if (!hostPlays && E.user) { const k = playing.shift(); C.slots[k].g = E.user; E.user.guest = true; C.hostOut = true; }
-      playing.forEach(k => { const p = cand.shift(); if (p) { p.user = true; p.guest = true; C.slots[k].g = p; } });
+      playing.forEach(k => { const p = cand.shift(); if (p) { p.user = true; p.guest = true; C.slots[k].g = p; const pr = C.slots[k].prof; if (pr) { p.name = pr.name; if (pr.look) p.look = pr.look; if (pr.num) p.num = pr.num; } } });
     }
     C.slots.forEach((s, k) => sendTo(s, { t: 'start', kind: E.type, kits: MU.kits, gk: MU.gk, tn: [E.teams[0].name, E.teams[1].name], pl: E.players.map(p => [p.team, p.id, p.name, p.pos, p.num, p.look, 0]), g2: s.g ? E.players.indexOf(s.g) : -1, hu: E.user ? E.players.indexOf(E.user) : -1 }));
     sendHud(true);
@@ -4977,7 +4984,20 @@ const COOP = (function () {
     if (C.role !== 'host' || !C.ready || !E || E !== C.lastE) return;
     C.tSnap += dt; if (C.tSnap >= (OPT ? 0.08 : 0.05)) { C.tSnap = 0; send(snap()); }
   }
-  /* ---- espelho da tela de carreira (somente leitura) para os convidados ---- */
+  /* ---- Pronto / votação ---- */
+  function sendProfile() { try { if (typeof G !== 'undefined' && G && G.user) { const p = up(); send({ t: 'prof', p: { name: fullName(p), pos: p.pos, num: p.num, look: p.look, ovr: p.ovr } }); } else send({ t: 'prof', p: null }); } catch (e) { send({ t: 'prof', p: null }); } }
+  function voteDone() { const v = C.vote; C.vote = null; send({ t: 'go', kind: v.kind }); C.pass = true; try { v.btn.click(); } catch (e) {} setTimeout(() => { C.pass = false; }, 300); }
+  document.addEventListener('click', e => {
+    if (C.role !== 'host' || !nready()) return; const b = e.target.closest && e.target.closest('[data-act="play"],[data-act="sim"]'); if (!b) return;
+    if (C.pass) return; e.preventDefault(); e.stopPropagation();
+    if (C.vote) return; const kind = b.dataset.act;
+    C.vote = { kind, btn: b, need: nready(), n: 0, ok: 0, until: Date.now() + 25000 };
+    send({ t: 'ask', kind }); toast('Aguardando os convidados darem "Pronto"…');
+  }, true);
+  function guestAsk(m) { modal(`<h2>${m.kind === 'sim' ? 'Simular a partida?' : 'Jogar os momentos?'}</h2><p class="mut" style="text-align:center">O anfitrião quer ${m.kind === 'sim' ? 'simular' : 'jogar os momentos d'}${m.kind === 'sim' ? '' : 'a partida junto com vocês'}. Todos precisam dar pronto.</p><div class="stack"><button class="btn primary" data-act="coop-yes">✅ Pronto</button><button class="btn" data-act="coop-no">Agora não</button></div>`); }
+  function guestGo(m) { closeModal(); if (m.kind === 'sim') { toast('Simulando a partida…'); return; } guestEnter(); }
+  function guestBack() { try { E = null; MU = null; C.tgt = null; coopUi(false); const o = $c('#coophub'); if (o) o.hidden = true; const hasG = typeof G !== 'undefined' && G && G.user; if (hasG) { show('s-hub'); try { renderHub(); } catch (e) {} } else show('s-menu'); toast('Partida terminada. De volta à sua carreira.'); } catch (e) {} }
+  /* ---- (antigo) espelho da tela de carreira (somente leitura) para os convidados ---- */
   function hubHtml() {
     const h = $c('#s-hub'); if (!h) return null;
     const cp = n => { const c = n.cloneNode(true); const src = n.querySelectorAll('canvas'), dst = c.querySelectorAll('canvas'); src.forEach((cv, i) => { try { const im = document.createElement('img'); im.src = cv.toDataURL('image/png'); im.className = cv.className; im.style.cssText = cv.style.cssText; im.width = cv.width; im.height = cv.height; dst[i].replaceWith(im); } catch (e) {} }); return c.innerHTML; };
@@ -4991,7 +5011,13 @@ const COOP = (function () {
       if (force || k !== hubKey || !hubOn) { hubKey = k; hubOn = true; send(Object.assign({ t: 'hub' }, d)); }
     } else if (hubOn) { hubOn = false; hubKey = ''; send({ t: 'hub', off: 1 }); }
   }
-  setInterval(() => { try { hubSync(false); } catch (e) {} }, 1000);
+  let inMatchSent = false;
+  setInterval(() => { try {
+    if (C.role !== 'host' || !C.ready) { inMatchSent = false; return; }
+    const on = typeof curScreen !== 'undefined' && curScreen === 's-match' && !!MU;
+    if (on) inMatchSent = true; else if (inMatchSent) { inMatchSent = false; C.lastE = null; send({ t: 'leave' }); }
+    if (C.vote && Date.now() > C.vote.until) { toast('Votação cancelada: nem todos responderam.'); send({ t: 'vote-cancel' }); C.vote = null; }
+  } catch (e) {} }, 1000);
   function hostTick(dt) {
     if (C.role !== 'host' || !C.ready) return;
     const inM = MU && MU.phase === 'moment' && E && !MU.drill;

@@ -2,7 +2,7 @@ name: Android APK (teste)
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [live-none]
     paths: ["www/**", ".github/workflows/apk.yml"]
 permissions:
   contents: write
@@ -27,6 +27,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk Rodix-Football.apk
-          gh release delete apk-latest --yes --cleanup-tag || true
-          gh release create apk-latest Rodix-Football.apk --title "Rodix Football (APK de teste)" --notes "APK de teste (assinatura de debug) para instalar direto no celular."
+          cp android/app/build/outputs/apk/debug/app-debug.apk Rodix-Live.apk
+          gh release delete apk-live --yes --cleanup-tag || true
+          gh release create apk-live Rodix-Live.apk --title "Rodix Live (co-op)" --notes "APK de teste (assinatura de debug) para instalar direto no celular."

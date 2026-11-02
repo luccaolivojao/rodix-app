@@ -4953,6 +4953,11 @@ const COOP = (function () {
     const rd = C.slots.map((s, k) => k).filter(k => C.slots[k].ready);
     if (C.mode === 'both') {
       const mn = (MU.MC && MU.MC.min) || 0;
+      if (rd.length >= 2) {
+        const order = ['host'].concat(rd);
+        if (!C.bench) { C.bench = { who: order[order.length - 1], left: 3, rot: true }; sayAll(C.bench.who, 'começa no banco', false); }
+        else if (--C.bench.left <= 0) { const prev = C.bench.who, nxt = order[(order.indexOf(prev) + 1) % order.length]; sayAll(prev, '', true); C.bench = { who: nxt, left: 3, rot: true }; sayAll(nxt, 'foi para o banco', false); }
+      } else
       if (C.bench) { if (--C.bench.left <= 0) { sayAll(C.bench.who, '', true); C.bench = null; } }
       else if (mn >= 50 && Math.random() < 0.22 && rd.length) {
         const opts = ['host'].concat(rd), who = opts[Math.floor(Math.random() * opts.length)], why = ['foi substituído', 'se machucou', 'levou cartão vermelho'][Math.floor(Math.random() * 3)];

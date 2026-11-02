@@ -4888,7 +4888,7 @@ const COOP = (function () {
   function lobby() {
     if (C.role === 'host') {
       const n = nready();
-      modal(`<h2>Co-op online · Anfitrião</h2><p class="mut">Passe este código para até 2 amigos entrarem:</p><div style="font:800 54px var(--display);letter-spacing:.18em;text-align:center;color:var(--acc);margin:14px 0">${C.code}</div><p id="coopmsg" class="mut" style="text-align:center">${n ? '✅ ' + n + '/2 conectado(s). Pode fechar e jogar a partida normalmente. Nos lances, cada um controla um companheiro.' : 'Aguardando amigos entrarem…'}</p><div class="stack"><button class="btn" data-act="coop-close">${n ? 'Fechar e jogar' : 'Cancelar'}</button>${optBtn()}</div>`);
+      modal(`<h2>Co-op online · Anfitrião</h2><p class="mut">Passe este código para até 2 amigos entrarem:</p><div style="font:800 54px var(--display);letter-spacing:.18em;text-align:center;color:var(--acc);margin:14px 0">${C.code}</div><p id="coopmsg" class="mut" style="text-align:center">${n ? '✅ ' + n + '/2 conectado(s). Pode fechar e jogar a partida normalmente. Nos lances, cada um controla um companheiro.' : 'Aguardando amigos entrarem…'}</p><div class="stack">${n ? '<button class="btn primary" data-act="coop-start">▶ Iniciar partida</button><button class="btn" data-act="coop-start-sim">Simular partida</button>' : ''}<button class="btn" data-act="coop-close">${n ? 'Fechar' : 'Cancelar'}</button>${optBtn()}</div>`);
     } else if (C.role === 'guest' && C.ready) {
       modal(`<h2>Co-op online</h2><p id="coopmsg" class="mut" style="text-align:center">✅ Conectado! Fique na sua carreira: quando o anfitrião chamar a partida, aparece o botão Pronto.</p><div class="stack"><button class="btn" data-act="coop-close">Voltar para minha carreira</button>${optBtn()}</div>`);
     } else {
@@ -4905,6 +4905,10 @@ const COOP = (function () {
     else if (a === 'coop-mode') { C.mode = C.mode === 'both' ? 'host' : C.mode === 'host' ? 'guest' : 'both'; modeBtn(); toast('Valendo no próximo lance: ' + MODES[C.mode]); }
     else if (a === 'coop-yes') { closeModal(); send({ t: 'vote', ok: 1 }); toast('Pronto! Aguardando os outros…'); }
     else if (a === 'coop-no') { closeModal(); send({ t: 'vote', ok: 0 }); }
+    else if (a === 'coop-start' || a === 'coop-start-sim') {
+      closeModal(); const want = a === 'coop-start' ? 'play' : 'sim'; const hub = $c('#s-hub'); const btn = hub && !hub.hidden ? hub.querySelector('[data-act="' + want + '"]') : null;
+      if (btn) btn.click(); else toast('Abra a sua carreira (tela inicial) e toque em ' + (want === 'play' ? 'Jogar momentos' : 'Simular partida') + '.');
+    }
     else if (a === 'coop-opt') { setOpt(!OPT); lobby(); }
     else if (a === 'coop-leave') { C.role === 'guest' ? guestLeave() : reset(); }
   }, true);
@@ -5013,6 +5017,8 @@ const COOP = (function () {
   }
   let inMatchSent = false;
   setInterval(() => { try {
+    let gb = $c('#coopgo'); if (!gb) { gb = document.createElement('button'); gb.id = 'coopgo'; gb.dataset.act = 'coop-start'; gb.textContent = '▶ Iniciar co-op'; gb.style.cssText = 'position:fixed;left:8px;top:48px;z-index:61;background:#ffd23f;color:#111;border:0;border-radius:10px;padding:6px 12px;font:800 13px var(--body)'; document.body.appendChild(gb); }
+    gb.hidden = !(C.role === 'host' && C.ready && typeof curScreen !== 'undefined' && curScreen === 's-hub');
     if (C.role !== 'host' || !C.ready) { inMatchSent = false; return; }
     const on = typeof curScreen !== 'undefined' && curScreen === 's-match' && !!MU;
     if (on) inMatchSent = true; else if (inMatchSent) { inMatchSent = false; C.lastE = null; send({ t: 'leave' }); }

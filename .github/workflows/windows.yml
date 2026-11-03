@@ -27,4 +27,4 @@ jobs:
       - name: Publicar na aba Releases
         shell: bash
         env: { GH_TOKEN: "${{ github.token }}" }
-        run: gh release delete windows-live --yes --cleanup-tag || true; gh release create windows-live desktop/dist/Rodix-Live.exe --title "Rodix Live (co-op .exe)" --notes "Rodix Live para Windows: ate 3 jogadores online. Baixe e execute. Todos precisam do mesmo arquivo."
+        run: gh release delete windows-live --yes --cleanup-tag || true; gh release create windows-live desktop/dist/Rodix-Live.exe --title "Rodix Live (co-op .exe)" --notes "Rodix Live para Windows (ate 3 jogadores online). Baixe e execute. Todos precisam do mesmo arquivo."

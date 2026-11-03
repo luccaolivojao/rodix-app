@@ -1386,7 +1386,7 @@ function nationTeam(nat, withUser) {
   }
   return { key: 'N:' + nat, name: N.n, sh: nat, c1: N.c1, c2: N.c2, xi, str: xiStr(xi), nation: true };
 }
-function clubTeam(cid) { const c = club(cid); const xi = pickXI(cid); return { key: cid, name: c.name, sh: c.sh, c1: c.c1, c2: c.c2, xi, str: xiStr(xi) }; }
+function clubTeam(cid) { const c = club(cid); const xi = pickXI(cid); return { key: cid, name: c.name, sh: c.sh, c1: c.c1, c2: c.c2, pk: c.pk, xi, str: xiStr(xi) }; }
 
 function buildMatch(kind) {
   const p = up(); let teams, uSide, fx = null, lid = null, title;

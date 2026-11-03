@@ -938,9 +938,11 @@ function money(v) { if (v >= 1e6) return '€' + (v / 1e6).toFixed(v >= 1e8 ? 0 
 function seasonLabel(lid) { const y = G.season; return lid && LDEF[lid] && LDEF[lid].civil ? String(y + 1) : y + '/' + String(y + 1).slice(2); }
 
 /* ---------- DATA PACKS: arquivos .json que trocam nomes, escudos, cores e jogadores (como os option files dos jogos de futebol) ---------- */
+/* packs que vão dentro do app (licenciados). Formato igual ao do arquivo .json; id fixo 'bi-...'. */
+const BUILTIN_PACKS = [];
 let PACKS = [], PACK_ON = '', PKLOGO = {};
-function packsLoad() { try { PACKS = JSON.parse(localStorage.getItem('rodix-packs') || '[]'); PACK_ON = localStorage.getItem('rodix-pack-on') || ''; } catch (e) { PACKS = []; PACK_ON = ''; } PKLOGO = {}; PACKS.forEach(p => p.clubs.forEach(c => { if (c.logo) PKLOGO[p.id + '|' + c.match] = c.logo; })); }
-function packsSave() { try { localStorage.setItem('rodix-packs', JSON.stringify(PACKS)); localStorage.setItem('rodix-pack-on', PACK_ON); return true; } catch (e) { return false; } }
+function packsLoad() { try { PACKS = JSON.parse(localStorage.getItem('rodix-packs') || '[]'); PACK_ON = localStorage.getItem('rodix-pack-on') || ''; } catch (e) { PACKS = []; PACK_ON = ''; } PACKS = PACKS.filter(p => !String(p.id).startsWith('bi-')); BUILTIN_PACKS.forEach(b => { try { const c = packClean(b); c.id = 'bi-' + String(b.id || b.name).replace(/\W/g, ''); c.bi = 1; PACKS.unshift(c); } catch (e) { } }); if (!PACK_ON && BUILTIN_PACKS.length && !localStorage.getItem('rodix-pack-on')) PACK_ON = PACKS[0].id; PKLOGO = {}; PACKS.forEach(p => p.clubs.forEach(c => { if (c.logo) PKLOGO[p.id + '|' + c.match] = c.logo; })); }
+function packsSave() { try { localStorage.setItem('rodix-packs', JSON.stringify(PACKS.filter(p => !p.bi))); localStorage.setItem('rodix-pack-on', PACK_ON); return true; } catch (e) { return false; } }
 function packClean(raw) {
   if (!raw || typeof raw !== 'object' || !Array.isArray(raw.clubs) || !raw.clubs.length) throw new Error('Arquivo inválido: faltou a lista "clubs".');
   const str = (v, n) => String(v == null ? '' : v).slice(0, n), col = v => /^#[0-9a-f]{6}$/i.test(v) ? v : null;
@@ -981,7 +983,7 @@ function packTemplate() {
 function dlText(name, txt) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], { type: 'application/json' })); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
 packsLoad();
 function packCard() {
-  const rows = PACKS.map(p => `<div class="row" style="align-items:center;gap:8px"><div style="flex:1"><b>${esc(p.name)}</b> <span class="mut">${p.clubs.length} clubes${p.author ? ' · ' + esc(p.author) : ''}</span></div><button class="btn ${PACK_ON === p.id ? 'pri' : ''}" data-act="pack-use" data-id="${p.id}">${PACK_ON === p.id ? 'Ativo' : 'Usar'}</button><button class="btn" data-act="pack-del" data-id="${p.id}">Remover</button></div>`).join('') || '<p class="mut" style="margin:0">Nenhum pack instalado.</p>';
+  const rows = PACKS.map(p => `<div class="row" style="align-items:center;gap:8px"><div style="flex:1"><b>${esc(p.name)}</b> <span class="mut">${p.clubs.length} clubes${p.author ? ' · ' + esc(p.author) : ''}</span></div><button class="btn ${PACK_ON === p.id ? 'pri' : ''}" data-act="pack-use" data-id="${p.id}">${PACK_ON === p.id ? 'Ativo' : 'Usar'}</button>${p.bi ? '' : `<button class="btn" data-act="pack-del" data-id="${p.id}">Remover</button>`}</div>`).join('') || '<p class="mut" style="margin:0">Nenhum pack instalado.</p>';
   return `<div class="card stack"><span class="lbl">Data Packs</span><p class="mut" style="margin:0">Packs são arquivos .json que trocam nomes, escudos, cores e jogadores dos clubes. O pack ativo vale para <b>novas carreiras</b>.</p>${rows}<div class="row"><button class="btn" data-act="pack-import">Importar pack</button><button class="btn" data-act="pack-tpl">Baixar modelo</button>${PACK_ON ? '<button class="btn" data-act="pack-use" data-id="">Desativar</button>' : ''}</div><input type="file" id="pack-file" accept=".json,application/json" hidden></div>`;
 }
 function genSeasonLabel() { return G.season + '/' + String(G.season + 1).slice(2); }

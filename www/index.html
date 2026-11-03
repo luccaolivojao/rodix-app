@@ -936,6 +936,54 @@ function valueOf(p) {
 function wageFor(ovr, rep) { return Math.round(150 * Math.exp((ovr - 45) / 7.5) * (0.4 + rep / 80) / 10) * 10; }
 function money(v) { if (v >= 1e6) return '€' + (v / 1e6).toFixed(v >= 1e8 ? 0 : 1).replace('.', ',') + ' mi'; if (v >= 1e3) return '€' + Math.round(v / 1e3) + ' mil'; return '€' + Math.round(v); }
 function seasonLabel(lid) { const y = G.season; return lid && LDEF[lid] && LDEF[lid].civil ? String(y + 1) : y + '/' + String(y + 1).slice(2); }
+
+/* ---------- DATA PACKS: arquivos .json que trocam nomes, escudos, cores e jogadores (como os option files dos jogos de futebol) ---------- */
+let PACKS = [], PACK_ON = '', PKLOGO = {};
+function packsLoad() { try { PACKS = JSON.parse(localStorage.getItem('rodix-packs') || '[]'); PACK_ON = localStorage.getItem('rodix-pack-on') || ''; } catch (e) { PACKS = []; PACK_ON = ''; } PKLOGO = {}; PACKS.forEach(p => p.clubs.forEach(c => { if (c.logo) PKLOGO[p.id + '|' + c.match] = c.logo; })); }
+function packsSave() { try { localStorage.setItem('rodix-packs', JSON.stringify(PACKS)); localStorage.setItem('rodix-pack-on', PACK_ON); return true; } catch (e) { return false; } }
+function packClean(raw) {
+  if (!raw || typeof raw !== 'object' || !Array.isArray(raw.clubs) || !raw.clubs.length) throw new Error('Arquivo inválido: faltou a lista "clubs".');
+  const str = (v, n) => String(v == null ? '' : v).slice(0, n), col = v => /^#[0-9a-f]{6}$/i.test(v) ? v : null;
+  const out = { id: 'pk' + Date.now().toString(36), name: str(raw.name || 'Data Pack', 40), author: str(raw.author || '', 40), ver: str(raw.version || '1', 10), clubs: [] };
+  let total = 0;
+  for (const c of raw.clubs.slice(0, 400)) {
+    if (!c || !c.match) continue;
+    const o = { match: str(c.match, 60) };
+    if (c.name) o.name = str(c.name, 40); if (c.sh) o.sh = str(c.sh, 4).toUpperCase();
+    if (col(c.c1)) o.c1 = c.c1; if (col(c.c2)) o.c2 = c.c2;
+    if (typeof c.logo === 'string' && /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+\/=]+$/.test(c.logo) && c.logo.length < 250000) { o.logo = c.logo; total += c.logo.length; }
+    if (Array.isArray(c.players)) o.players = c.players.slice(0, 30).map(p => ({ fn: str(p.fn, 24), ln: str(p.ln, 24), pos: POS.includes(p.pos) ? p.pos : 'MEI', ovr: clamp(+p.ovr || 60, 35, 97), age: clamp(+p.age || 25, 16, 42), nat: NATIONS[p.nat] ? p.nat : null })).filter(p => p.ln || p.fn);
+    out.clubs.push(o);
+  }
+  if (!out.clubs.length) throw new Error('Nenhum clube válido no arquivo.');
+  if (total > 7e6) throw new Error('Pack grande demais (logos). Reduza o tamanho dos escudos.');
+  return out;
+}
+function packApply() {
+  const pk = PACKS.find(p => p.id === PACK_ON); if (!pk || !G) return; G.pack = pk.id;
+  for (const pc of pk.clubs) {
+    const c = Object.values(G.clubs).find(x => x.name === pc.match); if (!c) continue;
+    c.pk = pk.id + '|' + pc.match;
+    if (pc.name) c.name = pc.name; if (pc.sh) c.sh = pc.sh; if (pc.c1) c.c1 = pc.c1; if (pc.c2) c.c2 = pc.c2;
+    if (pc.players) {
+      const used = new Set();
+      for (const rp of pc.players) {
+        let slot = c.sq.map(pl).find(p => p && !p.u && !used.has(p.id) && p.pos === rp.pos) || c.sq.map(pl).find(p => p && !p.u && !used.has(p.id));
+        if (!slot) { slot = genPlayer(c, rp.pos, false); }
+        used.add(slot.id); slot.fn = rp.fn; slot.ln = rp.ln; slot.pos = rp.pos; slot.ovr = rp.ovr; slot.age = rp.age; slot.pot = Math.max(rp.ovr, slot.pot || 0); if (rp.nat) slot.nat = rp.nat;
+      }
+    }
+  }
+}
+function packTemplate() {
+  return JSON.stringify({ name: 'Meu Data Pack', author: 'Seu nome', version: '1', clubs: [{ match: 'Nome do clube como aparece no jogo', name: 'Novo nome (opcional)', sh: 'ABC', c1: '#d71920', c2: '#ffffff', logo: 'data:image/png;base64,... (opcional, PNG/JPG/WEBP até 180 KB)', players: [{ fn: 'Nome', ln: 'Sobrenome', pos: 'ATA', ovr: 80, age: 27, nat: 'BRA' }] }], _posicoes: POS.join(', ') }, null, 2);
+}
+function dlText(name, txt) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], { type: 'application/json' })); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
+packsLoad();
+function packCard() {
+  const rows = PACKS.map(p => `<div class="row" style="align-items:center;gap:8px"><div style="flex:1"><b>${esc(p.name)}</b> <span class="mut">${p.clubs.length} clubes${p.author ? ' · ' + esc(p.author) : ''}</span></div><button class="btn ${PACK_ON === p.id ? 'pri' : ''}" data-act="pack-use" data-id="${p.id}">${PACK_ON === p.id ? 'Ativo' : 'Usar'}</button><button class="btn" data-act="pack-del" data-id="${p.id}">Remover</button></div>`).join('') || '<p class="mut" style="margin:0">Nenhum pack instalado.</p>';
+  return `<div class="card stack"><span class="lbl">Data Packs</span><p class="mut" style="margin:0">Packs são arquivos .json que trocam nomes, escudos, cores e jogadores dos clubes. O pack ativo vale para <b>novas carreiras</b>.</p>${rows}<div class="row"><button class="btn" data-act="pack-import">Importar pack</button><button class="btn" data-act="pack-tpl">Baixar modelo</button>${PACK_ON ? '<button class="btn" data-act="pack-use" data-id="">Desativar</button>' : ''}</div><input type="file" id="pack-file" accept=".json,application/json" hidden></div>`;
+}
 function genSeasonLabel() { return G.season + '/' + String(G.season + 1).slice(2); }
 
 /* ---------- Geração de jogadores e mundo ---------- */
@@ -989,6 +1037,7 @@ function newWorld() {
     for (const c of L.clubs) { const id = 'c' + (G.nextC++); G.clubs[id] = { id, name: c[0], sh: c[1], rep: c[2], rep0: c[2], c1: c[3], c2: c[4], lg: L.id, co: L.co, sq: [], tt: {} }; G.leagues[L.id].clubs.push(id); }
   }
   for (const id in G.clubs) fillSquad(G.clubs[id]);
+  try { packApply(); } catch (e) { }
   for (const lid in G.leagues) makeFixtures(lid);
   initComps(null);
 }
@@ -3143,7 +3192,7 @@ function closeModal() { $('#modal').hidden = true; }
 function contrast(hex) { const h = hex.replace('#', ''); const r = parseInt(h.substr(0, 2), 16), g = parseInt(h.substr(2, 2), 16), b = parseInt(h.substr(4, 2), 16); return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.6 ? '#111' : '#fff'; }
 function shade(hex, a) { const h = hex.replace('#', ''); const f = i => clamp(Math.round(parseInt(h.substr(i, 2), 16) * (1 + a)), 0, 255).toString(16).padStart(2, '0'); return '#' + f(0) + f(2) + f(4); }
 function badge(c, size) {
-  size = size || 34; const sh = (c.sh || '?').slice(0, 4);
+  size = size || 34; if (c.pk && PKLOGO[c.pk]) return `<img src="${PKLOGO[c.pk]}" width="${size}" height="${Math.round(size * 1.15)}" alt="" style="flex:none;object-fit:contain">`; const sh = (c.sh || '?').slice(0, 4);
   return `<svg width="${size}" height="${Math.round(size * 1.15)}" viewBox="0 0 40 46" aria-hidden="true" style="flex:none"><path d="M20 2 L37 8 V22 C37 33 29 41 20 44 C11 41 3 33 3 22 V8 Z" fill="${c.c1}" stroke="${c.c2}" stroke-width="2.5"/><path d="M4 18 H36 V27 H4Z" fill="${c.c2}"/><text x="20" y="23" text-anchor="middle" dominant-baseline="middle" font-family="Saira Condensed, Arial Narrow, sans-serif" font-weight="800" font-size="${sh.length > 3 ? 8.5 : 10.5}" fill="${contrast(c.c2)}">${esc(sh)}</text></svg>`;
 }
 function flagChip(nat) { const N = NATIONS[nat] || NATIONS.BRA; return `<span class="chip" style="border-color:${N.c1};color:var(--fg)"><i style="width:8px;height:8px;border-radius:2px;background:${N.c1};display:inline-block;box-shadow:3px 0 0 ${N.c2}"></i>${esc(N.n)}</span>`; }
@@ -4386,6 +4435,7 @@ function renderSettings() {
     <div class="field"><label class="lbl" for="cfg-perf">Desempenho</label><select id="cfg-perf"><option value="auto" ${(CFG.perf || 'auto') === 'auto' ? 'selected' : ''}>Automático</option><option value="normal" ${CFG.perf === 'normal' ? 'selected' : ''}>Normal (melhor visual)</option><option value="low" ${CFG.perf === 'low' ? 'selected' : ''}>Economia (celular travando)</option></select><p class="fine" style="margin:0">Economia reduz a resolução da partida e tira efeitos para rodar mais leve.</p></div></div>
   ${G && G.user ? `<div class="card stack"><span class="lbl">Dificuldade da carreira</span>${diffPicker(G.user.diff || 'semi', true)}<p class="fine" style="margin:0">${diffFx(G.user.diff || 'semi')}</p></div>` : ''}
   ${achCardHtml()}
+  ${packCard()}
   <div class="card stack"><span class="lbl">Saves</span><p class="mut" style="margin:0">Até ${SLOTS} carreiras ficam salvas neste navegador (IndexedDB). Para guardar uma cópia fora do navegador, exporte o texto do save.</p>
     <div class="row"><button class="btn" data-act="export" ${G && G.user ? '' : 'disabled'}>Exportar carreira atual</button></div></div>
   <div class="card stack"><span class="lbl">Procedência dos dados</span><p style="margin:0" class="mut">Real: nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias. Fictício: todos os atletas, atributos, nomes de jogadores, distintivos e uniformes desenhados pelo jogo. Licenciado: nenhum conteúdo. Nada aqui usa arquivos, logos ou código de outros jogos.</p></div></div>`;
@@ -4394,6 +4444,7 @@ const cfgInput = e => { const id = e.target.id; if (id === 'cfg-speed') { CFG.sp
 function bindSettings() {
   const r = $('#settings-root');
   r.oninput = cfgInput;
+  r.onchange = e => { if (e.target.id !== 'pack-file') return; const f = e.target.files[0]; if (!f) return; const fr = new FileReader(); fr.onload = () => { try { const pk = packClean(JSON.parse(fr.result)); PACKS.push(pk); PACK_ON = pk.id; if (!packsSave()) { PACKS.pop(); PACK_ON = ''; throw new Error('Sem espaço para guardar o pack neste aparelho.'); } packsLoad(); toast('Pack "' + pk.name + '" instalado e ativo.'); } catch (er) { toast(er.message || 'Arquivo inválido.'); } renderSettings(); }; fr.readAsText(f); };
 }
 function openExport() {
   const txt = JSON.stringify({ app: 'rodix-football', v: 1, data: G });
@@ -4425,6 +4476,10 @@ async function act(a, el) {
     case 'open-shop': hubTab = 'shop'; renderHub(); iapLoad().then(() => { if (hubTab === 'shop' && curScreen === 's-hub') renderHub(); }); document.querySelector('#s-hub').scrollTop = 0; break;
     case 'kit-use': { if (useKit()) { toast('Kit Médico usado: você está recuperado.'); await saveGame(true); renderHub(); } break; }
     case 'quick-train': { const r = doTraining(G.user.focus, G.user.inten, 0.8, 0); if (r.ok) { const g = Object.entries(r.gains).map(([k, v]) => ATTRN[k] + ' +' + v).join(', '); toast(r.injured ? 'Você se lesionou no treino.' : g ? 'Evolução: ' + g + (r.d > 0 ? ' · Overall +' + r.d : '') : 'Treino feito. Progresso acumulado.'); } await saveGame(true); renderHub(); break; }
+    case 'pack-import': { const f = $('#pack-file'); if (f) f.click(); break; }
+    case 'pack-tpl': dlText('rodix-datapack-modelo.json', packTemplate()); break;
+    case 'pack-use': PACK_ON = el.dataset.id; packsSave(); renderSettings(); toast(PACK_ON ? 'Pack ativado para novas carreiras.' : 'Pack desativado.'); break;
+    case 'pack-del': PACKS = PACKS.filter(p => p.id !== el.dataset.id); if (PACK_ON === el.dataset.id) PACK_ON = ''; packsSave(); packsLoad(); renderSettings(); break;
     case 'settings': settingsBack = curScreen; renderSettings(); show('s-settings'); break;
     case 'settings-back': if (settingsBack === 's-hub' && G && G.user) openHub(); else show('s-menu'); break;
     case 'load': closeModal(); loadSlot(+el.dataset.slot); break;

@@ -2,7 +2,7 @@ name: Windows EXE
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [live-none]
     paths: ["www/**", "desktop/**", ".github/workflows/windows.yml"]
 permissions:
   contents: write
@@ -22,9 +22,9 @@ jobs:
         run: npm install && npx electron-builder --win portable
       - uses: actions/upload-artifact@v4
         with:
-          name: Rodix-Football-exe
-          path: desktop/dist/Rodix-Football.exe
+          name: Rodix-Live-exe
+          path: desktop/dist/Rodix-Live.exe
       - name: Publicar na aba Releases
         shell: bash
         env: { GH_TOKEN: "${{ github.token }}" }
-        run: gh release delete windows-latest --yes --cleanup-tag || true; gh release create windows-latest desktop/dist/Rodix-Football.exe --title "Rodix Football (Windows .exe)" --notes "Arquivo .exe portátil para Windows. Baixe e execute."
+        run: gh release delete windows-live --yes --cleanup-tag || true; gh release create windows-live desktop/dist/Rodix-Live.exe --title "Rodix Live (co-op .exe)" --notes "Rodix Live para Windows: ate 3 jogadores online. Baixe e execute. Todos precisam do mesmo arquivo."

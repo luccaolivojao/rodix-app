@@ -6,10 +6,10 @@
   "author": "Rodix",
   "devDependencies": { "electron": "33.2.1", "electron-builder": "25.1.8" },
   "build": {
-    "appId": "br.com.rodix.football",
-    "productName": "Rodix Football",
+    "appId": "br.com.rodix.football.live",
+    "productName": "Rodix Live",
     "files": ["main.js", "www/**/*"],
     "directories": { "output": "dist" },
-    "win": { "target": [{ "target": "portable", "arch": ["x64"] }], "icon": "icon.png", "artifactName": "Rodix-Football.exe" }
+    "win": { "target": [{ "target": "portable", "arch": ["x64"] }], "icon": "icon.png", "artifactName": "Rodix-Live.exe" }
   }
 }

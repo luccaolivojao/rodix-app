@@ -29,7 +29,7 @@ NOTE=('Esta versao nao oferece compras dentro do app no iOS: os pacotes de Rodix
 try:
     vs=api('GET',f'/v1/apps/{APP}/appStoreVersions?limit=10')
     for v in vs['data']: L('VERSION',v['id'],v['attributes']['versionString'],v['attributes']['appStoreState'])
-    ver=[v for v in vs['data'] if v['attributes']['appStoreState']=='REJECTED' or v['attributes']['appVersionState']=='REJECTED'][0]; vid=ver['id']
+    ver=[v for v in vs['data'] if v['attributes']['appStoreState'] in ('REJECTED','PREPARE_FOR_SUBMISSION')][0]; vid=ver['id']
     bs=api('GET',f'/v1/builds?filter[app]={APP}&sort=-uploadedDate&limit=5')
     for b in bs['data']: L('BUILD',b['id'],b['attributes']['version'],b['attributes']['processingState'],b['attributes']['uploadedDate'],b['attributes'].get('expired'))
     cur=api('GET',f'/v1/appStoreVersions/{vid}/build',quiet=True); L('CURRENT_BUILD',(cur or {}).get('data',{}).get('attributes',{}).get('version'))

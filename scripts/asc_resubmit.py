@@ -19,7 +19,7 @@ def api(m,path,body=None,ok=(200,201,204),quiet=False):
         if r.status_code in ok: return r.json() if r.content else {}
         if r.status_code>=500: time.sleep(3);continue
         break
-    if not quiet: L('ERR',m,path,r.status_code,' '.join(r.text.split())[:350])
+    if not quiet: L('ERR',m,path,r.status_code,' '.join(r.text.split())[:1500])
     return None
 MODE=os.environ.get('MODE','inspect')
 NOTE=('Esta versao nao oferece compras dentro do app no iOS: os pacotes de Rodix Coins ficam ocultos e nao ha fluxo de compra. '
@@ -44,14 +44,14 @@ try:
         nb=good[0]; L('USING_BUILD',nb['attributes']['version'])
         api('PATCH',f'/v1/appStoreVersions/{vid}/relationships/build',{'data':{'type':'builds','id':nb['id']}})
         if rd: api('PATCH',f'/v1/appStoreReviewDetails/{rd["data"]["id"]}',{'data':{'type':'appStoreReviewDetails','id':rd['data']['id'],'attributes':{'notes':NOTE}}})
-        for r in rs['data']:
-            if r['attributes']['state'] in ('UNRESOLVED_ISSUES','READY_FOR_REVIEW','WAITING_FOR_REVIEW','IN_REVIEW'):
-                if r['attributes']['state']=='UNRESOLVED_ISSUES':
-                    its=api('GET',f'/v1/reviewSubmissions/{r["id"]}/items',quiet=True) or {'data':[]}
-                    L('RESUBMIT_EXISTING',r['id'])
-                    x=api('PATCH',f'/v1/reviewSubmissions/{r["id"]}',{'data':{'type':'reviewSubmissions','id':r['id'],'attributes':{'submitted':True}}})
-                    L('RESULT',json.dumps(x)[:300] if x else 'fail')
-                    break
+        ns=api('POST','/v1/reviewSubmissions',{'data':{'type':'reviewSubmissions','attributes':{'platform':'IOS'},'relationships':{'app':{'data':{'type':'apps','id':APP}}}}})
+        if ns:
+            sid=ns['data']['id']; L('NEW_SUBMISSION',sid)
+            it=api('POST','/v1/reviewSubmissionItems',{'data':{'type':'reviewSubmissionItems','relationships':{'reviewSubmission':{'data':{'type':'reviewSubmissions','id':sid}},'appStoreVersion':{'data':{'type':'appStoreVersions','id':vid}}}}})
+            L('ITEM','ok' if it else 'fail')
+            if it:
+                x=api('PATCH',f'/v1/reviewSubmissions/{sid}',{'data':{'type':'reviewSubmissions','id':sid,'attributes':{'submitted':True}}})
+                L('RESULT',json.dumps(x)[:300] if x else 'fail')
 except Exception as e:
     L('EXC',repr(e))
 open('/tmp/asc_log.txt','w').write('\n'.join(log)+'\nEND\n')

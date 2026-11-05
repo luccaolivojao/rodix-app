@@ -2649,11 +2649,11 @@ function carrierThink(p, dt) {
     const lane = laneSafety(p.x, p.y, m.x, m.y, 1 - t); if (lane < 1.4) s -= 18; else if (lane < 3) s -= 6;
     const [open] = nearestOpp(m); s += Math.min(open, 8) * 0.8;
     if (m.pos === 'GOL') s -= 12;
-    if (m.user && E.involve) s += 9;
+    if (m.user && E.involve) s += 5;
     s += (Math.random() - 0.5) * (110 - p.a.vis) * 0.12;
     if (s > bs) { bs = s; best = m; }
   }
-  const thr = press < 2.2 ? -4 : press < 4 ? 3 : 7;
+  const thr = press < 2.2 ? -4 : press < 4 ? 1 : 4;
   if (best && bs > thr) { aiPass(p, best); return; }
   dribbleTo(p);
 }
@@ -2671,7 +2671,7 @@ function aiShoot(p, press) {
 }
 function aiPass(p, m) {
   const lead = 0.45; const tx = m.x + m.vx * lead, ty = m.y + m.vy * lead; const d = D(p.x, p.y, tx, ty);
-  const lane = laneSafety(p.x, p.y, tx, ty, 1 - p.team); const noise = 0.015 + (1 - p.a.pas / 99) * 0.07;
+  const lane = laneSafety(p.x, p.y, tx, ty, 1 - p.team); const noise = 0.008 + (1 - p.a.pas / 99) * 0.045;
   if (d > 20 && lane < 1.6) { const vh = clamp(11 + d * 0.22, 12, 22); const tf = d / vh; kick(p, tx - p.x, ty - p.y, vh, 4.9 * tf * 0.95, 'pass', noise); }
   else kick(p, tx - p.x, ty - p.y, passSpeed(d), 0, 'pass', noise);
   E.ball.intended = m; m.recv = 2.5;
@@ -3049,9 +3049,9 @@ function classifyKick(dir, power) {
 function userKick(dir, power, force) { if (typeof MU !== 'undefined' && MU && MU.paused) return; 
   const u = E.user; const kind = force || classifyKick(dir, power); const a = u.a;
   if (kind === 'shot' || kind === 'pen') {
-    const skill = kind === 'pen' ? a.pen : a.fin; const speed = 15 + power * 22;
-    const vz = 0.5 + power * 2.5 + Math.max(0, power - 0.86) * 26;
-    kick(u, dir[0], dir[1], speed, vz, kind === 'pen' ? 'pen' : 'shot', 0.012 + (1 - skill / 99) * 0.06 + power * 0.015);
+    const skill = kind === 'pen' ? a.pen : a.fin; const speed = 13 + power * 20;
+    const vz = 0.3 + power * 1.8 + Math.max(0, power - 0.86) * 26;
+    kick(u, dir[0], dir[1], speed, vz, kind === 'pen' ? 'pen' : 'shot', 0.016 + (1 - skill / 99) * 0.07 + power * 0.02);
     if (kind === 'pen') penKeeper(dir);
   } else if (kind === 'fk') {
     kick(u, dir[0], dir[1], 15 + power * 15, 2 + power * 6.2, 'fk', 0.01 + (1 - a.fal / 99) * 0.05);
@@ -4090,7 +4090,7 @@ function openControls() {
   $('#modal-box').oninput = cfgInput;
 }
 function openAbout() {
-  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 11). Escudos e Data Pack por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
+  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 12). Escudos e Data Pack por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
 }
 async function openProfiles() {
   const all = await refreshSaves();

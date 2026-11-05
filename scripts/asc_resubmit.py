@@ -44,14 +44,14 @@ try:
         nb=good[0]; L('USING_BUILD',nb['attributes']['version'])
         api('PATCH',f'/v1/appStoreVersions/{vid}/relationships/build',{'data':{'type':'builds','id':nb['id']}})
         if rd: api('PATCH',f'/v1/appStoreReviewDetails/{rd["data"]["id"]}',{'data':{'type':'appStoreReviewDetails','id':rd['data']['id'],'attributes':{'notes':NOTE}}})
-        ns=api('POST','/v1/reviewSubmissions',{'data':{'type':'reviewSubmissions','attributes':{'platform':'IOS'},'relationships':{'app':{'data':{'type':'apps','id':APP}}}}})
-        if ns:
-            sid=ns['data']['id']; L('NEW_SUBMISSION',sid)
-            it=api('POST','/v1/reviewSubmissionItems',{'data':{'type':'reviewSubmissionItems','relationships':{'reviewSubmission':{'data':{'type':'reviewSubmissions','id':sid}},'appStoreVersion':{'data':{'type':'appStoreVersions','id':vid}}}}})
-            L('ITEM','ok' if it else 'fail')
-            if it:
-                x=api('PATCH',f'/v1/reviewSubmissions/{sid}',{'data':{'type':'reviewSubmissions','id':sid,'attributes':{'submitted':True}}})
-                L('RESULT',json.dumps(x)[:300] if x else 'fail')
+        for r in rs['data']:
+            st=r['attributes']['state']; its=api('GET',f'/v1/reviewSubmissions/{r["id"]}/items',quiet=True) or {'data':[]}
+            if st=='READY_FOR_REVIEW' and not its['data']:
+                api('PATCH',f'/v1/reviewSubmissions/{r["id"]}',{'data':{'type':'reviewSubmissions','id':r['id'],'attributes':{'canceled':True}}},quiet=True); L('CANCELED_EMPTY',r['id'])
+        for r in rs['data']:
+            if r['attributes']['state']=='UNRESOLVED_ISSUES':
+                x=api('PATCH',f'/v1/reviewSubmissions/{r["id"]}',{'data':{'type':'reviewSubmissions','id':r['id'],'attributes':{'submitted':True}}})
+                L('RESULT',json.dumps(x)[:300] if x else 'fail'); break
 except Exception as e:
     L('EXC',repr(e))
 open('/tmp/asc_log.txt','w').write('\n'.join(log)+'\nEND\n')

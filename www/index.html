@@ -117,6 +117,20 @@ main#view{min-width:0;padding-bottom:40px}
 .kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px}
 .kv dt{color:var(--mut)} .kv dd{margin:0;font-weight:600;text-align:right}
 .news{display:flex;flex-direction:column;gap:8px;font-size:14px}
+.sc-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.sc-fol{font-size:13px;color:var(--mut)}.sc-fol b{color:var(--fg);font-size:20px}
+.sc-post{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.sc-post.hate{border-color:#ff5a5a}
+.sc-who{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.sc-av{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:800;color:#06140c;flex:none}
+.sc-who small{display:block;color:var(--mut);font-size:12px}
+.sc-post p{margin:0;font-size:15px;line-height:1.35}
+.sc-act{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+.sc-act button{background:transparent;border:1px solid var(--line);color:var(--fg);border-radius:999px;padding:6px 12px;font-size:13px;cursor:pointer}
+.sc-act button.on{border-color:#ff5a5a;color:#ff5a5a}
+.sc-cm{margin-top:10px;padding:8px 12px;border-left:3px solid var(--acc);font-size:14px;background:rgba(255,255,255,.03);border-radius:6px}
+.sc-cm b{display:block;font-size:12px;color:var(--mut)}
+
 .news div{padding-left:10px;border-left:2px solid var(--line2)} .news div.good{border-color:var(--good)}
 .opt{display:flex;flex-direction:column;gap:8px;text-align:left;cursor:pointer;border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--panel)}
 .opt[aria-pressed=true]{border-color:var(--acc);background:var(--panel2)}
@@ -1591,6 +1605,7 @@ function finishMatch(MC) {
       u.intl.caps++; u.intl.g += st.g; u.intl.a += st.a; if (MC.kind === 'wc' && !G.comps[MC.comp].q) { u.wc.ap++; u.wc.g += st.g; u.wc.a += st.a; }
     }
     u.ratings.push(rating); if (u.ratings.length > 8) u.ratings.shift();
+    socAfterMatch(MC, rating, mins, st, gf, ga);
     u.form = u.ratings.length ? (u.ratings.reduce((s, x) => s + x, 0) / u.ratings.length - 6.6) : 0;
     if (rnd() < 0.025 * dfx().hurt * (mins / 90)) { p.inj = ri(1, 6); addNews('Lesão na partida: ' + p.inj + ' semana(s) de recuperação.'); }
     if (p.ovr > u.peakOvr) u.peakOvr = p.ovr;
@@ -3413,7 +3428,7 @@ const ICONS = {
 };
 function ico(n, s) { s = s || 28; return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n] || ICONS.ball}</svg>`; }
 function paintIcons(root) { (root || document).querySelectorAll('i[data-ico]').forEach(el => { el.innerHTML = ico(el.dataset.ico, 30); }); }
-const TILES = [['me', 'Meu jogador', 'user'], ['club', 'Clube', 'shield'], ['comp', 'Competições', 'table'], ['cal', 'Calendário', 'calendar'], ['market', 'Transferências', 'swap'], ['train', 'Treinamento', 'dumbbell'], ['stats', 'Estatísticas', 'chart'], ['nat', 'Seleção', 'flag'], ['hist', 'Histórico', 'history'], ['shop', 'Loja', 'bag']];
+const TILES = [['me', 'Meu jogador', 'user'], ['club', 'Clube', 'shield'], ['comp', 'Competições', 'table'], ['cal', 'Calendário', 'calendar'], ['market', 'Transferências', 'swap'], ['train', 'Treinamento', 'dumbbell'], ['stats', 'Estatísticas', 'chart'], ['nat', 'Seleção', 'flag'], ['hist', 'Histórico', 'history'], ['social', 'Rodix Social', 'news'], ['shop', 'Loja', 'bag']];
 function openHub() { applyClubTheme(); show('s-hub'); renderHub(); setTimeout(maybeIntro, 250); }
 function userKit() { const c = userClub(); return c ? { c1: c.c1, c2: c.c2 } : { c1: '#888888', c2: '#ffffff' }; }
 function refreshMenuCoins() { const e = $('#menu-coins'); if (e) e.textContent = coinsOf() + ' Coins'; const h = $('#hub-coins'); if (h) h.textContent = coinsOf(); }
@@ -3424,9 +3439,67 @@ function renderHub() {
   $('#hub-season').textContent = 'Temporada ' + genSeasonLabel() + ' · Semana ' + Math.min(G.week + 1, totalWeeks()) + '/' + totalWeeks();
   drawAvatar($('#hub-av'), p.look, userKit(), p.num, false);
   if (hubTab === 'shop' && !IAP.tried && iapPlugin()) iapLoad().then(() => { if (hubTab === 'shop' && curScreen === 's-hub') renderHub(); });
-  const f = { home: vHome, me: vMe, club: vClub, comp: vComp, cal: vCal, market: vMarket, train: vTrain, stats: vStats, nat: vNat, hist: vHist, shop: vShop }[hubTab] || vHome;
+  const f = { home: vHome, me: vMe, club: vClub, comp: vComp, cal: vCal, market: vMarket, train: vTrain, stats: vStats, nat: vNat, hist: vHist, social: vSocial, shop: vShop }[hubTab] || vHome;
   $('#view').innerHTML = f();
   if (hubTab === 'me') { const cvs = $('#me-av'); if (cvs) drawAvatar(cvs, p.look, userKit(), p.num, true); }
+}
+
+/* ---------- Rodix Social (protótipo) ---------- */
+const SOC_ACC = {
+  fan: { n: 'Torcida Organizada', c: '#ffd23f', i: 'T' },
+  mkt: { n: 'Central do Mercado', c: '#3fc27a', i: 'M' },
+  res: { n: 'Resenha da Rodada', c: '#ff9a3d', i: 'R' },
+  cro: { n: 'Crônicas do Futebol', c: '#9db1a3', i: 'C' },
+  rod: { n: 'Rodix Social', c: '#3fc27a', i: 'R' },
+};
+const SOC_HATERS = ['haterdoreal', 'zueira_fc', 'bola_murcha', 'critico_de_sofa', 'resenhista_chato'];
+function soc() {
+  const u = G.user; if (!u.soc) {
+    const c = userClub(); u.soc = { fol: 300 + Math.round((c ? c.rep : 40) * 22), posts: [], nid: 1 };
+    socPost('rod', 'Bem-vindo ao Rodix Social. Aqui a torcida, a imprensa e os haters reagem à sua carreira. Jogue bem e a sua audiência cresce.', {});
+  } return u.soc;
+}
+function socPost(acc, text, o) {
+  const u = G.user; const S = u.soc || soc(); o = o || {};
+  const a = typeof acc === 'string' ? SOC_ACC[acc] : acc;
+  const base = Math.max(20, S.fol * (o.hate ? 0.01 : 0.05));
+  S.posts.unshift({ id: S.nid++, a, t: text, w: G.week, s: genSeasonLabel(), lk: Math.round(base * (0.4 + rnd() * 1.2)), liked: false, hate: !!o.hate, replied: false, cm: [] });
+  if (S.posts.length > 40) S.posts.length = 40;
+}
+function socAfterMatch(MC, rating, mins, st, gf, ga) {
+  try {
+    const S = soc(); const p = up(); const opp = MC.teams[1 - MC.uSide].name; const r1 = Math.round(rating * 10) / 10;
+    let d = 0;
+    if (st.g >= 2) { socPost('fan', `${st.g} gols contra o ${opp}! Esse é o nosso camisa ${p.num || ''}! 🔥⚽`); d += 40 * st.g; }
+    else if (st.g === 1) { socPost('fan', `Golaço contra o ${opp}! Já pode renovar. 🔥`); d += 35; }
+    if (st.a >= 1) { socPost('res', `Assistência de ${shortName(p)} contra o ${opp}. Nota ${r1}.`); d += 15; }
+    if (rating >= 8) { socPost('res', `Time da semana saiu e ${shortName(p)} está nele, com nota ${r1}. 👀`); d += 60; }
+    if (gf > ga && rnd() < 0.5) socPost('cro', `Vitória do ${MC.teams[MC.uSide].name} por ${gf}x${ga} sobre o ${opp}.`);
+    if (rating <= 5.6 || (gf < ga && rnd() < 0.35)) { socPost({ n: pick(SOC_HATERS), c: '#ff5a5a', i: 'H' }, pick(['Esse aí só joga no modo fácil kkkk. Overrated demais. 😂', `Nota ${r1}? Devia pendurar as chuteiras.`, 'Contrataram errado, o time joga melhor sem ele.', `Perdeu para o ${opp} e ainda tem coragem de postar.`]), { hate: true }); d -= 10; }
+    if (rnd() < 0.12 && p.ovr >= 60) socPost('mkt', `${shortName(p)} está na mira de outros clubes. Até onde vai a sondagem?`);
+    S.fol = Math.max(50, S.fol + Math.round(d * (1 + (p.ovr - 55) / 100)));
+  } catch (e) { }
+}
+function socPostHtml(x) {
+  const cm = x.cm.map(c => `<div class="sc-cm"><b>${esc(c.n)}</b>${esc(c.t)}</div>`).join('');
+  return `<div class="sc-post ${x.hate ? 'hate' : ''}"><div class="sc-who"><div class="sc-av" style="background:${x.a.c}">${esc(x.a.i)}</div><div><b>${esc(x.a.n)}</b><small>${esc(x.s)} · sem. ${x.w + 1}</small></div></div><p>${esc(x.t)}</p>${cm}<div class="sc-act"><button class="${x.liked ? 'on' : ''}" data-act="soc-like" data-id="${x.id}">♥ ${x.lk + (x.liked ? 1 : 0)}</button>${x.hate && !x.replied ? `<button data-act="soc-reply" data-id="${x.id}">💬 Responder</button>` : ''}</div></div>`;
+}
+function vSocial() {
+  const S = soc(); G.user.socSeen = S.nid;
+  return head('Rodix Social', '<span class="sc-fol"><b>' + S.fol.toLocaleString('pt-BR') + '</b> seguidores</span>') + `<p class="fine" style="margin:0 0 14px">Protótipo. A torcida, a imprensa e os haters reagem aos seus jogos.</p>` + (S.posts.map(socPostHtml).join('') || '<span class="mut">Sem posts.</span>');
+}
+function socReplyModal(id) {
+  modal(`<h2>Responder ao hater</h2><p class="mut">Como você responde? Se a sua fase estiver boa, uma resposta firme rende seguidores. Se estiver ruim, pode virar piada.</p><div class="stack"><button class="btn pri" data-act="soc-pick" data-id="${id}" data-k="classe">Responder com classe</button><button class="btn" data-act="soc-pick" data-id="${id}" data-k="sarc">Joga no Lendário e vem falar comigo. 😎</button><button class="btn ghost" data-act="soc-pick" data-id="${id}" data-k="ign">Ignorar</button></div>`);
+}
+function socPick(id, k) {
+  const S = soc(), x = S.posts.find(q => q.id === id); if (!x) return; const u = G.user, p = up();
+  const good = u.form > 0; let d = 0, t = '', msg = '';
+  if (k === 'classe') { t = 'Respeito a opinião. Vou responder em campo, domingo tem jogo. 🤝'; d = Math.round(S.fol * 0.02); msg = 'Resposta elogiada: +' + d + ' seguidores'; }
+  else if (k === 'sarc') { t = 'Joga no Lendário e vem falar comigo. 😎'; if (good) { d = Math.round(S.fol * 0.06); msg = 'A resposta viralizou: +' + d + ' seguidores'; } else { d = -Math.round(S.fol * 0.04); msg = 'Deu ruim: a resposta virou piada (' + d + ' seguidores)'; } }
+  else { x.replied = true; saveGame(true); closeModal(); renderHub(); return; }
+  x.replied = true; x.cm.push({ n: 'Você', t }); x.lk += Math.abs(d); S.fol = Math.max(50, S.fol + d);
+  socPost('fan', d >= 0 ? 'A torcida está com o craque! Respondeu o hater à altura. 👏' : 'O hater levou a melhor dessa vez...', {});
+  saveGame(true); closeModal(); renderHub(); toast(msg);
 }
 function head(t, right) { return `<div class="pagehead"><div class="row" style="gap:14px"><button class="back" data-act="home" aria-label="Voltar ao início">${ico('back', 22)}</button><h2>${t}</h2></div>${right ? `<div class="row">${right}</div>` : ''}</div>`; }
 function allNews() { const me = (G.news || []).map(x => Object.assign({ tag: 'me' }, x)); return me.concat(G.wnews || []).sort((a, b) => (b.s > a.s ? 1 : b.s < a.s ? -1 : 0) || b.w - a.w); }
@@ -3506,7 +3579,7 @@ function vShop() { return head('Loja') + shopBody(true); }
 function menuShop() { const sc = $('#modal-box').scrollTop; modal(`<h2>Loja</h2>${shopBody(false)}<div class="row" style="margin-top:14px"><button class="btn ghost" data-act="close-modal">Fechar</button></div>`); $('#modal-box').classList.add('wide'); $('#modal-box').scrollTop = sc; }
 function vHome() {
   const p = up(), u = G.user, c = userClub();
-  const sub = { me: `Overall ${p.ovr}`, club: c ? c.name : 'Sem clube', comp: c ? LDEF[c.lg].n : '—', cal: `Semana ${Math.min(G.week + 1, totalWeeks())}`, shop: coinsOf() + ' Coins', market: G.offers.length ? G.offers.length + ' proposta(s)' : 'Sem propostas', train: u.trained ? 'Feito nesta semana' : p.inj > 0 ? 'Lesionado' : 'Treino disponível', stats: 'Artilharia e prêmios', nat: G.pendingIntl ? 'Convocado!' : NATIONS[p.nat].n, hist: `${u.history.length} temporada(s)` };
+  const sub = { me: `Overall ${p.ovr}`, club: c ? c.name : 'Sem clube', comp: c ? LDEF[c.lg].n : '—', cal: `Semana ${Math.min(G.week + 1, totalWeeks())}`, shop: coinsOf() + ' Coins', market: G.offers.length ? G.offers.length + ' proposta(s)' : 'Sem propostas', train: u.trained ? 'Feito nesta semana' : p.inj > 0 ? 'Lesionado' : 'Treino disponível', stats: 'Artilharia e prêmios', nat: G.pendingIntl ? 'Convocado!' : NATIONS[p.nat].n, hist: `${u.history.length} temporada(s)`, social: ((u.soc ? u.soc.fol : 0) || 0).toLocaleString('pt-BR') + ' seguidores' };
   const bd = { market: G.offers.length || '', train: !u.trained && p.inj === 0 && p.club ? '!' : '', nat: G.pendingIntl ? '!' : '' };
   const tiles = TILES.map(([k, n, ic]) => `<button class="tile" data-tab="${k}"><i>${ico(ic, 30)}</i><span><b>${n}</b><small>${esc(sub[k])}</small></span>${bd[k] ? `<em class="tbadge">${bd[k]}</em>` : ''}</button>`).join('');
   return `<div class="home-top">${nextCard()}${depthCard()}</div><div class="tilegrid">${tiles}</div><div class="card stack" style="margin-top:20px"><span class="lbl">Notícias</span>${newsHtml(10)}</div>`;
@@ -4091,7 +4164,7 @@ function openControls() {
   $('#modal-box').oninput = cfgInput;
 }
 function openAbout() {
-  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 13). Escudos e Data Pack por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
+  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 14 · protótipo Rodix Social). Escudos e Data Pack por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
 }
 async function openProfiles() {
   const all = await refreshSaves();
@@ -4515,6 +4588,9 @@ async function act(a, el) {
     case 'back-create': renderCreate(); show('s-create'); break;
     case 'start': if (CP.club) beginCareer(); break;
     case 'overwrite': closeModal(); doBegin(+el.dataset.slot); break;
+    case 'soc-like': { const x = soc().posts.find(q => q.id === +el.dataset.id); if (x) { x.liked = !x.liked; saveGame(true); renderHub(); } break; }
+    case 'soc-reply': socReplyModal(+el.dataset.id); break;
+    case 'soc-pick': socPick(+el.dataset.id, el.dataset.k); break;
     case 'close-modal': closeModal(); if (curScreen === 's-hub') { renderHub(); setTimeout(maybeIntro, 300); } break;
     case 'save': saveGame(false); break;
     case 'play': startPlayed(el.dataset.kind); break;

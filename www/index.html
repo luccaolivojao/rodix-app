@@ -1475,12 +1475,13 @@ function makeTimeline(MC) {
   return ev.sort((a, b) => a.m - b.m);
 }
 /* cartões: amarelos/vermelhos de todos os jogadores (o usuário tem os seus no lance e nos desarmes) */
+function mcDerby(MC) { if (MC.derby == null) { try { MC.derby = !isNat(MC.kind) && isDerby(MC.teams[0].name, MC.teams[1].name); } catch (e) { MC.derby = false; } } return MC.derby; }
 function genCards(MC) {
   const out = []; const us = MC.uSide;
   for (let side = 0; side < 2; side++) {
     const xi = MC.teams[side].xi.filter(q => !q.u); if (!xi.length) continue;
     const w = xi.map(q => ({ GOL: 0.15, ZAG: 1.3, LAT: 1.1, VOL: 1.6, MEI: 1, PON: 0.7, ATA: 0.6 }[q.pos] || 1));
-    const n = poisson(1.5 * (side === us ? 1 : dfx().cards));
+    const n = poisson(1.5 * (mcDerby(MC) ? 1.6 : 1) * (side === us ? 1 : dfx().cards));
     const yc = new Map();
     for (let i = 0; i < n; i++) {
       let r = rnd() * w.reduce((s, x) => s + x, 0), k = 0; while (k < xi.length - 1 && (r -= w[k]) > 0) k++;
@@ -1528,7 +1529,7 @@ function resolveUserStat(MC, e) {
     }
   } else if (e.kind === 'def') {
     const ok = rnd() < 0.45 + ((a.des + a.mar) / 2) / 99 * 0.35 - diff;
-    if (ok) { st.tkw++; txt = 'Desarme seu, perigo afastado.'; if (rnd() < 0.05 * dfx().cards) { userCard(MC, e.m); txt += ' Cartão amarelo.'; } }
+    if (ok) { st.tkw++; txt = 'Desarme seu, perigo afastado.'; if (rnd() < 0.05 * (mcDerby(MC) ? 1.6 : 1) * dfx().cards) { userCard(MC, e.m); txt += ' Cartão amarelo.'; } }
     else if (rnd() < 0.3) { const s = pickScorer(O.xi); teamGoal(MC, 1 - us, s, null, e.m); txt = 'Você foi superado: gol do adversário.'; } else txt = 'O adversário finalizou para fora.';
   } else if (e.kind === 'gk') {
     if (rnd() < 0.7) { if (rnd() < 0.55 + a.gol / 99 * 0.33 - diff) { st.sv++; txt = 'Defesa sua!'; } else { const s = pickScorer(O.xi); teamGoal(MC, 1 - us, s, null, e.m); txt = 'Gol do adversário.'; } } else txt = 'Chute para fora.';
@@ -2021,7 +2022,7 @@ function sfx(name) {
 }
 
 /* ---------- torcida (ruído filtrado em loop, com picos nos lances) ---------- */
-let CROWD = null; const CROWD_BASE = 0.045;
+let CROWD = null, CROWD_BASE = 0.045, CROWD_K = 1;
 function crowdStart() {
   const c = sfxCtx(); if (!c || CROWD) return;
   try {
@@ -2040,7 +2041,7 @@ function crowdStop() {
 /* pico: sobe até 'peak' em 'up' s e volta ao nível base em 'down' s; 'tone' desloca a frequência (grave = vaia/lamento) */
 function crowdPulse(peak, up, down, tone) {
   if (!CROWD || !AC) return; const t = AC.currentTime, g = CROWD.g.gain;
-  try { g.cancelScheduledValues(t); g.setTargetAtTime(peak, t, Math.max(0.05, (up || 0.3) / 3)); g.setTargetAtTime(CROWD_BASE, t + (up || 0.3), Math.max(0.1, (down || 1.2) / 3)); CROWD.f.frequency.cancelScheduledValues(t); CROWD.f.frequency.setTargetAtTime(tone || 900, t, 0.15); CROWD.f.frequency.setTargetAtTime(650, t + (up || 0.3) + 0.2, 0.8); } catch (e) { }
+  try { g.cancelScheduledValues(t); g.setTargetAtTime(peak * CROWD_K, t, Math.max(0.05, (up || 0.3) / 3)); g.setTargetAtTime(CROWD_BASE, t + (up || 0.3), Math.max(0.1, (down || 1.2) / 3)); CROWD.f.frequency.cancelScheduledValues(t); CROWD.f.frequency.setTargetAtTime(tone || 900, t, 0.15); CROWD.f.frequency.setTargetAtTime(650, t + (up || 0.3) + 0.2, 0.8); } catch (e) { }
 }
 
 /* ---------- vibração (Capacitor Haptics no app; navigator.vibrate no navegador) ---------- */
@@ -2814,7 +2815,7 @@ function tryTackles() {
   }
 }
 function foul(p, car, cp, rp) {
-  const card = Math.random() < (cp == null ? 0.2 : cp) * dfx().cards; const redC = rp && p.user && Math.random() < rp * dfx().cards;
+  const card = Math.random() < (cp == null ? 0.2 : cp) * (E.derby ? 1.6 : 1) * dfx().cards; const redC = rp && p.user && Math.random() < rp * dfx().cards;
   if (redC) E.red = true; else if (card && p.user) { E.st.yc++; if (E.st.yc + (E.prevYc || 0) >= 2) { E.red = true; } }
   E.banner = 'Falta' + (redC ? ' · cartão vermelho' : card ? ' · cartão amarelo' : ''); E.bannerT = 1.2;
   const inPen = NX(car.team, car.x) > FL - 16.5 && Math.abs(car.y - GC) < 20.16;
@@ -3129,7 +3130,8 @@ function setupDrill(kind) {
     setupMoment('fk', { x: rf(FL - 25, FL - 12), y: rf(18, 50) }); E.drill = 'fin';
     for (const p of E.players) { if (p.pos === 'GOL' || p.user) continue; p.wall = false; p.x = rf(48, 70); p.y = rf(8, 60); p.tgt = [p.x, p.y]; }
     E.banner = 'Finalize!'; E.bannerT = 1.4;
-  } else if (kind === 'fk') setupMoment('fk', { x: rf(FL - 30, FL - 20), y: rf(16, 52) });
+  } else if (kind === 'pen') setupMoment('pen', {});
+  else if (kind === 'fk') setupMoment('fk', { x: rf(FL - 30, FL - 20), y: rf(16, 52) });
   else setupMoment(kind === 'col' ? 'att' : kind, {});
   E.drill = E.drill || kind;
 }
@@ -3912,10 +3914,11 @@ function vMarket() {
   <h3 style="margin:18px 0 10px;font-size:22px">Propostas (${G.offers.length})</h3>${offers ? `<div class="grid2">${offers}</div>` : '<div class="card mut">Nenhuma proposta no momento.</div>'}
   <h3 style="margin:18px 0 10px;font-size:22px">Movimentações no mundo</h3><div class="card"><div class="tblw"><table><thead><tr><th>Temp.</th><th>Jogador</th><th>De</th><th>Para</th><th class="r">Valor</th></tr></thead><tbody>${log || '<tr><td colspan="5" class="mut">As transferências entre clubes acontecem a cada fim de temporada.</td></tr>'}</tbody></table></div></div>`;
 }
-const DRILL_OF = { fin: 'fin', bp: 'fk', gk: 'gkpen', def: 'def', pas: 'col', dri: 'col', fis: 'col' };
-const DRILLS = { fin: { n: 'Finalização', reps: 5, ico: 'target', d: '5 chutes de fora da área contra o goleiro.' }, fk: { n: 'Faltas', reps: 5, ico: 'wall', d: '5 cobranças com barreira.' }, gkpen: { n: 'Pênaltis', reps: 5, ico: 'glove', d: 'Defenda 5 cobranças de pênalti.' }, def: { n: 'Defesa', reps: 3, ico: 'shield', d: 'Pare 3 ataques do time reserva.' }, col: { n: 'Coletivo', reps: 3, ico: 'whistle', d: '3 ataques contra o time reserva: crie e finalize.' } };
+const DRILL_OF = { fin: 'fin', bp: 'bp', gk: 'gkpen', def: 'def', pas: 'col', dri: 'col', fis: 'col' };
+const DRILLS = { fin: { n: 'Finalização', reps: 5, ico: 'target', d: '5 chutes de fora da área contra o goleiro.' }, fk: { n: 'Faltas', reps: 5, ico: 'wall', d: '5 cobranças com barreira.' }, pen: { n: 'Pênaltis (batedor)', reps: 5, ico: 'target', d: '5 cobranças de pênalti contra o goleiro. Mire nos cantos.' }, gkpen: { n: 'Pênaltis (goleiro)', reps: 5, ico: 'glove', d: 'Defenda 5 cobranças de pênalti.' }, def: { n: 'Defesa', reps: 3, ico: 'shield', d: 'Pare 3 ataques do time reserva.' }, col: { n: 'Coletivo', reps: 3, ico: 'whistle', d: '3 ataques contra o time reserva: crie e finalize.' } };
+function drillOf(f) { return f === 'bp' ? (G.week % 2 ? 'pen' : 'fk') : DRILL_OF[f]; }
 function vTrain() {
-  const p = up(), u = G.user; const dk = DRILL_OF[u.focus]; const D = DRILLS[dk];
+  const p = up(), u = G.user; const dk = drillOf(u.focus); const D = DRILLS[dk];
   const opts = Object.entries(TRAIN).filter(([k]) => p.pos === 'GOL' ? true : k !== 'gk').map(([k, t]) => `<button class="opt" data-focus="${k}" aria-pressed="${u.focus === k}"><b>${t.n}</b><span class="mut" style="font-size:13px">${t.k.map(x => ATTRN[x] + ' ' + p.a[x]).join(' · ')}</span></button>`).join('');
   const ints = Object.entries(INTENS).map(([k, t]) => `<button type="button" data-int="${k}" aria-pressed="${u.inten === k}">${t.n}</button>`).join('');
   const prog = TRAIN[u.focus].k.map(k => { const v = Math.round((u.prog[k] || 0) / attrCost(p.a[k]) * 100); return `<div class="attr"><span>${ATTRN[k]} <span class="mut">${p.a[k]} → ${p.a[k] + 1}</span></span><span class="v">${v}%</span><div class="bar"><i style="width:${v}%"></i></div></div>`; }).join('');
@@ -4106,7 +4109,9 @@ function hudSub() {
   $('#hud-sub').innerHTML = `<span class="cmp">${esc(MC.title)}</span>${MC.leg1 ? `<span>${esc(tr('Agregado'))} ${MC.leg1[0] + MC.score[0]} – ${MC.leg1[1] + MC.score[1]} · ${esc(tr('Ida'))} ${MC.leg1[0]}–${MC.leg1[1]}</span>` : ''}${MC.goals[0].length ? `<span>${gl(0)}</span>` : ''}${MC.goals[1].length ? `<span>${gl(1)}</span>` : ''}${cd ? `<span>${cd}</span>` : ''}`;
 }
 function kickIntro(MC, after) {
-  $('#kickintro').hidden = true; MU.phase = 'ticker'; sfx('whistle'); crowdStart(); crowdPulse(0.2, 0.6, 2.5, 1000); if (after) after(); return;
+  $('#kickintro').hidden = true; const dby = mcDerby(MC); CROWD_BASE = dby ? 0.08 : 0.045; CROWD_K = dby ? 1.5 : 1; MU.phase = 'ticker'; sfx('whistle'); crowdStart(); crowdPulse(dby ? 0.34 : 0.2, 0.6, 2.5, 1000);
+  if (dby) { try { flashBanner('CLÁSSICO', MC.teams[0].name + ' × ' + MC.teams[1].name); feedMsg('Clássico! A torcida está em chamas e o árbitro vai estar de olho: mais cartões.', true); } catch (e) { } }
+  if (after) after(); return;
   const el = $('#kickintro'), T = MC.teams; const u = G.user; const p = up();
   const st = MC.on === 0 ? 'Você é titular' : MC.on > 0 ? 'Você começa no banco' : 'Fora da lista';
   el.style.setProperty('--k0', MC.kits[0].c1); el.style.setProperty('--k1', MC.kits[1].c1);
@@ -4149,7 +4154,7 @@ function startMoment(e, sub) {
   if (!sub) sfx('whistle');
   KB.aimY = 0; KB.ch = null; MU.repChk = false; recStart();
   const MC = MU.MC, us = MC.uSide;
-  engNew([engTeamOf(MC.teams[us], MU.kits[0], 0), engTeamOf(MC.teams[1 - us], MU.kits[1], 1)], e.kind);
+  engNew([engTeamOf(MC.teams[us], MU.kits[0], 0), engTeamOf(MC.teams[1 - us], MU.kits[1], 1)], e.kind); E.derby = mcDerby(MC);
   E.prevYc = MC.st.yc;
   setupMoment(e.kind, e.opts || { x: rf(FL - 30, FL - 20), y: rf(16, 52) });
   E.pause = sub ? 0.5 : 0.8;
@@ -4303,7 +4308,7 @@ function drillRepDone(skipped) {
   const Dr = MU.drill; let pts = 0, txt = 'Não foi dessa vez';
   if (!skipped && E) {
     const g0 = E.goals.filter(g => g.team === 0).length, g1 = E.goals.filter(g => g.team === 1).length;
-    if (Dr.kind === 'fin' || Dr.kind === 'fk') { pts = g0 ? 1 : E.st.sot > 0 ? 0.3 : 0; txt = g0 ? 'Gol!' : E.st.sot ? 'No alvo, defendido' : 'Para fora'; }
+    if (Dr.kind === 'fin' || Dr.kind === 'fk' || Dr.kind === 'pen') { pts = g0 ? 1 : E.st.sot > 0 ? 0.3 : 0; txt = g0 ? 'Gol!' : E.st.sot ? 'No alvo, defendido' : 'Para fora'; }
     else if (Dr.kind === 'gkpen') { pts = g1 ? 0 : 1; txt = g1 ? 'Gol do batedor' : 'Defendido!'; }
     else if (Dr.kind === 'def') { pts = g1 ? 0 : E.reason === 'won' ? 1 : 0.5; txt = g1 ? 'Sofreu o gol' : E.reason === 'won' ? 'Bola recuperada!' : 'Ataque contido'; }
     else { pts = g0 ? (E.st.g || E.st.a ? 1 : 0.6) : E.st.sot ? 0.3 : 0; txt = g0 ? (E.st.g ? 'Gol seu!' : E.st.a ? 'Assistência!' : 'Gol do time') : E.st.sot ? 'Finalização no alvo' : 'Ataque sem gol'; }
@@ -4340,7 +4345,7 @@ function openControls() {
   $('#modal-box').oninput = cfgInput;
 }
 function openAbout() {
-  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 20). Escudos e Data Pack por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
+  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 21). Escudos e Data Pack por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
 }
 async function openProfiles() {
   const all = await refreshSaves();
@@ -4742,7 +4747,7 @@ async function act(a, el) {
     case 'rp-skip': repEnd(); break;
     case 'var-skip': varFinish(); break;
     case 'home': closeModal(); hubTab = 'home'; renderHub(); document.querySelector('#s-hub').scrollTop = 0; break;
-    case 'drill': startDrill(DRILL_OF[G.user.focus], true); break;
+    case 'drill': startDrill(drillOf(G.user.focus), true); break;
     case 'drill-back': closeModal(); MU = null; E = null; await saveGame(true); hubTab = 'train'; openHub(); break;
     case 'shop-buy': { const r = buyItem(el.dataset.id); if (r.ok) { sfx('click'); toast('Compra feita.'); if (curScreen === 's-menu') { menuShop(); refreshMenuCoins(); } else { await saveGame(true); renderHub(); } } else toast(r.short ? 'Rodix Coins insuficientes.' : 'Item indisponível.'); break; }
     case 'menu-shop': menuShop(); iapLoad().then(() => { if (curScreen === 's-menu' && !$('#modal').hidden && $('#modal-box').querySelector('.shopgrid')) menuShop(); }); break;

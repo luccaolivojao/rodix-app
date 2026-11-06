@@ -3317,7 +3317,7 @@ async function freeSlot() { const all = await Store.all(); const used = new Set(
 
 /* ---------- CRIAÇÃO DO JOGADOR ---------- */
 let CR = null;
-function defaultCreate() { const [fn, ln] = nameFor('BRA'); return { fn, ln, rnd: true, nat: 'BRA', age: 16, pos: 'ATA', style: 'Finalizador', height: 179, weight: 72, foot: 'Direito', num: 9, look: { skin: 2, hair: 1, hairC: 0 } }; }
+function defaultCreate() { const [fn, ln] = nameFor('BRA'); return { fn, ln, rnd: true, nat: 'BRA', age: 16, pos: 'ATA', style: 'Finalizador', height: 179, weight: 72, foot: 'Direito', num: 9, soc: true, look: { skin: 2, hair: 1, hairC: 0 } }; }
 function renderCreate() {
   const c = CR; const posBtns = POS.map(p => `<button type="button" data-pos="${p}" aria-pressed="${c.pos === p}">${POSN[p]}</button>`).join('');
   const styles = Object.keys(STYLES).filter(s => c.pos === 'GOL' ? /goleiro/i.test(s) || s === 'Especialista em bola parada' : !/goleiro/i.test(s));
@@ -3340,6 +3340,7 @@ function renderCreate() {
       <div class="card stack"><span class="lbl">Posição</span><div class="seg" id="seg-pos">${posBtns}</div>
         <div class="field"><label class="lbl" for="f-style">Estilo de jogo</label><select id="f-style">${styles.map(s => `<option ${s === c.style ? 'selected' : ''}>${s}</option>`).join('')}</select></div></div>
       ${REC_MODE_OK ? `<label class="card row" style="gap:12px;cursor:pointer"><input type="checkbox" id="f-rec" ${c.rec ? 'checked' : ''}><span><b>Modo gravação</b><span class="fine" style="display:block">Começa com overall 75–80 e já perto da vaga de titular. Ideal para vídeos.</span></span></label>` : ''}
+      <div class="card stack"><span class="lbl">Rodix Social</span><div class="seg" id="seg-soc"><button type="button" data-soc="1" aria-pressed="${c.soc !== false}">Sim, quero</button><button type="button" data-soc="0" aria-pressed="${c.soc === false}">Não</button></div><p class="fine" style="margin:0">A rede social do jogo: torcida, imprensa e haters reagem à sua carreira. Você pode mudar isso depois em Configurações.</p></div>
       <div class="card stack"><span class="lbl">Aparência</span>
         <div class="row" id="sw-skin" aria-label="Cor da pele">${SKINS.map((s, i) => `<button class="sw" type="button" data-skin="${i}" style="background:${s}" aria-label="Tom de pele ${i + 1}" aria-pressed="${c.look.skin === i}"></button>`).join('')}</div>
         <div class="seg" id="seg-hair">${HAIRS.map((h, i) => `<button type="button" data-hair="${i}" aria-pressed="${c.look.hair === i}">${h}</button>`).join('')}</div>
@@ -3370,6 +3371,7 @@ function bindCreate() {
     if (b.dataset.dice) { [CR.fn, CR.ln] = nameFor(CR.nat); CR.rnd = true; renderCreate(); b.blur(); const d = $('#create-root .dice'); if (d) { d.classList.add('roll'); } return; }
     if (b.dataset.pos) { CR.pos = b.dataset.pos; CR.num = DEF_NUM[CR.pos][0]; renderCreate(); }
     else if (b.dataset.skin) { CR.look.skin = +b.dataset.skin; renderCreate(); }
+    else if (b.dataset.soc) { CR.soc = b.dataset.soc === '1'; renderCreate(); }
     else if (b.dataset.hair) { CR.look.hair = +b.dataset.hair; renderCreate(); }
     else if (b.dataset.hairc) { CR.look.hairC = +b.dataset.hairc; renderCreate(); }
   };
@@ -3426,7 +3428,7 @@ async function beginCareer() {
 }
 function doBegin(slot) {
   SLOT = slot; const cfg = Object.assign({}, CR, { fn: (CR.fn || 'Jogador').trim(), ln: (CR.ln || 'Novo').trim() });
-  const p = startCareer(cfg, CP.club); G.user.diff = DF; if (!CFG.tutHub) G.user.tutNew = true;
+  const p = startCareer(cfg, CP.club); G.user.diff = DF; G.user.socOn = cfg.soc !== false; if (!CFG.tutHub) G.user.tutNew = true;
   saveGame(true); hubTab = 'home'; openHub();
   modal(`<h2>Bem-vindo ao ${esc(club(CP.club).name)}</h2><p>${esc(fullName(p))}, ${p.age} anos, ${esc(tr(POSN[p.pos]).toLowerCase())}. Overall inicial <b>${p.ovr}</b>. Os olheiros estimam seu potencial entre <b>${Math.max(p.ovr, p.pot - 4)} e ${Math.min(99, p.pot + 4)}</b>.</p><p class="mut">Seu contrato: ${G.user.contract.years} temporadas, ${money(G.user.contract.wage)} por semana. Ganhe a confiança do treinador para virar titular.</p><button class="btn pri" data-act="close-modal">Vamos lá</button>`);
 }
@@ -3475,6 +3477,109 @@ const SOC_ACC = {
   cro: { n: 'Crônicas do Futebol', c: '#9db1a3', i: 'C' },
   rod: { n: 'Rodix Social', c: '#3fc27a', i: 'R' },
 };
+const SOC_REPLIES = [['c', "Respeito a opinião. Vou responder em campo, domingo tem jogo. 🤝"],
+  ['c', "Obrigado pela crítica, vou trabalhar para melhorar."],
+  ['c', "Cada um tem a sua opinião. Eu sigo focado no trabalho."],
+  ['c', "Quem critica também ajuda a evoluir. Valeu!"],
+  ['c', "Sem problemas. O que importa é o time somar pontos."],
+  ['c', "Entendo a cobrança, é parte do futebol. Vamos juntos!"],
+  ['c', "Aceito a crítica e volto mais forte no próximo jogo."],
+  ['c', "Respeito você, respeito a torcida. Seguimos trabalhando."],
+  ['c', "Fico feliz que você acompanha o jogo. Obrigado por isso."],
+  ['c', "A resposta vem no treino e no campo, não nas redes."],
+  ['c', "Quem ama o clube cobra. Eu também cobro de mim."],
+  ['c', "Obrigado pelo feedback. Já estou ajustando o que errei."],
+  ['c', "Cada partida é uma chance nova. Vou aproveitar a próxima."],
+  ['c', "Boa cobrança. Prometo mais entrega no próximo jogo."],
+  ['c', "O time está unido e eu estou aqui para ajudar."],
+  ['c', "Críticas fazem parte, mas eu sou movido por quem acredita."],
+  ['c', "Não vou discutir. Vou responder jogando bola."],
+  ['c', "Agradeço o carinho, mesmo na crítica. Bora pra cima!"],
+  ['c', "Errar faz parte do jogo. O importante é aprender."],
+  ['c', "Desejo o melhor para você também. Até o próximo jogo! 🙏"],
+  ['s', "Joga no Lendário e vem falar comigo. 😎"],
+  ['s', "Tá fácil falar de trás da tela, né? Vem pro campo."],
+  ['s', "Já vi esse filme: quem critica muito nunca pisou no gramado."],
+  ['s', "Manda o seu currículo que eu mando o meu: tá na tabela."],
+  ['s', "Sofá dá um ótimo ângulo de câmera, mas o campo dá um ângulo melhor."],
+  ['s', "Se é tão fácil, a vaga de titular está livre. Aparece lá."],
+  ['s', "Obrigado pelo engajamento, aumenta o meu alcance. 😉"],
+  ['s', "Quanta energia para quem diz que não gosta de mim."],
+  ['s', "Você me segue só para falar mal? Isso é amor, vai."],
+  ['s', "Vou passar o seu perfil para o time de marketing: bons números."],
+  ['s', "Nota 10 em reclamação. Em futebol, ainda estou esperando."],
+  ['s', "Fala mal, mas assiste todos os jogos, né? 👀"],
+  ['s', "A sua torcida de sofá não bate falta, mas eu bato."],
+  ['s', "Olha o placar no domingo e depois a gente conversa."],
+  ['s', "Continua assim que o meu overall agradece. 😂"],
+  ['s', "Se ficar nervoso, respira. Futebol é só um jogo."],
+  ['s', "Me segue de volta que eu te mostro como é um passe."],
+  ['s', "Esse comentário vai ficar de lembrança quando eu virar o jogo."],
+  ['s', "Pode apostar que o meu próximo gol é dedicado a você. 🎯"],
+  ['s', "Tô aqui rindo com a torcida. Valeu pela audiência!"],
+  ['h', "Hoje o meu pé estava de folga, amanhã ele volta ao trabalho. 😅"],
+  ['h', "Se eu soubesse que ia ser tão criticado, tinha virado streamer."],
+  ['h', "Cai a nota e sobe o meme. Equilíbrio é tudo."],
+  ['h', "Foi só um treino de paciência para a torcida. 🤣"],
+  ['h', "Culpa da chuteira nova, mas eu já fiz as pazes com ela."],
+  ['h', "Eu e a bola estamos brigados, mas fizemos as pazes no vestiário."],
+  ['h', "Prometo que o próximo chute vai pelo menos na direção do gol. 😂"],
+  ['h', "O goleiro estava inspirado, o juiz também. Eu só participei."],
+  ['h', "Nem o VAR me salvou desta vez, mas eu sigo."],
+  ['h', "Meu pé esquerdo pediu demissão, mas o direito ficou. 🦶"],
+  ['h', "Aqui o único que sofre mais é o meu fisioterapeuta."],
+  ['h', "Já me chamaram de tudo, só não de desistente. Bora!"],
+  ['h', "Se o gol fosse maior eu teria acertado, juro."],
+  ['h', "Foi mal pelo lance, o meu GPS estava desligado. 🧭"],
+  ['h', "Só errei para dar emoção ao jogo. Estratégia de roteiro."],
+  ['h', "A bola estava mais escorregadia que mensagem no grupo da família."],
+  ['h', "Treino uma coisa, no jogo sai outra. Mistérios do futebol."],
+  ['h', "Prometo uma música dedicada se eu fizer gol domingo. 🎶"],
+  ['h', "Hoje o meu desempenho foi uma obra de arte moderna: ninguém entendeu."],
+  ['h', "Cuidado com o hater, ele pode virar meu fã na próxima rodada. 😁"],
+  ['m', "Quem trabalha em silêncio faz barulho no campo. Vamos que vamos!"],
+  ['m', "Não vou desistir. O melhor ainda está por vir. 💪"],
+  ['m', "Cada crítica vira combustível para o próximo jogo."],
+  ['m', "O sonho é grande e eu estou correndo atrás dele todos os dias."],
+  ['m', "Chegamos até aqui no suor e é no suor que vamos continuar."],
+  ['m', "Os campeões se constroem nos dias ruins. Hoje é um deles."],
+  ['m', "Acredito no meu trabalho e no meu time. Seguimos!"],
+  ['m', "Quem acredita nunca desiste. Domingo tem mais."],
+  ['m', "A derrota de hoje é a motivação de amanhã."],
+  ['m', "Treino pesado, cabeça no lugar, foco no próximo jogo. 🔥"],
+  ['m', "Não é sobre o que dizem, é sobre o que eu entrego em campo."],
+  ['m', "Fé, foco e força. O resto é consequência."],
+  ['m', "A minha história ainda está sendo escrita, e o melhor capítulo vem aí."],
+  ['m', "Obrigado a quem acredita em mim, vocês são a minha força."],
+  ['m', "A bola é redonda e a vida dá voltas. Vamos virar essa chave."],
+  ['m', "Hoje foi difícil, amanhã vai ser melhor. Sempre."],
+  ['m', "Persistência vence talento quando o talento não persiste."],
+  ['m', "Os haters me deixam mais forte, os torcedores me deixam mais inspirado."],
+  ['m', "Cabeça erguida e olhar no próximo desafio. ⚽"],
+  ['m', "Nada abala quem sabe o seu valor. Bora trabalhar!"],
+  ['t', "Os números mostram a evolução, dá uma olhada nas minhas estatísticas."],
+  ['t', "Foram poucos minutos em campo, mas dá para mostrar mais no próximo jogo."],
+  ['t', "O time está jogando num sistema novo e eu ainda estou me adaptando."],
+  ['t', "Fiz o que o treinador pediu. A leitura do jogo é coletiva."],
+  ['t', "Meu overall subiu nas últimas semanas. Confere no perfil."],
+  ['t', "A defesa deles estava fechada, é difícil achar espaço assim."],
+  ['t', "A estratégia de hoje não favorecia o meu estilo de jogo."],
+  ['t', "Passes certos, desarmes e posicionamento: o jogo não é só gol."],
+  ['t', "Estou trabalhando a finalização todo dia no treino."],
+  ['t', "A minha nota na temporada fala mais do que um jogo."],
+  ['t', "Tive menos bolas para trabalhar, o time ficou muito recuado."],
+  ['t', "Uma partida não define uma carreira. Veja a média do ano."],
+  ['t', "Estou sendo acompanhado pela comissão técnica, tudo sob controle."],
+  ['t', "Quando a bola chegou, eu fiz o meu papel. Falta o time encaixar."],
+  ['t', "A evolução vem com tempo e treino, e eu estou no caminho."],
+  ['t', "Os dados do último mês são os melhores da minha carreira."],
+  ['t', "Vamos avaliar o desempenho no fim da temporada, não em um lance."],
+  ['t', "O treinador conversou comigo e traçamos um plano para o próximo jogo."],
+  ['t', "Eu mesmo vi o vídeo do lance e já sei o que corrigir."],
+  ['t', "Sou jovem e ainda estou aprendendo. É assim que se cresce."]];
+const SOC_REACT = ['Que resposta!', 'O craque é gente como a gente.', 'Isso é postura de profissional.', 'Kkkkk, perdeu, hater!', 'Agora virou novela, quero ver o próximo capítulo.', 'Resposta boa, mas o time precisa de resultado.', 'Mandou bem! Continua assim.', 'Faltou classe na resposta, na minha opinião.', 'O povo gosta de treta, a gente gosta de gol.', 'Já pode ser contratado pelo marketing do clube. 😂'];
+const SOC_MS = [1000, 2500, 5000, 10000, 25000, 50000, 100000, 250000, 500000, 1000000];
+const SOC_TYPES = { c: 'Com classe', s: 'Sarcástica', h: 'Bom humor', m: 'Motivacional', t: 'Racional' };
 const SOC_HATERS = ['haterdoreal', 'zueira_fc', 'bola_murcha', 'critico_de_sofa', 'resenhista_chato'];
 function soc() {
   const u = G.user; if (!u.soc) {
@@ -3513,6 +3618,7 @@ function socPost(acc, text, o) {
   if (S.posts.length > 40) S.posts.length = 40;
 }
 function socAfterMatch(MC, rating, mins, st, gf, ga) {
+  if (!socOn()) return;
   try {
     const S = soc(); const p = up(); const opp = MC.teams[1 - MC.uSide].name; const r1 = Math.round(rating * 10) / 10;
     let d = 0; const meN = MC.teams[MC.uSide].name; const derby = !isNat(MC.kind) && isDerby(meN, opp);
@@ -3524,7 +3630,7 @@ function socAfterMatch(MC, rating, mins, st, gf, ga) {
     if (gf > ga && rnd() < 0.5) socPost('cro', `Vitória do ${MC.teams[MC.uSide].name} por ${gf}x${ga} sobre o ${opp}.`);
     if (!derby && (rating <= 5.6 || (gf < ga && rnd() < 0.35))) { socPost({ n: pick(SOC_HATERS), c: '#ff5a5a', i: 'H' }, pick(['Esse aí só joga no modo fácil kkkk. Overrated demais. 😂', `Nota ${r1}? Devia pendurar as chuteiras.`, 'Contrataram errado, o time joga melhor sem ele.', `Perdeu para o ${opp} e ainda tem coragem de postar.`]), { hate: true }); d -= 10; }
     if (rnd() < 0.12 && p.ovr >= 60) socPost('mkt', `${shortName(p)} está na mira de outros clubes. Até onde vai a sondagem?`);
-    S.fol = Math.max(50, S.fol + Math.round(d * (1 + (p.ovr - 55) / 100)));
+    S.fol = Math.max(50, S.fol + Math.round(d * (1 + (p.ovr - 55) / 100))); socMilestone(S);
   } catch (e) { }
 }
 function socPostHtml(x) {
@@ -3532,22 +3638,30 @@ function socPostHtml(x) {
   return `<div class="sc-post ${x.hate ? 'hate' : ''}"><div class="sc-who"><div class="sc-av" style="background:${x.a.c}">${esc(x.a.i)}</div><div><b>${esc(x.a.n)}</b><small>${esc(x.s)} · sem. ${x.w + 1}</small></div></div><p>${esc(x.t)}</p>${cm}<div class="sc-act"><button class="${x.liked ? 'on' : ''}" data-act="soc-like" data-id="${x.id}">♥ ${x.lk + (x.liked ? 1 : 0)}</button>${x.hate && !x.replied ? `<button data-act="soc-reply" data-id="${x.id}">💬 Responder</button>` : ''}</div></div>`;
 }
 function vSocial() {
+  if (!socOn()) return head('Rodix Social') + '<div class="card stack"><p class="mut" style="margin:0">O Rodix Social está desligado nesta carreira.</p><button class="btn pri" data-act="soc-on">Ligar Rodix Social</button></div>';
   const S = soc(); G.user.socSeen = S.nid;
   return head('Rodix Social', '<span class="sc-fol"><b>' + S.fol.toLocaleString('pt-BR') + '</b> seguidores</span>') + `<p class="fine" style="margin:0 0 14px">Protótipo. A torcida, a imprensa e os haters reagem aos seus jogos.</p>` + (S.posts.map(socPostHtml).join('') || '<span class="mut">Sem posts.</span>');
 }
 function socReplyModal(id) {
-  modal(`<h2>Responder ao hater</h2><p class="mut">Como você responde? Se a sua fase estiver boa, uma resposta firme rende seguidores. Se estiver ruim, pode virar piada.</p><div class="stack"><button class="btn pri" data-act="soc-pick" data-id="${id}" data-k="classe">Responder com classe</button><button class="btn" data-act="soc-pick" data-id="${id}" data-k="sarc">Joga no Lendário e vem falar comigo. 😎</button><button class="btn ghost" data-act="soc-pick" data-id="${id}" data-k="ign">Ignorar</button></div>`);
+  const types = Object.keys(SOC_TYPES).sort(() => rnd() - 0.5).slice(0, 3);
+  const opts = types.map(k => { const pool = SOC_REPLIES.filter(r => r[0] === k); const i = SOC_REPLIES.indexOf(pick(pool)); return `<button class="btn ${k === 's' ? '' : 'pri'}" data-act="soc-pick" data-id="${id}" data-i="${i}"><small style="display:block;opacity:.7;font-size:11px;text-transform:uppercase;letter-spacing:.08em">${SOC_TYPES[k]}</small>${esc(SOC_REPLIES[i][1])}</button>`; }).join('');
+  modal(`<h2>Responder ao hater</h2><p class="mut">Escolha o tom. Se a sua fase estiver boa, respostas firmes rendem seguidores. Se estiver ruim, podem virar piada.</p><div class="stack">${opts}<button class="btn ghost" data-act="soc-pick" data-id="${id}" data-i="-1">Ignorar</button></div>`);
 }
-function socPick(id, k) {
-  const S = soc(), x = S.posts.find(q => q.id === id); if (!x) return; const u = G.user, p = up();
-  const good = u.form > 0; let d = 0, t = '', msg = '';
-  if (k === 'classe') { t = 'Respeito a opinião. Vou responder em campo, domingo tem jogo. 🤝'; d = Math.round(S.fol * 0.02); msg = 'Resposta elogiada: +' + d + ' seguidores'; }
-  else if (k === 'sarc') { t = 'Joga no Lendário e vem falar comigo. 😎'; if (good) { d = Math.round(S.fol * 0.06); msg = 'A resposta viralizou: +' + d + ' seguidores'; } else { d = -Math.round(S.fol * 0.04); msg = 'Deu ruim: a resposta virou piada (' + d + ' seguidores)'; } }
-  else { x.replied = true; saveGame(true); closeModal(); renderHub(); return; }
-  x.replied = true; x.cm.push({ n: 'Você', t }); x.lk += Math.abs(d); S.fol = Math.max(50, S.fol + d);
+function socPick(id, i) {
+  const S = soc(), x = S.posts.find(q => q.id === id); if (!x) return; const u = G.user;
+  if (i < 0) { x.replied = true; saveGame(true); closeModal(); renderHub(); return; }
+  const [k, t] = SOC_REPLIES[i]; const good = u.form > 0; let f = 0;
+  if (k === 'c') f = 0.02; else if (k === 's') f = good ? 0.06 : -0.04; else if (k === 'h') f = rnd() < 0.7 ? 0.03 : -0.01; else if (k === 'm') f = u.form > -0.3 ? 0.025 : 0.01; else f = good ? 0.03 : 0;
+  const d = Math.round(S.fol * f);
+  x.replied = true; x.cm.push({ n: 'Você', t }); x.cm.push({ n: 'torcedor_' + ri(10, 99), t: pick(SOC_REACT) }); x.lk += Math.abs(d); S.fol = Math.max(50, S.fol + d);
   socPost('fan', d >= 0 ? 'A torcida está com o craque! Respondeu o hater à altura. 👏' : 'O hater levou a melhor dessa vez...', {});
-  saveGame(true); closeModal(); renderHub(); toast(msg);
+  socMilestone(S); saveGame(true); closeModal(); renderHub();
+  toast(d > 0 ? 'A resposta rendeu +' + d + ' seguidores' : d < 0 ? 'A resposta virou piada (' + d + ' seguidores)' : 'Sem efeito nos seguidores');
 }
+function socMilestone(S) {
+  S.ms = S.ms || 0; while (S.ms < SOC_MS.length && S.fol >= SOC_MS[S.ms]) { socPost('rod', 'Você chegou a ' + SOC_MS[S.ms].toLocaleString('pt-BR') + ' seguidores no Rodix Social! 🎉', { mul: 2 }); S.ms++; }
+}
+function socOn() { return !(G && G.user && G.user.socOn === false); }
 function head(t, right) { return `<div class="pagehead"><div class="row" style="gap:14px"><button class="back" data-act="home" aria-label="Voltar ao início">${ico('back', 22)}</button><h2>${t}</h2></div>${right ? `<div class="row">${right}</div>` : ''}</div>`; }
 function allNews() { const me = (G.news || []).map(x => Object.assign({ tag: 'me' }, x)); return me.concat(G.wnews || []).sort((a, b) => (b.s > a.s ? 1 : b.s < a.s ? -1 : 0) || b.w - a.w); }
 function newsItem(x) { return `<div class="${x.k}"><span class="mut" style="font-size:12px">${esc(x.s)} · sem. ${x.w + 1}${x.tag === 'me' ? ' · ' + esc(tr('Você')) : x.lid && LDEF[x.lid] ? ' · ' + esc(LDEF[x.lid].n) : ''}</span><br>${esc(x.t)}</div>`; }
@@ -3627,8 +3741,8 @@ function menuShop() { const sc = $('#modal-box').scrollTop; modal(`<h2>Loja</h2>
 function vHome() {
   const p = up(), u = G.user, c = userClub();
   const sub = { me: `Overall ${p.ovr}`, club: c ? c.name : 'Sem clube', comp: c ? LDEF[c.lg].n : '—', cal: `Semana ${Math.min(G.week + 1, totalWeeks())}`, shop: coinsOf() + ' Coins', market: G.offers.length ? G.offers.length + ' proposta(s)' : 'Sem propostas', train: u.trained ? 'Feito nesta semana' : p.inj > 0 ? 'Lesionado' : 'Treino disponível', stats: 'Artilharia e prêmios', nat: G.pendingIntl ? 'Convocado!' : NATIONS[p.nat].n, hist: `${u.history.length} temporada(s)`, social: ((u.soc ? u.soc.fol : 0) || 0).toLocaleString('pt-BR') + ' seguidores' };
-  const bd = { market: G.offers.length || '', train: !u.trained && p.inj === 0 && p.club ? '!' : '', nat: G.pendingIntl ? '!' : '' };
-  const tiles = TILES.map(([k, n, ic]) => `<button class="tile" data-tab="${k}"><i>${ico(ic, 30)}</i><span><b>${n}</b><small>${esc(sub[k])}</small></span>${bd[k] ? `<em class="tbadge">${bd[k]}</em>` : ''}</button>`).join('');
+  const bd = { market: G.offers.length || '', train: !u.trained && p.inj === 0 && p.club ? '!' : '', nat: G.pendingIntl ? '!' : '', social: (u.soc && socOn()) ? (Math.max(0, u.soc.nid - (u.socSeen || 1)) || '') : '' };
+  const tiles = TILES.filter(t => t[0] !== 'social' || socOn()).map(([k, n, ic]) => `<button class="tile" data-tab="${k}"><i>${ico(ic, 30)}</i><span><b>${n}</b><small>${esc(sub[k])}</small></span>${bd[k] ? `<em class="tbadge">${bd[k]}</em>` : ''}</button>`).join('');
   return `<div class="home-top">${nextCard()}${depthCard()}</div><div class="tilegrid">${tiles}</div><div class="card stack" style="margin-top:20px"><span class="lbl">Notícias</span>${newsHtml(10)}</div>`;
 }
 function vMe() {
@@ -4211,7 +4325,7 @@ function openControls() {
   $('#modal-box').oninput = cfgInput;
 }
 function openAbout() {
-  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 15). Escudos e Data Pack por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
+  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 16). Escudos e Data Pack por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
 }
 async function openProfiles() {
   const all = await refreshSaves();
@@ -4577,6 +4691,7 @@ function renderSettings() {
     <div class="field"><label class="lbl" for="cfg-speed">Velocidade do relógio simulado: <b id="o-speed">${CFG.speed}×</b></label><input type="range" id="cfg-speed" min="0.5" max="3" step="0.5" value="${CFG.speed}"></div>
     <div class="field"><label class="lbl" for="cfg-txt">Textos na tela (lances)</label><select id="cfg-txt"><option value="on" ${(CFG.txt || 'on') === 'on' ? 'selected' : ''}>Todos</option><option value="min" ${CFG.txt === 'min' ? 'selected' : ''}>Só gols</option><option value="off" ${CFG.txt === 'off' ? 'selected' : ''}>Nenhum</option></select><p class="fine" style="margin:0">Esconde avisos como "Bola fora" e a lista de lances que cobrem o campo.</p></div>
     <div class="field"><label class="lbl" for="cfg-perf">Desempenho</label><select id="cfg-perf"><option value="auto" ${(CFG.perf || 'auto') === 'auto' ? 'selected' : ''}>Automático</option><option value="normal" ${CFG.perf === 'normal' ? 'selected' : ''}>Normal (melhor visual)</option><option value="low" ${CFG.perf === 'low' ? 'selected' : ''}>Economia (celular travando)</option></select><p class="fine" style="margin:0">Economia reduz a resolução da partida e tira efeitos para rodar mais leve.</p></div></div>
+  ${G && G.user ? `<div class="card stack"><span class="lbl">Rodix Social</span><select id="cfg-soc"><option value="1" ${socOn() ? 'selected' : ''}>Ligado</option><option value="0" ${socOn() ? '' : 'selected'}>Desligado</option></select><p class="fine" style="margin:0">Quando desligado, nenhum post é gerado e o botão some do menu.</p></div>` : ''}
   ${G && G.user ? `<div class="card stack"><span class="lbl">Dificuldade da carreira</span>${diffPicker(G.user.diff || 'semi', true)}<p class="fine" style="margin:0">${diffFx(G.user.diff || 'semi')}</p></div>` : ''}
   ${achCardHtml()}
   ${packCard()}
@@ -4584,7 +4699,7 @@ function renderSettings() {
     <div class="row"><button class="btn" data-act="export" ${G && G.user ? '' : 'disabled'}>Exportar carreira atual</button></div></div>
   <div class="card stack"><span class="lbl">Procedência dos dados</span><p style="margin:0" class="mut">Real: nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias. Fictício: todos os atletas, atributos, nomes de jogadores, distintivos e uniformes desenhados pelo jogo. Licenciado: nenhum conteúdo. Nada aqui usa arquivos, logos ou código de outros jogos.</p></div></div>`;
 }
-const cfgInput = e => { const id = e.target.id; if (id === 'cfg-speed') { CFG.speed = +e.target.value; $('#o-speed').textContent = CFG.speed + '×'; } if (id === 'cfg-sens') { CFG.sens = +e.target.value; $('#o-sens').textContent = CFG.sens + '×'; } if (id === 'cfg-traj') CFG.traj = e.target.checked; if (id === 'cfg-hints') { CFG.hints = e.target.checked; applyHints(); } if (id === 'cfg-replay') CFG.replay = e.target.checked; if (id === 'cfg-psize') { CFG.padSize = +e.target.value; $('#o-psize').textContent = Math.round(CFG.padSize * 100) + '%'; } if (id === 'cfg-pop') { CFG.padOp = +e.target.value; $('#o-pop').textContent = Math.round(CFG.padOp * 100) + '%'; } if (id === 'cfg-lefty') CFG.lefty = e.target.checked; applyPadCfg(); if (id === 'cfg-touch') CFG.touch = e.target.value; if (id === 'cfg-lang') { setLang(e.target.value); return; } if (id === 'cfg-sound') { CFG.sound = e.target.value !== 'off'; if (CFG.sound) sfx('whistle'); } if (id === 'cfg-sound') musicSync(); if (id === 'cfg-vol') { CFG.vol = +e.target.value; $('#o-vol').textContent = Math.round(CFG.vol * 100) + '%'; if (MASTER) MASTER.gain.value = CFG.vol; } if (id === 'cfg-music') { CFG.music = +e.target.value; $('#o-music').textContent = Math.round(CFG.music * 100) + '%'; musicSync(); } if (id === 'cfg-txt') { CFG.txt = e.target.value; try { feedVis(); } catch (e2) { } } if (id === 'cfg-perf') { CFG.perf = e.target.value; PERF_AUTO_LOW = null; try { resizePitch(); } catch (e2) { } } if (id === 'cfg-vibe') { CFG.vibe = e.target.value !== 'off'; if (CFG.vibe) vib('goal'); } saveCfg(); };
+const cfgInput = e => { const id = e.target.id; if (id === 'cfg-speed') { CFG.speed = +e.target.value; $('#o-speed').textContent = CFG.speed + '×'; } if (id === 'cfg-sens') { CFG.sens = +e.target.value; $('#o-sens').textContent = CFG.sens + '×'; } if (id === 'cfg-traj') CFG.traj = e.target.checked; if (id === 'cfg-hints') { CFG.hints = e.target.checked; applyHints(); } if (id === 'cfg-replay') CFG.replay = e.target.checked; if (id === 'cfg-psize') { CFG.padSize = +e.target.value; $('#o-psize').textContent = Math.round(CFG.padSize * 100) + '%'; } if (id === 'cfg-pop') { CFG.padOp = +e.target.value; $('#o-pop').textContent = Math.round(CFG.padOp * 100) + '%'; } if (id === 'cfg-lefty') CFG.lefty = e.target.checked; applyPadCfg(); if (id === 'cfg-touch') CFG.touch = e.target.value; if (id === 'cfg-lang') { setLang(e.target.value); return; } if (id === 'cfg-sound') { CFG.sound = e.target.value !== 'off'; if (CFG.sound) sfx('whistle'); } if (id === 'cfg-sound') musicSync(); if (id === 'cfg-vol') { CFG.vol = +e.target.value; $('#o-vol').textContent = Math.round(CFG.vol * 100) + '%'; if (MASTER) MASTER.gain.value = CFG.vol; } if (id === 'cfg-music') { CFG.music = +e.target.value; $('#o-music').textContent = Math.round(CFG.music * 100) + '%'; musicSync(); } if (id === 'cfg-soc') { if (G && G.user) { G.user.socOn = e.target.value === '1'; saveGame(true); } } if (id === 'cfg-txt') { CFG.txt = e.target.value; try { feedVis(); } catch (e2) { } } if (id === 'cfg-perf') { CFG.perf = e.target.value; PERF_AUTO_LOW = null; try { resizePitch(); } catch (e2) { } } if (id === 'cfg-vibe') { CFG.vibe = e.target.value !== 'off'; if (CFG.vibe) vib('goal'); } saveCfg(); };
 function bindSettings() {
   const r = $('#settings-root');
   r.oninput = cfgInput;
@@ -4636,8 +4751,9 @@ async function act(a, el) {
     case 'start': if (CP.club) beginCareer(); break;
     case 'overwrite': closeModal(); doBegin(+el.dataset.slot); break;
     case 'soc-like': { const x = soc().posts.find(q => q.id === +el.dataset.id); if (x) { x.liked = !x.liked; saveGame(true); renderHub(); } break; }
+    case 'soc-on': G.user.socOn = true; saveGame(true); renderHub(); break;
     case 'soc-reply': socReplyModal(+el.dataset.id); break;
-    case 'soc-pick': socPick(+el.dataset.id, el.dataset.k); break;
+    case 'soc-pick': socPick(+el.dataset.id, +el.dataset.i); break;
     case 'close-modal': closeModal(); if (curScreen === 's-hub') { renderHub(); setTimeout(maybeIntro, 300); } break;
     case 'save': saveGame(false); break;
     case 'play': startPlayed(el.dataset.kind); break;

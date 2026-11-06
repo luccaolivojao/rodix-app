@@ -2632,14 +2632,14 @@ function touch(p, kind) { E.touches.push({ p, t: E.t, kind }); if (E.touches.len
 function giveBall(p) {
   const b = E.ball;
   if (b.kicker && b.kind === 'pass' && b.kicker.user && b.kicker !== p && p.team === b.kicker.team) E.st.pc++;
-  b.owner = p; b.vx = b.vy = b.vz = 0; b.z = 0; b.intended = null; b.kind = null; b.dip = false;
+  b.owner = p; b.vx = b.vy = b.vz = 0; b.z = 0; b.intended = null; b.kind = null; b.dip = false; b.fkDec = false;
   E.poss = p.team; b.last = p; b.lastTeam = p.team; p.think = 0.15 + Math.random() * 0.2; touch(p, 'ctl');
   if (p.user) { E.slowT = 0.45; }
 }
 function kick(p, dx, dy, speed, vz, kind, noise) {
   const b = E.ball; const a = Math.atan2(dy, dx) + randn() * (noise || 0);
   b.owner = null; b.vx = Math.cos(a) * speed; b.vy = Math.sin(a) * speed; b.vz = vz; b.z = Math.max(b.z, 0.02);
-  b.last = p; b.lastTeam = p.team; b.kicker = p; b.kind = kind; b.dip = kind === 'fk'; b.intended = null;
+  b.last = p; b.lastTeam = p.team; b.kicker = p; b.kind = kind; b.dip = kind === 'fk'; b.intended = null; b.fkDec = false;
   p.cd = 0.32; p.kickA = 0.25; touch(p, kind); if (typeof sfx === 'function') { sfx('kick'); if (p.user) vib(kind === 'shot' || kind === 'head' || kind === 'fk' || kind === 'pen' ? 'shot' : 'pass'); if (kind === 'shot' || kind === 'head') crowdPulse(0.11, 0.25, 1.0, 1000); }
   if (kind === 'shot' || kind === 'fk' || kind === 'pen' || kind === 'head') { E.diveDone = false; for (const q of E.players) if (q.pos === 'GOL') q.react = null; if (p.user) E.st.sh++; b.shot = true; } else b.shot = false;
   if (kind === 'pass' && p.user) E.st.pa++;
@@ -2809,7 +2809,7 @@ function tryTackles() {
       return;
     } else {
       if (Math.random() < 0.25) p.down = 0.5;
-      if (Math.random() < (p.user ? 0.02 : 0.05) + (100 - p.a.des) / (p.user ? 2500 : 1500)) { foul(p, car); return; }
+      if (Math.random() < 0.05 + (100 - p.a.des) / 1500) { foul(p, car); return; }
     }
   }
 }
@@ -2847,7 +2847,11 @@ function interactions(dt) {
   // goleiros
   for (const g of E.players) {
     if (g.pos !== 'GOL' || g.cd > 0) continue;
-    const reach = g.dive ? 1.15 : 0.75; const d = D(g.x, g.y, b.x, b.y);
+    if (b.kind === 'fk' && b.lastTeam !== g.team && !b.fkDec && Math.abs(b.x - g.x) < 1.3 && b.z < 2.4 && Math.abs(b.y - GC) < 3.66) {
+      b.fkDec = true; const dxc = Math.abs(b.y - GC) / 3.66; let pf = clamp(0.8 - dxc * 0.32 + (g.a.gol - 60) / 300, 0.35, 0.9); if (b.z > 1.9) pf *= 0.65; if (g.team === 1) pf = clamp(pf * dfx().cpu, 0.15, 0.92);
+      if (Math.random() < pf) { gkSave(g, Math.hypot(b.vx, b.vy)); return; }
+    }
+    const fkb = b.kind === 'fk'; const reach = g.dive ? (fkb ? FKR[0] : 1.15) : (fkb ? FKR[1] : 0.75); const d = D(g.x, g.y, b.x, b.y);
     if (d < reach && b.z < 2.4 && inBox(g.team, b.x, b.y)) {
       const sp = Math.hypot(b.vx, b.vy);
       if (b.lastTeam === g.team && sp < 16) { giveBall(g); g.hold = 0.9; return; }
@@ -2955,8 +2959,8 @@ function slideResolve(p, car) {
     if (Math.random() < 0.7) giveBall(p); else { const dir = p.team === 0 ? 1 : -1; E.ball.owner = null; E.ball.vx = dir * rf(2, 7); E.ball.vy = rf(-5, 5); E.ball.lastTeam = p.team; E.ball.last = p; E.ball.kind = 'poke'; touch(p, 'tk'); }
     return;
   }
-  const fp = clamp((p.user ? 0.17 : 0.28) + (behind ? (p.user ? 0.15 : 0.25) : 0) - p.a.des / 500, 0.08, 0.7);
-  if (Math.random() < fp) foul(p, car, p.user ? (behind ? 0.35 : 0.18) : (behind ? 0.55 : 0.35), p.user ? (behind ? 0.03 : 0.008) : (behind ? 0.07 : 0.02));
+  const fp = clamp(0.28 + (behind ? 0.25 : 0) - p.a.des / 500, 0.12, 0.7);
+  if (Math.random() < fp) foul(p, car, behind ? 0.55 : 0.35, behind ? 0.07 : 0.02);
 }
 function movePlayer(p, dt) {
   if (p.slide) { slideMove(p, dt); return; }
@@ -3062,6 +3066,15 @@ function classifyKick(dir, power) {
   if (u.x > 56 && cos > 0.84 && gl < 36) return 'shot';
   return power > 0.72 ? 'lob' : 'pass';
 }
+const FKR = [1.7, 1.1];
+/* falta: calcula velocidade e elevação para passar a barreira e cair no gol; a força define a altura de chegada */
+function fkZAt(vz, t) { const ta = vz / 9.8; if (t <= ta) return vz * t - 4.9 * t * t; return vz * vz / 19.6 - 8.82 * (t - ta) * (t - ta); }
+function fkArc(D, power) {
+  if (power < 0.3) return { v: 13 + power * 14, vz: 2 + power * 6 };
+  const zg = 0.35 + power * 0.95 + (arguments[2] || 0); let best = null;
+  for (let v = 16; v <= 36; v += 0.25) { const tw = 9.15 / v, vz = (2.5 + 4.9 * tw * tw) / tw, z = fkZAt(vz, D / v), e = Math.abs(z - zg); if (!best || e < best.e) best = { v, vz, e }; }
+  return best;
+}
 function userKick(dir, power, force) { if (typeof MU !== 'undefined' && MU && MU.paused) return; 
   const u = E.user; const kind = force || classifyKick(dir, power); const a = u.a;
   if (kind === 'shot' || kind === 'pen') {
@@ -3070,7 +3083,8 @@ function userKick(dir, power, force) { if (typeof MU !== 'undefined' && MU && MU
     kick(u, dir[0], dir[1], speed, vz, kind === 'pen' ? 'pen' : 'shot', 0.016 + (1 - skill / 99) * 0.07 + power * 0.02);
     if (kind === 'pen') penKeeper(dir);
   } else if (kind === 'fk') {
-    kick(u, dir[0], dir[1], 15 + power * 15, 2 + power * 6.2, 'fk', 0.01 + (1 - a.fal / 99) * 0.05);
+    const fa = fkArc(Math.hypot(FL - u.x, GC - u.y), power, randn() * (0.25 + (1 - a.fal / 99) * 0.6));
+    kick(u, dir[0], dir[1], fa.v, fa.vz, 'fk', 0.014 + (1 - a.fal / 99) * 0.06);
   } else if (kind === 'lob') {
     const vh = 11 + power * 10; kick(u, dir[0], dir[1], vh, 4 + (power - 0.72) * 22, 'pass', 0.01 + (1 - a.pas / 99) * 0.05);
   } else {
@@ -4326,7 +4340,7 @@ function openControls() {
   $('#modal-box').oninput = cfgInput;
 }
 function openAbout() {
-  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 19). Escudos e Data Pack por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
+  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 20). Escudos e Data Pack por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
 }
 async function openProfiles() {
   const all = await refreshSaves();

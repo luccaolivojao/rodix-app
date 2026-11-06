@@ -29,7 +29,7 @@ NOTE=('Esta versao nao oferece compras dentro do app no iOS: os pacotes de Rodix
 try:
     vs=api('GET',f'/v1/apps/{APP}/appStoreVersions?limit=10')
     for v in vs['data']: L('VERSION',v['id'],v['attributes']['versionString'],v['attributes']['appStoreState'])
-    ver=[v for v in vs['data'] if v['attributes']['appStoreState'] in ('REJECTED','PREPARE_FOR_SUBMISSION')][0]; vid=ver['id']
+    ver=[v for v in vs['data'] if v['attributes']['appStoreState'] in ('REJECTED','PREPARE_FOR_SUBMISSION','READY_FOR_REVIEW','DEVELOPER_REJECTED','METADATA_REJECTED')][0]; vid=ver['id']
     bs=api('GET',f'/v1/builds?filter[app]={APP}&sort=-uploadedDate&limit=5')
     for b in bs['data']: L('BUILD',b['id'],b['attributes']['version'],b['attributes']['processingState'],b['attributes']['uploadedDate'],b['attributes'].get('expired'))
     cur=api('GET',f'/v1/appStoreVersions/{vid}/build',quiet=True); L('CURRENT_BUILD',(cur or {}).get('data',{}).get('attributes',{}).get('version'))
@@ -48,8 +48,10 @@ try:
             st=r['attributes']['state']; its=api('GET',f'/v1/reviewSubmissions/{r["id"]}/items',quiet=True) or {'data':[]}
             if st=='READY_FOR_REVIEW' and not its['data']:
                 api('PATCH',f'/v1/reviewSubmissions/{r["id"]}',{'data':{'type':'reviewSubmissions','id':r['id'],'attributes':{'canceled':True}}},quiet=True); L('CANCELED_EMPTY',r['id'])
-        for r in rs['data']:
-            if r['attributes']['state']=='UNRESOLVED_ISSUES':
+        rs2=api('GET',f'/v1/apps/{APP}/reviewSubmissions?limit=10') or rs
+        for r in rs2['data']:
+            its=api('GET',f'/v1/reviewSubmissions/{r["id"]}/items',quiet=True) or {'data':[]}
+            if r['attributes']['state'] in ('UNRESOLVED_ISSUES','READY_FOR_REVIEW') and its['data']:
                 x=api('PATCH',f'/v1/reviewSubmissions/{r["id"]}',{'data':{'type':'reviewSubmissions','id':r['id'],'attributes':{'submitted':True}}})
                 L('RESULT',json.dumps(x)[:300] if x else 'fail'); break
 except Exception as e:

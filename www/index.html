@@ -2809,7 +2809,7 @@ function tryTackles() {
       return;
     } else {
       if (Math.random() < 0.25) p.down = 0.5;
-      if (Math.random() < 0.05 + (100 - p.a.des) / 1500) { foul(p, car); return; }
+      if (Math.random() < (p.user ? 0.02 : 0.05) + (100 - p.a.des) / (p.user ? 2500 : 1500)) { foul(p, car); return; }
     }
   }
 }
@@ -2955,8 +2955,8 @@ function slideResolve(p, car) {
     if (Math.random() < 0.7) giveBall(p); else { const dir = p.team === 0 ? 1 : -1; E.ball.owner = null; E.ball.vx = dir * rf(2, 7); E.ball.vy = rf(-5, 5); E.ball.lastTeam = p.team; E.ball.last = p; E.ball.kind = 'poke'; touch(p, 'tk'); }
     return;
   }
-  const fp = clamp(0.28 + (behind ? 0.25 : 0) - p.a.des / 500, 0.12, 0.7);
-  if (Math.random() < fp) foul(p, car, behind ? 0.55 : 0.35, behind ? 0.07 : 0.02);
+  const fp = clamp((p.user ? 0.17 : 0.28) + (behind ? (p.user ? 0.15 : 0.25) : 0) - p.a.des / 500, 0.08, 0.7);
+  if (Math.random() < fp) foul(p, car, p.user ? (behind ? 0.35 : 0.18) : (behind ? 0.55 : 0.35), p.user ? (behind ? 0.03 : 0.008) : (behind ? 0.07 : 0.02));
 }
 function movePlayer(p, dt) {
   if (p.slide) { slideMove(p, dt); return; }
@@ -4326,7 +4326,7 @@ function openControls() {
   $('#modal-box').oninput = cfgInput;
 }
 function openAbout() {
-  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 18). Escudos e Data Pack por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
+  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 19). Escudos e Data Pack por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
 }
 async function openProfiles() {
   const all = await refreshSaves();

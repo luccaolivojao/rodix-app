@@ -1149,7 +1149,8 @@ function addProg(k, amt) {
 function recalcUser() { const p = up(); const old = p.ovr; p.ovr = ovrOf(p.a, p.pos); if (p.ovr > p.pot) p.pot = p.ovr; return p.ovr - old; }
 function growFromMatch(rating, mins) {
   const p = up(); const f = ageF(p.age) * gapF(p) * (0.35 + 0.65 * mins / 90);
-  const base = (rating - 5) * 0.3 * f * dfx().grow;
+  let cr = 1; try { cr = 0.9 + clamp(club(p.club).rep, 30, 95) / 100 * 0.3; } catch (e) { }
+  const base = (rating - 5) * 0.17 * f * dfx().grow * cr;
   for (const k in W[p.pos]) addProg(k, W[p.pos][k] * base);
   return recalcUser();
 }
@@ -1450,8 +1451,8 @@ function makeTimeline(MC) {
   const elig = ev.filter(e => onP(e) && !e.user && (e.side === us ? INV_ATT[p.pos] >= 0.1 : INV_DEF[p.pos] >= 0.1));
   const mins = MC.on >= 0 ? MC.off - MC.on : 0;
   let cnt = ev.filter(e => e.user).length;
-  while (mins >= 40 && cnt < 3 && elig.length) { const e = elig.splice(Math.floor(rnd() * elig.length), 1)[0]; e.user = true; cnt++; }
-  let k = 0; for (const e of ev) { if (e.user && ++k > 9) e.user = false; }
+  while (mins >= 40 && cnt < 2 && elig.length) { const e = elig.splice(Math.floor(rnd() * elig.length), 1)[0]; e.user = true; cnt++; }
+  let k = 0; for (const e of ev) { if (e.user && ++k > 6) e.user = false; }
   for (const e of ev) {
     if (!e.user) continue;
     if (e.side === us) { const r = rnd(); e.kind = r < 0.06 && userPenTaker(p) ? 'pen' : r < 0.15 && userFkTaker(p) ? 'fk' : 'att'; }
@@ -1506,7 +1507,7 @@ function resolveUserStat(MC, e) {
   if (e.kind === 'att') {
     const shootP = { ATA: .6, PON: .45, MEI: .38, VOL: .3, LAT: .22, ZAG: .35 }[p.pos] || .4;
     if (rnd() < shootP) {
-      st.sh++; if (rnd() < 0.33 + a.fin / 99 * 0.35) { st.sot++; if (rnd() < 0.2 + a.fin / 99 * 0.28 + diff) { teamGoal(MC, us, p, rnd() < 0.6 ? pickAssist(mates, p) : null, e.m); st.g++; txt = 'GOL seu!'; } else txt = 'Finalização defendida.'; } else txt = 'Finalização para fora.';
+      st.sh++; if (rnd() < 0.3 + a.fin / 99 * 0.3) { st.sot++; if (rnd() < 0.13 + a.fin / 99 * 0.22 + diff - dfx().opp * 0.01) { teamGoal(MC, us, p, rnd() < 0.6 ? pickAssist(mates, p) : null, e.m); st.g++; txt = 'GOL seu!'; } else txt = 'Finalização defendida.'; } else txt = 'Finalização para fora.';
     } else {
       const n = ri(2, 4); st.pa += n; st.pc += n - (rnd() < 0.75 - a.pas / 400 ? 0 : 1);
       if (rnd() < 0.08 + a.pas / 99 * 0.16 + diff) { const s = pickScorer(mates); teamGoal(MC, us, s, p, e.m); st.a++; txt = 'Assistência para ' + shortName(s) + '!'; } else txt = 'Jogada construída, sem gol.';
@@ -2591,7 +2592,7 @@ function shapeTarget(p) {
   let hx = p.hx + sx, hy = p.hy + (by - 34) * (att ? 0.18 : 0.32);
   if (!att) hy = 34 + (hy - 34) * 0.85;
   if (att && (p.pos === 'PON' || p.pos === 'LAT')) hy = 34 + (hy - 34) * 1.08;
-  hx = clamp(hx, 2, 101); hy = clamp(hy, 2, 66);
+  hx = clamp(hx, p.pos === 'GOL' ? 2 : 9, 101); hy = clamp(hy, 2, 66);
   return [NX(t, hx), NY(t, hy)];
 }
 function defLineN(t) { // linha defensiva adversária, nas coords normalizadas do time t
@@ -4090,7 +4091,7 @@ function openControls() {
   $('#modal-box').oninput = cfgInput;
 }
 function openAbout() {
-  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 12). Escudos e Data Pack por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
+  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 13). Escudos e Data Pack por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
 }
 async function openProfiles() {
   const all = await refreshSaves();

@@ -986,7 +986,7 @@ function packClean(raw) {
     if (col(c.c1)) o.c1 = c.c1; if (col(c.c2)) o.c2 = c.c2;
     if (typeof c.logo === 'string' && /^logos\/[a-z0-9_-]{1,24}\.webp$/.test(c.logo)) o.logo = c.logo;
     else if (typeof c.logo === 'string' && /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+\/=]+$/.test(c.logo) && c.logo.length < 250000) { o.logo = c.logo; total += c.logo.length; }
-    if (Array.isArray(c.players)) o.players = c.players.slice(0, 30).map(p => ({ fn: str(p.fn, 24), ln: str(p.ln, 24), pos: POS.includes(p.pos) ? p.pos : 'MEI', ovr: clamp(+p.ovr || 60, 35, 97), age: clamp(+p.age || 25, 16, 42), nat: NATIONS[p.nat] ? p.nat : null })).filter(p => p.ln || p.fn);
+    if (Array.isArray(c.players)) o.players = c.players.slice(0, 30).map(p => ({ fn: str(p.fn, 24), ln: str(p.ln, 24), pos: POS.includes(p.pos) ? p.pos : null, ovr: +p.ovr ? clamp(+p.ovr, 35, 97) : null, age: +p.age ? clamp(+p.age, 16, 42) : null, nat: NATIONS[p.nat] ? p.nat : null })).filter(p => p.ln || p.fn);
     out.clubs.push(o);
   }
   if (!out.clubs.length) throw new Error('Nenhum clube válido no arquivo.');
@@ -1001,10 +1001,12 @@ function packApply() {
     if (pc.name) c.name = pc.name; if (pc.sh) c.sh = pc.sh; if (pc.c1) c.c1 = pc.c1; if (pc.c2) c.c2 = pc.c2;
     if (pc.players) {
       const used = new Set();
-      for (const rp of pc.players) {
-        let slot = c.sq.map(pl).find(p => p && !p.u && !used.has(p.id) && p.pos === rp.pos) || c.sq.map(pl).find(p => p && !p.u && !used.has(p.id));
-        if (!slot) { slot = genPlayer(c, rp.pos, false); }
-        used.add(slot.id); slot.fn = rp.fn; slot.ln = rp.ln; slot.pos = rp.pos; slot.ovr = rp.ovr; slot.age = rp.age; slot.pot = Math.max(rp.ovr, slot.pot || 0); if (rp.nat) slot.nat = rp.nat;
+      const plist = pc.players.slice().sort((a, b) => (b.pos ? 1 : 0) - (a.pos ? 1 : 0));
+      for (const rp of plist) {
+        let slot = rp.pos ? c.sq.map(pl).find(p => p && !p.u && !used.has(p.id) && p.pos === rp.pos) : c.sq.map(pl).find(p => p && !p.u && !used.has(p.id) && p.pos !== 'GOL');
+        if (!slot) slot = c.sq.map(pl).find(p => p && !p.u && !used.has(p.id) && (rp.pos || p.pos !== 'GOL'));
+        if (!slot) { slot = genPlayer(c, rp.pos || 'MEI', false); }
+        used.add(slot.id); slot.fn = rp.fn; slot.ln = rp.ln; if (rp.pos) slot.pos = rp.pos; if (rp.ovr) { slot.ovr = rp.ovr; slot.pot = Math.max(rp.ovr, slot.pot || 0); } if (rp.age) slot.age = rp.age; if (rp.nat) slot.nat = rp.nat;
       }
     }
   }
@@ -4419,7 +4421,7 @@ function openControls() {
   $('#modal-box').oninput = cfgInput;
 }
 function openAbout() {
-  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 36). Escudos e Data Pack por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
+  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 37). Escudos e Data Pack por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
 }
 async function openProfiles() {
   const all = await refreshSaves();

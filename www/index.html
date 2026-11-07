@@ -3297,14 +3297,21 @@ function drawFig(ctx, x, y, S, o) {
   const lift = o.jump > 0 ? Math.sin(Math.min(1, o.jump / 0.4) * Math.PI) * 0.45 * S : 0;
   ctx.save();
   ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.beginPath(); ctx.ellipse(x, y, 0.44 * S, 0.17 * S, 0, 0, 7); ctx.fill();
+  if (o.slide) {
+    const sg = o.fx >= 0 ? 1 : -1, pr = o.slide; ctx.save();
+    ctx.strokeStyle = 'rgba(235,245,225,' + (0.5 * (1 - pr * 0.6)) + ')'; ctx.lineWidth = Math.max(2, 0.12 * S); ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(x - sg * 0.2 * S, y - 0.03 * S); ctx.lineTo(x - sg * (0.6 + pr * 2.8) * S, y - 0.03 * S); ctx.stroke();
+    for (let i = 0; i < 6; i++) { const t = i / 5, px = x - sg * (0.3 + t * 2.2 * (0.4 + pr)) * S, py = y - (0.08 + t * 0.32 + Math.sin(pr * 6 + i) * 0.05) * S, r = (0.16 + t * 0.34) * S; ctx.globalAlpha = (1 - t) * 0.55 * (1 - pr * 0.5); ctx.fillStyle = '#d8d2b4'; ctx.beginPath(); ctx.arc(px, py, r, 0, 7); ctx.fill(); }
+    ctx.restore();
+  }
   ctx.translate(x, y - lift);
+  if (o.slide) { const k = Math.sin(Math.min(1, o.slide * 4) * Math.PI / 2), sg = o.fx >= 0 ? 1 : -1; ctx.translate(0, -0.02 * S); ctx.translate(0, -0.55 * S); ctx.rotate(-sg * 1.22 * k); ctx.translate(0, (0.45 + 0.4 * k) * S); }
   if (o.gk && o.ready) ctx.translate(0, 0.07 * S);
   if (o.dive) { ctx.translate(0, -0.3 * S); ctx.rotate(o.dive * 1.2); ctx.translate(0, 0.3 * S); }
   else if (o.down) { ctx.rotate((o.fx >= 0 ? 1 : -1) * 1.35); }
   const sw = Math.sin(o.phase || 0) * 0.2 * S * (o.moving ? 1 : 0);
   ctx.lineCap = 'round';
   ctx.strokeStyle = o.sock; ctx.lineWidth = 0.17 * S;
-  ctx.beginPath(); ctx.moveTo(-0.12 * S, -0.6 * S); ctx.lineTo(-0.12 * S + sw, -0.06 * S); ctx.moveTo(0.12 * S, -0.6 * S); ctx.lineTo(0.12 * S - sw + (o.kick > 0 ? 0.3 * S * (o.fx >= 0 ? 1 : -1) : 0), -0.06 * S - (o.kick > 0 ? 0.15 * S : 0)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-0.12 * S, -0.6 * S); ctx.lineTo(-0.12 * S + sw, -0.06 * S); ctx.moveTo(0.12 * S, -0.6 * S); ctx.lineTo(0.12 * S - sw + (o.kick > 0 ? 0.3 * S * (o.fx >= 0 ? 1 : -1) : 0) + (o.slide ? 0.1 * S : 0), -0.06 * S - (o.kick > 0 ? 0.15 * S : 0) - (o.slide ? 0.1 * S : 0)); ctx.stroke();
   ctx.fillStyle = o.shorts; ctx.fillRect(-0.3 * S, -0.8 * S, 0.6 * S, 0.26 * S);
   ctx.strokeStyle = o.shirt; ctx.lineWidth = 0.15 * S;
   if (o.gk && (o.dive || o.ready)) {
@@ -4412,7 +4419,7 @@ function openControls() {
   $('#modal-box').oninput = cfgInput;
 }
 function openAbout() {
-  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 35). Escudos e Data Pack por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
+  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 36). Escudos e Data Pack por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
 }
 async function openProfiles() {
   const all = await refreshSaves();
@@ -4496,7 +4503,7 @@ function renderMatch() {
     const sx = X(p.x), sy = Y(p.y);
     if (p.user) { ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.ellipse(sx, sy, S * 0.62, S * 0.26, 0, 0, 7); ctx.stroke(); }
     else if (b.owner === p) { ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(sx, sy, S * 0.55, S * 0.22, 0, 0, 7); ctx.stroke(); }
-    drawFig(ctx, sx, sy, S, figOpts(p.look, kit, { num: p.num, phase: p.phase, moving: Math.hypot(p.vx, p.vy) > 0.4, fx: p.fx, dive: p.dive ? Math.sign(p.dive.vy) * (p.team === 0 ? 1 : -1) : 0, down: (p.down > 0 || !!p.slide) && !p.dive, jump: p.jump, kick: p.kickA, back: p.fy < -0.6, gk: p.pos === 'GOL', ready: p.pos === 'GOL' && p.react != null && !p.dive && !p.hold }));
+    drawFig(ctx, sx, sy, S, figOpts(p.look, kit, { num: p.num, phase: p.phase, moving: Math.hypot(p.vx, p.vy) > 0.4, fx: p.fx, dive: p.dive ? Math.sign(p.dive.vy) * (p.team === 0 ? 1 : -1) : 0, down: p.down > 0 && !p.dive && !p.slide, slide: p.slide ? Math.max(0.03, 1 - p.slide.t / 0.5) : 0, jump: p.jump, kick: p.kickA, back: p.fy < -0.6, gk: p.pos === 'GOL', ready: p.pos === 'GOL' && p.react != null && !p.dive && !p.hold }));
     if (p.user) { const ty2 = sy - S * 2.35; ctx.fillStyle = '#ffd23f'; ctx.beginPath(); ctx.moveTo(sx, ty2 + S * 0.3); ctx.lineTo(sx - S * 0.25, ty2); ctx.lineTo(sx + S * 0.25, ty2); ctx.fill(); }
   }
   if (E.parts && E.parts.length) { const w0 = ctx.canvas.width; let any = false;

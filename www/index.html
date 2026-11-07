@@ -1475,6 +1475,7 @@ function makeTimeline(MC) {
   return ev.sort((a, b) => a.m - b.m);
 }
 /* cartões: amarelos/vermelhos de todos os jogadores (o usuário tem os seus no lance e nos desarmes) */
+const INV_TEST = true; /* TESTE: invasão 100% em qualquer partida; trocar por false */
 function mcDerby(MC) { if (MC.derby == null) { try { MC.derby = !isNat(MC.kind) && isDerby(MC.teams[0].name, MC.teams[1].name); } catch (e) { MC.derby = false; } } return MC.derby; }
 function genCards(MC) {
   const out = []; const us = MC.uSide;
@@ -2916,8 +2917,8 @@ function goal(team) {
   if (assist && assist.user) E.st.a++;
   E.goals.push({ team, scorer: scorer ? scorer.id : null, assist: assist ? assist.id : null, note: E.type === 'pen' || E.type === 'gkpen' ? 'pên.' : E.type === 'fk' && E.t - E.kickT < 3 ? 'falta' : '' });
   if (typeof sfx === 'function') { sfx(team === 0 ? 'goal' : 'miss'); sfx('net'); vib(team === 0 ? 'goal' : 'concede'); crowdPulse(team === 0 ? 0.34 : 0.14, 0.4, 4, team === 0 ? 1300 : 500); }
-  E.cele = 3.0; E.celeP = scorer; E.celeT = 0; E.celeTeam = team;
-  E.banner = team === 0 ? (scorer && scorer.user ? 'GOLAÇO SEU!' : 'GOOOL!') : 'Gol do adversário'; E.bannerT = 2.3;
+  E.cele = E.drill ? 0.5 : 3.0; E.celeP = E.drill ? null : scorer; E.celeT = 0; E.celeTeam = team;
+  if (!E.drill) { E.banner = team === 0 ? (scorer && scorer.user ? 'GOLAÇO SEU!' : 'GOOOL!') : 'Gol do adversário'; E.bannerT = 2.3; }
   b.vx *= 0.15; b.vy *= 0.15; b.vz = 0; b.z = Math.min(b.z, 1);
 }
 function end(reason) { if (E.over) return; E.over = true; E.reason = reason; }
@@ -4110,8 +4111,7 @@ function hudSub() {
 }
 function kickIntro(MC, after) {
   $('#kickintro').hidden = true; const dby = mcDerby(MC); CROWD_BASE = dby ? 0.08 : 0.045; CROWD_K = dby ? 1.5 : 1; MU.phase = 'ticker'; sfx('whistle'); crowdStart(); crowdPulse(dby ? 0.34 : 0.2, 0.6, 2.5, 1000);
-  if (MC.final && MC.invMin == null) { const pi = dby ? 0.10 : 0.05; MC.invMin = Math.random() < pi ? ri(12, 84) : 0; }
-  if (dby) { try { flashBanner('CLÁSSICO', MC.teams[0].name + ' × ' + MC.teams[1].name, 1100); feedMsg('Clássico! A torcida está em chamas e o árbitro vai estar de olho: mais cartões.', true); } catch (e) { } }
+  if (MC.invMin == null) { const pi = INV_TEST ? 1 : MC.final ? (dby ? 0.10 : 0.05) : 0; MC.invMin = Math.random() < pi ? ri(12, 84) : 0; }
   if (after) after(); return;
   const el = $('#kickintro'), T = MC.teams; const u = G.user; const p = up();
   const st = MC.on === 0 ? 'Você é titular' : MC.on > 0 ? 'Você começa no banco' : 'Fora da lista';
@@ -4132,7 +4132,7 @@ function tickMinute() {
 function cardTxt(MC, c) { const T = teamName(MC, c.side); return c.t === 'y' ? `${c.m}' Cartão amarelo: ${c.name} (${T})` : c.t === 'yr' ? `${c.m}' Segundo amarelo e expulsão: ${c.name} (${T})` : `${c.m}' Cartão vermelho direto: ${c.name} (${T})`; }
 function processMinute(m) {
   const MC = MU.MC; let vr = null;
-  if (MC.invMin && m === MC.invMin && !MC.invDone) { MC.invDone = true; MC.stop += ri(2, 4); feedMsg(m + "' A torcida invadiu o campo! Jogo paralisado, a segurança entra em ação.", true); flashBanner('TORCIDA INVADIU O CAMPO!', 'Jogo paralisado', 2600); crowdPulse(0.4, 0.4, 4, 1400); sfx('whistle'); vib('card'); holdFor(3.2); addNews('Torcida invadiu o campo na final (' + teamName(MC, 0) + ' × ' + teamName(MC, 1) + '). Jogo paralisado por alguns minutos.'); }
+  if (MC.invMin && m === MC.invMin && !MC.invDone) { MC.invDone = true; MC.stop += ri(2, 4); feedMsg(m + "' A torcida invadiu o campo! Jogo paralisado, a segurança entra em ação.", true); crowdPulse(0.4, 0.4, 4, 1400); sfx('whistle'); vib('card'); holdFor(3.2); addNews('Torcida invadiu o campo na final (' + teamName(MC, 0) + ' × ' + teamName(MC, 1) + '). Jogo paralisado por alguns minutos.'); }
   cardsAt(MC, m).forEach(c => { if (c.orig === 'r' && !vr) { vr = c; return; } feedMsg(cardTxt(MC, c), false); sfx('card'); vib('card'); holdFor(1.0); });
   if (vr) { varReview({ kind: 'red', over: !!vr.var, m, who: vr.name + ' (' + teamName(MC, vr.side) + ')' }, () => { feedMsg(cardTxt(MC, vr), false); sfx('card'); vib('card'); holdFor(1.0); processEvents(m); }); return; }
   processEvents(m);
@@ -4347,7 +4347,7 @@ function openControls() {
   $('#modal-box').oninput = cfgInput;
 }
 function openAbout() {
-  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 22). Escudos e Data Pack por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
+  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 23). Escudos e Data Pack por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
 }
 async function openProfiles() {
   const all = await refreshSaves();

@@ -2875,7 +2875,7 @@ function ballStep(dt) {
     if (!crossed) continue;
     const nearPost = Math.min(Math.abs(b.y - GY1), Math.abs(b.y - GY2)) < 0.17 && b.z < GH;
     const bar = b.y > GY1 && b.y < GY2 && Math.abs(b.z - GH) < 0.13;
-    if (nearPost || bar) { b.x = gx + (gx === 0 ? 0.2 : -0.2); b.vx = -b.vx * 0.55; if (bar) b.vz = -Math.abs(b.vz) * 0.5; b.vy += rf(-2, 2); E.banner = nearPost ? 'Na trave!' : 'No travessão!'; if (typeof sfx === 'function') { sfx('post'); vib('post'); } E.bannerT = 1.1; if (b.kicker && b.kicker.user && b.shot) E.st.sot += 0; }
+    if (nearPost || bar) { b.x = gx + (gx === 0 ? 0.2 : -0.2); b.vx = -b.vx * 0.55; if (bar) b.vz = -Math.abs(b.vz) * 0.5; b.vy += rf(-2, 2); E.postFx = { gx, bar: !!bar, t: E.t }; E.netFx = { gx, y: b.y, z: Math.min(b.z, GH), t: E.t - 0.05, a: 0.45 }; E.banner = nearPost ? 'Na trave!' : 'No travessão!'; if (typeof sfx === 'function') { sfx('post'); vib('post'); } E.bannerT = 1.1; if (b.kicker && b.kicker.user && b.shot) E.st.sot += 0; }
   }
 }
 function interactions(dt) {
@@ -2952,6 +2952,10 @@ function goal(team) {
   if (assist && assist.user) E.st.a++;
   E.goals.push({ team, scorer: scorer ? scorer.id : null, assist: assist ? assist.id : null, note: E.type === 'pen' || E.type === 'gkpen' ? 'pên.' : E.type === 'fk' && E.t - E.kickT < 3 ? 'falta' : '' });
   if (typeof sfx === 'function') { sfx(team === 0 ? 'goal' : 'miss'); sfx('net'); vib(team === 0 ? 'goal' : 'concede'); crowdPulse(team === 0 ? 0.34 : 0.14, 0.4, 4, team === 0 ? 1300 : 500); }
+  { const gx = b.x < 0 ? 0 : FL; E.netFx = { gx, y: clamp(b.y, GY1, GY2), z: clamp(b.z, 0.1, GH), t: E.t, a: 1 };
+    if (!E.drill) { const tk = E.teams && E.teams[team], cs = ['#ffd23f', '#ffffff', tk && tk.kit ? tk.kit.c1 : '#3fc27a', '#ff6b9d']; E.parts = []; const sg = gx === 0 ? 1 : -1;
+      for (let i = 0; i < 46; i++) E.parts.push({ x: gx + sg * rf(0.5, 2), y: GC + rf(-5, 5), z: rf(0.3, 1.6), vx: sg * rf(2, 11), vy: rf(-7, 7), vz: rf(5, 12), c: cs[i % cs.length], r: rf(0, 6), w: rf(0.12, 0.26), t: E.t });
+      E.flash = { t: E.t }; } }
   E.cele = E.drill ? 0.5 : 3.0; E.celeP = E.drill ? null : scorer; E.celeT = 0; E.celeTeam = team;
   if (!E.drill) { E.banner = team === 0 ? (scorer && scorer.user ? 'GOLAÇO SEU!' : 'GOOOL!') : 'Gol do adversário'; E.bannerT = 2.3; }
   b.vx *= 0.15; b.vy *= 0.15; b.vz = 0; b.z = Math.min(b.z, 1);
@@ -3294,6 +3298,7 @@ function drawFig(ctx, x, y, S, o) {
   ctx.save();
   ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.beginPath(); ctx.ellipse(x, y, 0.44 * S, 0.17 * S, 0, 0, 7); ctx.fill();
   ctx.translate(x, y - lift);
+  if (o.gk && o.ready) ctx.translate(0, 0.07 * S);
   if (o.dive) { ctx.translate(0, -0.3 * S); ctx.rotate(o.dive * 1.2); ctx.translate(0, 0.3 * S); }
   else if (o.down) { ctx.rotate((o.fx >= 0 ? 1 : -1) * 1.35); }
   const sw = Math.sin(o.phase || 0) * 0.2 * S * (o.moving ? 1 : 0);
@@ -3302,8 +3307,15 @@ function drawFig(ctx, x, y, S, o) {
   ctx.beginPath(); ctx.moveTo(-0.12 * S, -0.6 * S); ctx.lineTo(-0.12 * S + sw, -0.06 * S); ctx.moveTo(0.12 * S, -0.6 * S); ctx.lineTo(0.12 * S - sw + (o.kick > 0 ? 0.3 * S * (o.fx >= 0 ? 1 : -1) : 0), -0.06 * S - (o.kick > 0 ? 0.15 * S : 0)); ctx.stroke();
   ctx.fillStyle = o.shorts; ctx.fillRect(-0.3 * S, -0.8 * S, 0.6 * S, 0.26 * S);
   ctx.strokeStyle = o.shirt; ctx.lineWidth = 0.15 * S;
+  if (o.gk && (o.dive || o.ready)) {
+    // goleiro: braços abertos na posição de espera e esticados para cima no mergulho
+    const up = o.dive ? 1 : 0, ax = (0.5 + 0.2 * up) * S, ay = (o.dive ? -1.95 : -1.0) * S; const hands = [[-ax, ay], [ax, ay]];
+    ctx.beginPath(); ctx.moveTo(-0.32 * S, -1.18 * S); ctx.lineTo(hands[0][0], hands[0][1]); ctx.moveTo(0.32 * S, -1.18 * S); ctx.lineTo(hands[1][0], hands[1][1]); ctx.stroke();
+    ctx.fillStyle = '#ffd23f'; ctx.beginPath(); ctx.arc(hands[0][0], hands[0][1], 0.11 * S, 0, 7); ctx.arc(hands[1][0], hands[1][1], 0.11 * S, 0, 7); ctx.fill();
+  } else {
   ctx.beginPath(); ctx.moveTo(-0.32 * S, -1.18 * S); ctx.lineTo(-0.47 * S, -0.84 * S - sw * 0.4); ctx.moveTo(0.32 * S, -1.18 * S); ctx.lineTo(0.47 * S, -0.84 * S + sw * 0.4); ctx.stroke();
-  ctx.fillStyle = o.skin; ctx.beginPath(); ctx.arc(-0.47 * S, -0.82 * S - sw * 0.4, 0.07 * S, 0, 7); ctx.arc(0.47 * S, -0.82 * S + sw * 0.4, 0.07 * S, 0, 7); ctx.fill();
+  ctx.fillStyle = o.gk ? '#ffd23f' : o.skin; ctx.beginPath(); ctx.arc(-0.47 * S, -0.82 * S - sw * 0.4, (o.gk ? 0.1 : 0.07) * S, 0, 7); ctx.arc(0.47 * S, -0.82 * S + sw * 0.4, (o.gk ? 0.1 : 0.07) * S, 0, 7); ctx.fill();
+  }
   ctx.fillStyle = o.shirt; ctx.beginPath(); ctx.roundRect(-0.34 * S, -1.3 * S, 0.68 * S, 0.58 * S, 0.13 * S); ctx.fill();
   ctx.fillStyle = o.trim; ctx.fillRect(-0.34 * S, -0.84 * S, 0.68 * S, 0.06 * S);
   if (S >= 13 && o.num != null) { ctx.fillStyle = o.trim; ctx.font = `800 ${Math.round(0.34 * S)}px "Big Shoulders Display",sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(o.num, 0, -1.03 * S); }
@@ -4400,7 +4412,7 @@ function openControls() {
   $('#modal-box').oninput = cfgInput;
 }
 function openAbout() {
-  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 34). Escudos e Data Pack por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
+  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 35). Escudos e Data Pack por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
 }
 async function openProfiles() {
   const all = await refreshSaves();
@@ -4442,11 +4454,29 @@ function renderMatch() {
   for (const px of [11, FL - 11]) { ctx.beginPath(); ctx.ellipse(X(px), Y(34), 9.15 * S, 9.15 * S * T, 0, 0, 7); ctx.stroke(); }
   ctx.restore();
   // gols
+  const nf = E.netFx, pf = E.postFx;
   for (const gx of [0, FL]) {
-    const back = gx === 0 ? -2 : FL + 2;
-    ctx.fillStyle = 'rgba(255,255,255,.16)'; ctx.beginPath(); ctx.moveTo(X(gx), Y(GY1, GH)); ctx.lineTo(X(back), Y(GY1, GH * 0.8)); ctx.lineTo(X(back), Y(GY2, GH * 0.8)); ctx.lineTo(X(back), Y(GY2)); ctx.lineTo(X(back), Y(GY1)); ctx.lineTo(X(gx), Y(GY1)); ctx.closePath(); ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,.25)'; ctx.lineWidth = 1; for (let k = 0; k <= 6; k++) { const yy = GY1 + (GY2 - GY1) * k / 6; ctx.beginPath(); ctx.moveTo(X(gx), Y(yy, GH)); ctx.lineTo(X(back), Y(yy, GH * 0.8)); ctx.lineTo(X(back), Y(yy)); ctx.stroke(); }
-    ctx.strokeStyle = '#fff'; ctx.lineWidth = Math.max(2, S * 0.16); ctx.beginPath(); ctx.moveTo(X(gx), Y(GY1)); ctx.lineTo(X(gx), Y(GY1, GH)); ctx.lineTo(X(gx), Y(GY2, GH)); ctx.lineTo(X(gx), Y(GY2)); ctx.stroke();
+    const sg = gx === 0 ? -1 : 1, back = gx + sg * 2.2, bh = GH * 0.8;
+    const age = nf && nf.gx === gx ? E.t - nf.t : 99; const rip = age < 2.6 ? Math.exp(-age * 2.3) * Math.cos(age * 15) * nf.a : 0;
+    const disp = (yy, zz) => { if (!rip) return 0; const dy = (yy - nf.y) / 2.2, dz = (zz - nf.z) / 1.2; return rip * 1.5 * Math.exp(-(dy * dy + dz * dz)); };
+    const NY = 12, NZ = 5; const pt = (i, j) => { const yy = GY1 + (GY2 - GY1) * i / NY, zz = bh * j / NZ; return [X(back + sg * disp(yy, zz)), Y(yy, zz)]; };
+    ctx.fillStyle = 'rgba(255,255,255,.10)'; ctx.beginPath(); ctx.moveTo(X(gx), Y(GY1, GH)); ctx.lineTo(X(back), Y(GY1, bh)); ctx.lineTo(X(back), Y(GY2, bh)); ctx.lineTo(X(gx), Y(GY2, GH)); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.07)'; ctx.beginPath(); ctx.moveTo(X(back), Y(GY1, bh)); ctx.lineTo(X(back), Y(GY1)); ctx.lineTo(X(gx), Y(GY1)); ctx.lineTo(X(gx), Y(GY1, GH)); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(X(back), Y(GY2, bh)); ctx.lineTo(X(back), Y(GY2)); ctx.lineTo(X(gx), Y(GY2)); ctx.lineTo(X(gx), Y(GY2, GH)); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,.38)'; ctx.lineWidth = 1; ctx.beginPath();
+    for (let i = 0; i <= NY; i++) for (let j = 0; j <= NZ; j++) { const [px, py] = pt(i, j); if (j === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); }
+    for (let j = 0; j <= NZ; j++) for (let i = 0; i <= NY; i++) { const [px, py] = pt(i, j); if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); }
+    for (let k = 0; k <= 6; k++) { const yy = GY1 + (GY2 - GY1) * k / 6; ctx.moveTo(X(gx), Y(yy, GH)); const [px, py] = pt(Math.round(k * NY / 6), NZ); ctx.lineTo(px, py); }
+    for (const yy of [GY1, GY2]) { ctx.moveTo(X(gx), Y(yy)); ctx.lineTo(X(back), Y(yy)); for (let q = 1; q < 4; q++) { ctx.moveTo(X(gx + sg * 2.2 * q / 4), Y(yy, GH - (GH - bh) * q / 4)); ctx.lineTo(X(gx + sg * 2.2 * q / 4), Y(yy)); } }
+    ctx.stroke();
+    // traves e travessão (com sombra e vibração ao bater)
+    const pa = pf && pf.gx === gx ? E.t - pf.t : 99, vib = pa < 0.6 ? Math.exp(-pa * 6) : 0, sh = vib ? Math.sin(pa * 70) * vib * S * 0.12 : 0;
+    const post = (yy) => { ctx.beginPath(); ctx.moveTo(X(gx) + (pf && !pf.bar ? sh : 0), Y(yy)); ctx.lineTo(X(gx) + (pf && !pf.bar ? sh : 0), Y(yy, GH)); ctx.stroke(); };
+    ctx.lineCap = 'round'; ctx.strokeStyle = 'rgba(0,0,0,.28)'; ctx.lineWidth = Math.max(3, S * 0.24); ctx.beginPath(); ctx.moveTo(X(gx) + S * 0.1, Y(GY1)); ctx.lineTo(X(gx) + S * 0.1, Y(GY1, GH)); ctx.lineTo(X(gx) + S * 0.1, Y(GY2, GH)); ctx.lineTo(X(gx) + S * 0.1, Y(GY2)); ctx.stroke();
+    ctx.strokeStyle = vib ? `rgb(255,${Math.round(255 - 30 * vib)},${Math.round(255 - 150 * vib)})` : '#fff'; ctx.lineWidth = Math.max(2.4, S * (0.17 + 0.1 * vib));
+    if (vib) { ctx.shadowColor = '#ffd23f'; ctx.shadowBlur = 14 * vib; }
+    post(GY1); post(GY2); ctx.beginPath(); ctx.moveTo(X(gx), Y(GY1, GH) + (pf && pf.bar ? sh : 0)); ctx.lineTo(X(gx), Y(GY2, GH) + (pf && pf.bar ? sh : 0)); ctx.stroke();
+    ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
   }
   // trajetória
   if (inp.down && E.user && CFG.traj) drawAim(ctx, X, Y, S);
@@ -4466,9 +4496,14 @@ function renderMatch() {
     const sx = X(p.x), sy = Y(p.y);
     if (p.user) { ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.ellipse(sx, sy, S * 0.62, S * 0.26, 0, 0, 7); ctx.stroke(); }
     else if (b.owner === p) { ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(sx, sy, S * 0.55, S * 0.22, 0, 0, 7); ctx.stroke(); }
-    drawFig(ctx, sx, sy, S, figOpts(p.look, kit, { num: p.num, phase: p.phase, moving: Math.hypot(p.vx, p.vy) > 0.4, fx: p.fx, dive: p.dive ? Math.sign(p.dive.vy) * (p.team === 0 ? 1 : -1) : 0, down: (p.down > 0 || !!p.slide) && !p.dive, jump: p.jump, kick: p.kickA, back: p.fy < -0.6 }));
+    drawFig(ctx, sx, sy, S, figOpts(p.look, kit, { num: p.num, phase: p.phase, moving: Math.hypot(p.vx, p.vy) > 0.4, fx: p.fx, dive: p.dive ? Math.sign(p.dive.vy) * (p.team === 0 ? 1 : -1) : 0, down: (p.down > 0 || !!p.slide) && !p.dive, jump: p.jump, kick: p.kickA, back: p.fy < -0.6, gk: p.pos === 'GOL', ready: p.pos === 'GOL' && p.react != null && !p.dive && !p.hold }));
     if (p.user) { const ty2 = sy - S * 2.35; ctx.fillStyle = '#ffd23f'; ctx.beginPath(); ctx.moveTo(sx, ty2 + S * 0.3); ctx.lineTo(sx - S * 0.25, ty2); ctx.lineTo(sx + S * 0.25, ty2); ctx.fill(); }
   }
+  if (E.parts && E.parts.length) { const w0 = ctx.canvas.width; let any = false;
+    for (const q of E.parts) { const a = E.t - q.t; if (a > 2.6) continue; any = true; const x = q.x + q.vx * a, y = q.y + q.vy * a, z = Math.max(0, q.z + q.vz * a - 4.9 * a * a); const al = a > 1.9 ? Math.max(0, 1 - (a - 1.9) / 0.7) : 1;
+      ctx.save(); ctx.globalAlpha = al; ctx.translate(X(x), Y(y, z)); ctx.rotate(q.r + a * 7); ctx.fillStyle = q.c; ctx.fillRect(-q.w * S * 0.5, -q.w * S * 0.25, q.w * S, q.w * S * 0.5); ctx.restore(); }
+    if (!any) E.parts = null; }
+  if (E.flash) { const a = E.t - E.flash.t; if (a < 0.35) { ctx.save(); ctx.globalAlpha = 0.28 * (1 - a / 0.35); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height); ctx.restore(); } else E.flash = null; }
   const bn = $('#banner'); bn.textContent = E.bannerT > 0 && E.banner && txtOk(E.banner) && !(E.cele > 0 && MU && MU.MC && !MU.drill) ? E.banner : '';
 }
 function aimInfo() {

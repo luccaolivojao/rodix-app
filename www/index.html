@@ -4130,13 +4130,13 @@ function mgBuyBlock(p) {
 }
 function mgBidModal(pid) {
   const M = mgEnsure(), p = pl(pid); if (!p) return; const s = club(p.club), v = valueOf(p), blk = mgBuyBlock(p);
-  const btn = r => { const fee = Math.round(v * r / 1e4) * 1e4, no = fee > M.cash || blk; return `<button class="btn ${r === 1.15 ? 'pri' : ''}" ${no ? 'disabled' : ''} data-m="bid" data-v="${p.id}" data-r="${r}">${money(fee)}<small style="display:block;opacity:.75">${Math.round(mgBidChance(p, r) * 100)}% de aceitar</small></button>`; };
+  const btn = r => { const fee = Math.round(v * r / 1e4) * 1e4, no = !!blk; return `<button class="btn ${r === 1.15 ? 'pri' : ''}" ${no ? 'disabled' : ''} data-m="bid" data-v="${p.id}" data-r="${r}">${money(fee)}<small style="display:block;opacity:.75">${Math.round(mgBidChance(p, r) * 100)}% de aceitar</small></button>`; };
   modal(`<h2>Proposta por ${esc(fullName(p))}${rareMark(p)}</h2><div class="row" style="gap:12px">${badge(s, 44)}<div><b>${esc(s.name)}</b><div class="mut">${POSN[p.pos]} · ${p.age} anos · OVR ${p.ovr} · pot. ${p.pot || p.ovr}</div></div></div>
-  <dl class="kv" style="margin:12px 0"><dt>Valor de mercado</dt><dd>${money(v)}</dd><dt>Seu orçamento</dt><dd>${mgMoney(M.cash)}</dd></dl>${blk ? `<p class="bad" style="margin:0 0 10px">${esc(blk)}</p>` : ''}
+  <dl class="kv" style="margin:12px 0"><dt>Valor de mercado</dt><dd>${money(v)}</dd><dt>Seu orçamento</dt><dd>${mgMoney(M.cash)}</dd></dl>${blk ? `<p class="bad" style="margin:0 0 10px">${esc(blk)}</p>` : ''}${M.cash < v * 1.15 ? '<p class="fine" style="margin:0 0 10px">Se o seu orçamento não cobrir, o clube fica com dívida (valor negativo).</p>' : ''}
   <div class="row" style="flex-wrap:wrap">${[1, 1.15, 1.3, 1.5].map(btn).join('')}</div><div class="row" style="margin-top:12px"><button class="btn" data-act="close-modal">Cancelar</button></div>`);
 }
 function mgBid(pid, r) {
-  const M = mgEnsure(), p = pl(pid); if (!p || mgBuyBlock(p)) return; const fee = Math.round(valueOf(p) * r / 1e4) * 1e4; if (fee > M.cash) return;
+  const M = mgEnsure(), p = pl(pid); if (!p || mgBuyBlock(p)) return; const fee = Math.round(valueOf(p) * r / 1e4) * 1e4;
   const s = club(p.club), me = club(M.club);
   if (rnd() < mgBidChance(p, r)) { M.cash -= fee; moveClub(p, me.id); G.tlog.unshift({ s: genSeasonLabel(), name: fullName(p), from: s.name, to: me.name, fee, u: 1 }); addNews(fullName(p) + ' é o novo reforço do ' + me.name + ' (' + money(fee) + ').', 'good'); strCache.key = ''; saveGame(true); modal(`<h2>Contratado!</h2><p>${esc(fullName(p))} chega ao ${esc(me.name)} por ${money(fee)}.</p><div class="row"><button class="btn pri" data-act="close-modal">Ótimo</button></div>`); }
   else { M.rej[p.id] = G.week; saveGame(true); modal(`<h2>Proposta recusada</h2><p>O ${esc(s.name)} não aceitou ${money(fee)} por ${esc(fullName(p))}.</p><div class="row"><button class="btn pri" data-act="close-modal">Entendi</button></div>`); }
@@ -4176,7 +4176,7 @@ function mgFeedView() {
 }
 function mgrTrView() {
   const M = mgEnsure(); const tabs = [['busca', 'Busca de jogadores'], ['saida', 'Saída'], ['feed', 'Últimas transferências'], ['rara', '★ Cartas raras']];
-  return head('Transferências', `<span class="chip acc">Orçamento ${mgMoney(M.cash)}</span>`) + `<div class="seg" style="margin-bottom:12px">${tabs.map(([k, n]) => `<button type="button" data-m="sub" data-v="${k}" aria-pressed="${MGSUB === k}">${n}</button>`).join('')}</div>` + (MGSUB === 'busca' ? mgSearchView() : MGSUB === 'saida' ? mgSaidaView() : MGSUB === 'rara' ? mgRareView() : mgFeedView());
+  return head('Transferências', `<span class="chip ${M.cash < 0 ? 'bad' : 'acc'}">${M.cash < 0 ? 'Dívida' : 'Orçamento'} ${mgMoney(M.cash)}</span><button class="btn sm" data-m="budget">Editar orçamento</button>`) + `<div class="seg" style="margin-bottom:12px">${tabs.map(([k, n]) => `<button type="button" data-m="sub" data-v="${k}" aria-pressed="${MGSUB === k}">${n}</button>`).join('')}</div>` + (MGSUB === 'busca' ? mgSearchView() : MGSUB === 'saida' ? mgSaidaView() : MGSUB === 'rara' ? mgRareView() : mgFeedView());
 }
 /* ----- funções (capitão, pênaltis, falta) ----- */
 const MG_ROLES = [['cap', 'Capitão'], ['pk', 'Pênaltis'], ['fk', 'Tiro livre']];
@@ -4287,6 +4287,12 @@ function mgrRestore() {
   if (!G || !G.mgr || !G.mgr.playAs) return; const M = G.mgr, X = pl(M.playAs); if (X) delete X.u; if (M.dummy) G.user.pid = M.dummy; M.playAs = null; M.dummy = null; strCache.key = '';
 }
 /* ----- carta rara (contratação especial) ----- */
+function mgBudgetModal() {
+  const M = mgEnsure();
+  modal(`<h2>Editar orçamento</h2><p class="mut" style="margin:0 0 8px">Defina qualquer valor, inclusive negativo (dívida). Valor em milhões de euros.</p><label class="stack" style="gap:4px"><span class="lbl">Orçamento (mi €)</span><input id="mg-cash" class="inp" type="number" step="0.5" value="${(M.cash / 1e6).toFixed(1)}"></label>
+  <div class="row" style="flex-wrap:wrap;margin:10px 0"><button class="btn sm" data-m="budgetadd" data-v="50">+50 mi</button><button class="btn sm" data-m="budgetadd" data-v="500">+500 mi</button><button class="btn sm" data-m="budgetadd" data-v="-50">-50 mi</button><button class="btn sm" data-m="budgetadd" data-v="-500">-500 mi</button></div>
+  <div class="row"><button class="btn pri" style="flex:1" data-m="budgetset">Aplicar</button><button class="btn" data-act="close-modal">Cancelar</button></div>`);
+}
 function mgRareView() {
   const M = mgEnsure(); if (!M.rare) M.rare = {};
   return RARE_CARDS.map(r => { const got = M.rare[r.ln]; const a = genAttrs(r.ovr, r.pos, 7);
@@ -4346,6 +4352,9 @@ function mgrClick(e) {
   else if (m === 'qsell') { const p = pl(+v || v); if (p && p.club === M.club && !mgCanLose(p)) { const bs = mgBuyers(p).filter(d => d.rep <= club(M.club).rep + 25); const d = bs.length ? pick(bs) : null; if (d) { mgSell(p, d.id, Math.round(valueOf(p) * 0.8 / 1e4) * 1e4); saveGame(true); } } }
   else if (m === 'role') return mgRoleModal(v);
   else if (m === 'rsign') { mgRareSign(v); }
+  else if (m === 'budget') return mgBudgetModal();
+  else if (m === 'budgetset') { const e = document.getElementById('mg-cash'); const n = e ? parseFloat(String(e.value).replace(',', '.')) : NaN; if (isFinite(n)) { M.cash = Math.round(n * 1e6); saveGame(true); closeModal(); } else return; }
+  else if (m === 'budgetadd') { M.cash += +v * 1e6; saveGame(true); closeModal(); }
   else if (m === 'playas') return mgrPlayAs(+v || v);
   else if (m === 'mpost') mgrSocPost(v);
   else if (m === 'rolepick') { M.role[b.dataset.k] = +v || v; saveGame(true); closeModal(); }
@@ -5047,7 +5056,7 @@ function openControls() {
   $('#modal-box').oninput = cfgInput;
 }
 function openAbout() {
-  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 57). Escudos, Data Pack e nomes de jogadores por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
+  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 58). Escudos, Data Pack e nomes de jogadores por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
 }
 async function openProfiles() {
   const all = await refreshSaves();

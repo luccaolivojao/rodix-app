@@ -29,4 +29,4 @@ jobs:
         run: |
           cp android/app/build/outputs/apk/debug/app-debug.apk Rodix-Creators.apk
           gh release delete apk-creators-latest --yes --cleanup-tag || true
-          gh release create apk-creators-latest Rodix-Creators.apk --title "Rodix Creators (APK de teste)" --notes "Edição Creators (build 57), assinatura de debug, instala ao lado do jogo normal."
+          gh release create apk-creators-latest Rodix-Creators.apk --title "Rodix Creators (APK de teste)" --notes "Edição Creators (build 58), assinatura de debug, instala ao lado do jogo normal."

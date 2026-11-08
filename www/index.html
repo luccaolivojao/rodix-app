@@ -120,6 +120,7 @@ main#view{min-width:0;padding-bottom:40px}
 .sc-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .sc-fol{font-size:13px;color:var(--mut)}.sc-fol b{color:var(--fg);font-size:20px}
 .paper{background:#f4efe3;color:#111;border-radius:6px;padding:0 0 12px;box-shadow:0 6px 24px rgba(0,0,0,.4)}.paper-top{background:#d3161c;color:#fff;text-align:center;font-family:var(--display);font-size:34px;font-weight:900;letter-spacing:.04em;padding:6px}.paper-ed{font-size:10px;text-align:center;border-bottom:2px solid #c33;margin:4px 12px;color:#333}.paper-body{display:flex;gap:12px;padding:10px 14px}.paper-tx h1{font-family:var(--display);font-size:clamp(22px,5vw,36px);line-height:1;margin:0 0 8px;text-transform:uppercase;font-weight:900;color:#111}.paper-tx p{font-style:italic;font-size:13px;color:#333;margin:0}.paper-img{flex:none;width:34%;background:linear-gradient(#0d2b1a,#1f5b36);border:2px solid #333}.paper-img canvas{width:100%;display:block}.sc-img{width:100%;max-width:360px;border-radius:10px;margin-top:10px;display:block}#invnews .in-skip{pointer-events:auto;margin-top:6px;background:#fff;color:#111;border:0;font-family:var(--display);font-weight:900;font-size:14px;letter-spacing:.06em;padding:6px 14px;cursor:pointer}
+#mgr-root{padding:16px 18px 40px;max-width:1040px;margin:0 auto}
 .sc-post{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px}
 .sc-post.hate{border-color:#ff5a5a}
 .sc-who{display:flex;align-items:center;gap:10px;margin-bottom:8px}
@@ -604,6 +605,7 @@ if(document.readyState==='complete')ready();else window.addEventListener('load',
   <div class="menu-body">
     <div class="logo"><em lang="en" style="font:inherit;font-style:normal">Rodix Football</em></div>
     <button class="tile big" data-act="play-main"><i id="ico-play"></i><span><b>Jogar</b><small id="play-sub">Nova carreira</small></span></button>
+    <button class="tile big" id="tile-mgr" data-act="mgr-new" hidden><i data-ico="whistle"></i><span><b>Modo Técnico</b><small>Comande um clube</small></span></button>
     <div class="tilegrid3">
       <button class="tile" data-act="profiles"><i data-ico="crown"></i><span><b>Perfil</b><small id="save-count">Suas carreiras</small></span></button>
       <button class="tile" data-act="practice"><i data-ico="boot"></i><span><b>Praticar</b><small>Treino livre</small></span></button>
@@ -620,6 +622,7 @@ if(document.readyState==='complete')ready();else window.addEventListener('load',
 <div id="s-club" class="screen" hidden><div class="wrap" id="club-root"></div></div>
 <div id="s-settings" class="screen" hidden><div class="wrap" id="settings-root"></div></div>
 <div id="s-retired" class="screen" hidden><div class="wrap" id="retired-root"></div></div>
+<div id="s-mgr" class="screen gamebg" hidden><div class="wrap" id="mgr-root"></div></div>
 
 <div id="s-hub" class="screen gamebg" hidden>
   <header class="band slim"><div class="band-in">
@@ -1092,6 +1095,7 @@ function selScore(p) {
   return p.ovr + dfx().rival + (p.s.ap >= 3 ? clamp((p.s.r / p.s.ap - 6.6) * 2, -3, 3) : 0) + hash(p.n * 7 + G.week * 13) * 2.5;
 }
 function pickXI(cid, excludeUser) {
+  if (G.mgr && cid === G.mgr.club && !excludeUser) return mgrXI(cid);
   const c = club(cid); const by = {}; POS.forEach(p => by[p] = []);
   const avail = [];
   for (const id of c.sq) { const p = pl(id); if (!p || p.inj > 0 || p.sus > 0 || (excludeUser && p.u)) continue; by[p.pos].push(p); avail.push(p); }
@@ -1104,7 +1108,7 @@ function pickXI(cid, excludeUser) {
   }
   return xi;
 }
-function xiStr(xi) { return xi.length ? xi.reduce((s, p) => s + p.ovr, 0) / xi.length - (11 - xi.length) * 3 : 40; }
+function xiStr(xi) { return xi.length ? xi.reduce((s, p) => s + p.ovr, 0) / xi.length - (11 - xi.length) * 3 - (xi.__pen || 0) / xi.length : 40; }
 function clubStr(cid) { const key = G.season + ':' + G.week; if (strCache.key !== key) strCache = { key, m: {} }; if (strCache.m[cid] == null) strCache.m[cid] = xiStr(pickXI(cid)); return strCache.m[cid]; }
 function clubAvg(cid) { const c = club(cid); const ps = c.sq.map(pl).filter(Boolean).sort((a, b) => b.ovr - a.ovr).slice(0, 16); return ps.length ? ps.reduce((s, p) => s + p.ovr, 0) / ps.length : 50; }
 
@@ -1128,7 +1132,8 @@ function simGoals(xi, n) { const goals = []; for (let i = 0; i < n; i++) { const
 function simFixture(f) {
   const xh = pickXI(f.h), xa = pickXI(f.a);
   const sh = xiStr(xh) + 2.2, sa = xiStr(xa);
-  const lh = clamp(1.4 * Math.exp((sh - sa) / 16), 0.15, 4.5), la = clamp(1.12 * Math.exp((sa - sh) / 16), 0.15, 4.5);
+  let lh = clamp(1.4 * Math.exp((sh - sa) / 16), 0.15, 4.5), la = clamp(1.12 * Math.exp((sa - sh) / 16), 0.15, 4.5);
+  if (G.mgr) { const iH = f.h === G.mgr.club, iA = f.a === G.mgr.club; if (iH || iA) { const T = MG_TAC[G.mgr.tac] || MG_TAC.bal; if (iH) { lh *= T.a; la *= T.d; } else { la *= T.a; lh *= T.d; } } }
   f.hg = poisson(lh); f.ag = poisson(la);
   const gh = simGoals(xh, f.hg), ga = simGoals(xa, f.ag);
   f.sc = gh.map(g => g.s).concat(ga.map(g => g.s));
@@ -1374,7 +1379,7 @@ function makeUserPlayer(cfg, cid) {
 }
 function startCareer(cfg, cid) {
   const p = makeUserPlayer(cfg, cid); const c = club(cid);
-  const same = c.sq.map(pl).filter(q => q && q.pos === p.pos).sort((a, b) => a.ovr - b.ovr);
+  const same = cfg.mgr ? [] : c.sq.map(pl).filter(q => q && q.pos === p.pos).sort((a, b) => a.ovr - b.ovr);
   if (same.length) { const out = same[0]; c.sq = c.sq.filter(id => id !== out.id); delete G.players[out.id]; }
   c.sq.push(p.id);
   const wage = Math.max(250, Math.round(wageFor(p.ovr, c.rep) * 0.7 / 10) * 10);
@@ -2684,7 +2689,7 @@ function kick(p, dx, dy, speed, vz, kind, noise) {
   b.owner = null; b.vx = Math.cos(a) * speed; b.vy = Math.sin(a) * speed; b.vz = vz; b.z = Math.max(b.z, 0.02);
   b.last = p; b.lastTeam = p.team; b.kicker = p; b.kind = kind; b.dip = kind === 'fk'; b.intended = null; b.fkDec = false;
   p.cd = 0.32; p.kickA = 0.25; touch(p, kind);
-  if (FX2()) { fxPuff(p.x, p.y, 3, 1.2, 0.22); if (kind === 'shot' || kind === 'fk' || kind === 'pen' || kind === 'head') { fxRing(b.x, b.y, 0.2, '#ffd23f'); fxSparks(b.x, b.y, 0.3, 12, ['#ffd23f', '#ffffff', '#ff9a3d'], 8); fxShake(0.09); } else if (speed > 14) fxSparks(b.x, b.y, 0.2, 3, ['#ffffff'], 3); } if (typeof sfx === 'function') { sfx('kick'); if (p.user) vib(kind === 'shot' || kind === 'head' || kind === 'fk' || kind === 'pen' ? 'shot' : 'pass'); if (kind === 'shot' || kind === 'head') crowdPulse(0.11, 0.25, 1.0, 1000); }
+  if (FX2()) { if (kind === 'shot' || kind === 'fk' || kind === 'pen' || kind === 'head') { fxRing(b.x, b.y, 0.2, '#ffd23f'); fxSparks(b.x, b.y, 0.3, 12, ['#ffd23f', '#ffffff', '#ff9a3d'], 8); fxShake(0.09); } else if (speed > 14) fxSparks(b.x, b.y, 0.2, 3, ['#ffffff'], 3); } if (typeof sfx === 'function') { sfx('kick'); if (p.user) vib(kind === 'shot' || kind === 'head' || kind === 'fk' || kind === 'pen' ? 'shot' : 'pass'); if (kind === 'shot' || kind === 'head') crowdPulse(0.11, 0.25, 1.0, 1000); }
   if (kind === 'shot' || kind === 'fk' || kind === 'pen' || kind === 'head') { E.diveDone = false; for (const q of E.players) if (q.pos === 'GOL') q.react = null; if (p.user) E.st.sh++; b.shot = true; } else b.shot = false;
   if (kind === 'pass' && p.user) E.st.pa++;
   if (E.frozen) { E.frozen = false; E.kickT = E.t; for (const q of E.players) if (q.wall) q.jump = 0.5; }
@@ -2924,7 +2929,7 @@ function gkSave(g, sp) {
   const b = E.ball; const shooter = b.kicker;
   let catchP = clamp(0.25 + g.a.gol / 140 - (sp - 16) / 28 - (g.dive ? 0.15 : 0), 0.08, 0.92); if (g.team === 1) catchP = clamp(catchP * dfx().cpu, 0.05, 0.95);
   if (b.shot) { if (g.user) E.st.sv++; if (shooter && shooter.user) E.st.sot++; }
-  if (FX2()) { fxSparks(b.x, b.y, Math.max(0.4, b.z), 10, ['#62b6ff', '#ffffff', '#ffd23f'], 7); fxRing(b.x, b.y, Math.max(0.4, b.z), '#62b6ff'); fxPuff(g.x, g.y, 4, 1.5, 0.3); fxShake(0.12); }
+  if (FX2()) { fxSparks(b.x, b.y, Math.max(0.4, b.z), 10, ['#62b6ff', '#ffffff', '#ffd23f'], 7); fxRing(b.x, b.y, Math.max(0.4, b.z), '#62b6ff'); fxShake(0.12); }
   E.banner = g.user ? 'Que defesa!' : 'Defesa do goleiro'; E.bannerT = 1.1; if (typeof sfx === 'function') { sfx('save'); vib('save'); }
   if (Math.random() < catchP) { giveBall(g); g.hold = 1.0; }
   else { const dir = g.team === 0 ? 1 : -1; b.vx = dir * rf(3, 8); b.vy = (Math.random() < 0.5 ? -1 : 1) * rf(4, 10); b.vz = rf(1, 4); b.lastTeam = g.team; b.last = g; b.kind = 'parry'; b.shot = false; g.cd = 0.5; touch(g, 'save'); }
@@ -3436,6 +3441,7 @@ function openContinue() { return openProfiles(); }
 async function loadSlot(slot) {
   const s = await Store.get(slot); if (!s) { toast('Save não encontrado.'); return; }
   G = s.data; migrateWorld(); if (G.user && G.user.coins != null) { const w = wal(); w.coins += G.user.coins; w.kits += G.user.kits || 0; w.turbos += G.user.turbos || 0; delete G.user.coins; delete G.user.kits; delete G.user.turbos; saveCfg(); } SLOT = slot; strCache.key = ''; attrCache.clear();
+  if (G.mgr) { openMgr(); return; }
   if (G.user.retired) { showRetired(); return; }
   hubTab = 'home'; openHub();
 }
@@ -3932,6 +3938,147 @@ function vSocial() {
   const body = SOCTAB === 'dm' ? ((S.dms || []).map(socDmHtml).join('') || '<span class="mut">Sem mensagens.</span>') : SOCTAB === 'req' ? reqHtml() : SOCTAB === 'spon' ? sponHtml() : (S.posts.map(socPostHtml).join('') || '<span class="mut">Sem posts.</span>');
   return head('Rodix Social', '<span class="sc-fol"><b>' + S.fol.toLocaleString('pt-BR') + '</b> seguidores</span>') + bar + body;
 }
+
+/* ---------- MODO TÉCNICO (Edição Creators) ---------- */
+const MG_FORMS = {
+  '4-4-2': { ZAG: 2, LAT: 2, VOL: 1, MEI: 1, PON: 2, ATA: 2 },
+  '4-3-3': { ZAG: 2, LAT: 2, VOL: 1, MEI: 2, PON: 0, ATA: 3 },
+  '4-2-3-1': { ZAG: 2, LAT: 2, VOL: 2, MEI: 1, PON: 2, ATA: 1 },
+  '4-1-4-1': { ZAG: 2, LAT: 2, VOL: 1, MEI: 2, PON: 2, ATA: 1 },
+  '3-5-2': { ZAG: 3, LAT: 0, VOL: 1, MEI: 2, PON: 2, ATA: 2 },
+  '5-3-2': { ZAG: 3, LAT: 2, VOL: 1, MEI: 2, PON: 0, ATA: 2 }
+};
+const MG_TAC = { atk: { n: 'Ataque total', a: 1.14, d: 1.14, t: 'Mais gols dos dois lados.' }, bal: { n: 'Equilibrado', a: 1, d: 1, t: 'Sem riscos extras.' }, cnt: { n: 'Contra-ataque', a: 1.03, d: 0.92, t: 'Fecha a defesa e sai rápido.' }, def: { n: 'Retranca', a: 0.86, d: 0.84, t: 'Poucos gols, jogos travados.' } };
+let MGTAB = 'home', MGMODE = 'main', MGP = { co: 'BRA', lg: null, club: null, name: 'Técnico Novo' };
+function mgSlots(form) { const f = MG_FORMS[form] || MG_FORMS['4-3-3']; const s = ['GOL']; for (const k of ['ZAG', 'LAT', 'VOL', 'MEI', 'PON', 'ATA']) for (let i = 0; i < f[k]; i++) s.push(k); return s; }
+function mgAvail(p) { return p && !p.u && p.inj === 0 && p.sus === 0; }
+function mgAuto(cid, form, keep) {
+  const slots = mgSlots(form), c = club(cid), used = new Set(), out = [];
+  const pool = c.sq.map(pl).filter(mgAvail).sort((a, b) => b.ovr - a.ovr);
+  (keep || []).forEach(id => { if (id) used.add(id); });
+  slots.forEach((pos, i) => { const k = keep && keep[i]; if (k) { out[i] = k; return; }
+    let p = pool.find(q => !used.has(q.id) && q.pos === pos);
+    if (!p) p = pool.find(q => !used.has(q.id) && (pos === 'GOL' ? q.pos === 'GOL' : q.pos !== 'GOL'));
+    if (!p) p = pool.find(q => !used.has(q.id));
+    if (p) { used.add(p.id); out[i] = p.id; } else out[i] = null; });
+  return out;
+}
+function mgrXI(cid) {
+  const M = G.mgr, slots = mgSlots(M.form), c = club(cid); const sel = M.sel && M.sel.length === 11 ? M.sel.slice() : [];
+  const ok = sel.map(id => { const p = id && pl(id); return p && c.sq.includes(id) && mgAvail(p) ? id : null; });
+  const seen = new Set(); ok.forEach((id, i) => { if (id && seen.has(id)) ok[i] = null; else if (id) seen.add(id); });
+  const ids = mgAuto(cid, M.form, ok); M.sel = ids;
+  const xi = ids.map(id => pl(id)).filter(Boolean); let pen = 0;
+  ids.forEach((id, i) => { const p = id && pl(id); if (p && p.pos !== slots[i]) pen += slots[i] === 'GOL' || p.pos === 'GOL' ? 35 : 7; });
+  xi.__pen = pen; xi.__slots = slots; return xi;
+}
+function mgrStats() { const M = G.mgr; return { str: xiStr(mgrXI(M.club)) }; }
+function mgObjective() {
+  const c = club(G.mgr.club), L = G.leagues[c.lg], n = L.clubs.length;
+  const rank = L.clubs.slice().sort((a, b) => clubAvg(b) - clubAvg(a)).indexOf(c.id) + 1;
+  const down = (LDEF[c.lg] && LDEF[c.lg].down) || 0;
+  if (rank > n - down - 2 && down) return { N: n - down, text: 'Evitar o rebaixamento', rank };
+  const N = Math.max(1, Math.round(rank * 0.85)); return { N, text: N === 1 ? 'Ser campeão' : 'Terminar entre os ' + N + ' primeiros', rank };
+}
+function mgrInit(cid, name) {
+  const cfg = defaultCreate(); cfg.fn = 'Técnico'; cfg.ln = name; cfg.pos = 'GOL'; cfg.age = 16; cfg.mgr = true; cfg.style = Object.keys(STYLES).find(s => /goleiro/i.test(s)) || cfg.style;
+  const p = startCareer(cfg, cid); for (const k in p.a) p.a[k] = 12; p.ovr = ovrOf(p.a, p.pos); p.pot = p.ovr; p.num = 99; G.user.diff = 'semi'; G.user.hidden = true; G.user.contract.years = 99; G.user.socOn = false;
+  G.mgr = { club: cid, name, form: '4-3-3', tac: 'bal', sel: [], conf: 55, played: 0, hist: [], jobs: [{ club: club(cid).name, s: genSeasonLabel() }], startSeason: G.season }; G.mgr.obj = mgObjective();
+}
+async function mgrNew() { closeModal(); newWorld(); MGMODE = 'pick'; MGP = { co: 'BRA', lg: null, club: null, name: 'Técnico Novo' }; show('s-mgr'); mgrRender(); }
+async function mgrStart() {
+  if (!MGP.club) return; const slot = SLOT && G && G.mgr ? SLOT : await freeSlot();
+  if (!slot) { toast('Sem slot livre. Apague uma carreira em Perfil.'); return; }
+  SLOT = slot; mgrInit(MGP.club, (MGP.name || 'Técnico').trim().slice(0, 24)); strCache.key = ''; saveGame(true); MGMODE = 'main'; MGTAB = 'home'; mgrRender();
+  modal(`<h2>Bem-vindo ao ${esc(club(MGP.club).name)}</h2><p>Você é o novo técnico. A diretoria espera: <b>${esc(G.mgr.obj.text)}</b>.</p><p class="mut">Monte o time na aba Escalação, escolha a tática e simule as rodadas. Se a confiança da diretoria chegar a zero, você é demitido.</p><div class="row"><button class="btn pri" data-act="close-modal">Começar</button></div>`);
+}
+function openMgr() { MGMODE = G.mgr.sacked ? 'pick' : 'main'; MGTAB = 'home'; if (G.mgr.sacked) MGP = { co: 'BRA', lg: null, club: null, name: G.mgr.name }; show('s-mgr'); mgrRender(); }
+function mgFixture() { const c = club(G.mgr.club); const r = G.leagues[c.lg].rounds[G.week]; return r ? r.find(f => f.h === c.id || f.a === c.id) || null : null; }
+async function mgrPlay() {
+  const M = G.mgr, c = club(M.club); const f = mgFixture(), w = G.week; let pre = null;
+  if (f) { const home = f.h === c.id, opp = home ? f.a : f.h; const my = xiStr(mgrXI(c.id)) + (home ? 2.2 : 0), op = xiStr(pickXI(opp)) + (home ? 0 : 2.2); pre = { opp, home, e: 1 / (1 + Math.exp(-(my - op) / 7)) }; }
+  G.user.contract.years = Math.max(G.user.contract.years, 3); G.offers = [];
+  const cupBefore = userCupFixture();
+  const res = advanceWeek(); strCache.key = '';
+  let body = '';
+  if (f && f.hg != null) {
+    const home = f.h === c.id, gf = home ? f.hg : f.ag, ga = home ? f.ag : f.hg, a = gf > ga ? 1 : gf === ga ? 0.5 : 0;
+    const delta = (a - pre.e) * 10 + (a === 1 ? 1 : 0); M.conf = clamp(M.conf + delta, 0, 100); M.played++;
+    const sc = (f.sc || []).map(id => pl(id)), hs = sc.slice(0, f.hg), as = sc.slice(f.hg);
+    const nm = p => p ? esc(shortName(p)) : '?';
+    body = `<div class="row" style="justify-content:center;gap:16px;align-items:center">${badge(club(f.h), 46)}<b style="font-family:var(--display);font-size:44px">${f.hg} × ${f.ag}</b>${badge(club(f.a), 46)}</div><p class="mut" style="text-align:center;margin:4px 0">${esc(club(f.h).name)} × ${esc(club(f.a).name)}</p><p style="text-align:center;margin:8px 0"><b>${gf > ga ? 'Vitória!' : gf === ga ? 'Empate' : 'Derrota'}</b> · diretoria ${delta >= 0 ? '+' : ''}${Math.round(delta)}</p>${hs.length || as.length ? `<p class="fine" style="margin:0;text-align:center">${hs.length ? '⚽ ' + esc(club(f.h).name) + ': ' + hs.map(nm).join(', ') : ''}${hs.length && as.length ? '<br>' : ''}${as.length ? '⚽ ' + esc(club(f.a).name) + ': ' + as.map(nm).join(', ') : ''}</p>` : ''}`;
+  } else body = '<p class="mut">Semana sem jogo da liga.</p>';
+  if (cupBefore) { const m = cupBefore.m; if (m.hg != null) body += `<p class="fine" style="text-align:center;margin:10px 0 0">${esc(COMPDEF[cupBefore.comp.id].n)}: ${esc(ent(m.h).name)} ${m.hg} × ${m.ag} ${esc(ent(m.a).name)}</p>`; }
+  let end = '';
+  if (res.seasonEnded && res.summary) {
+    const S = res.summary, pos = S.user ? S.user.pos : 0, ob = M.obj, okk = pos > 0 && pos <= ob.N; M.conf = clamp(M.conf + (okk ? 12 : -(10 + Math.max(0, pos - ob.N) * 1.5)), 0, 100);
+    M.hist.push({ s: S.label, club: club(M.club).name, pos, obj: ob.text, ok: okk, champ: (S.champs.find(x => x.lid === club(M.club).lg) || {}).name || '' });
+    G.user.contract.years = 99; M.sel = []; M.obj = mgObjective(); strCache.key = '';
+    end = `<hr style="border:0;border-top:1px solid var(--line);margin:12px 0"><h3 style="margin:0 0 6px">Temporada ${esc(S.label)} encerrada</h3><p style="margin:0">${esc(club(M.club).name)} terminou em <b>${pos}º</b>. Meta: ${esc(ob.text)} — <b class="${okk ? 'good' : ''}">${okk ? 'cumprida' : 'não cumprida'}</b>.</p><p class="fine" style="margin:6px 0 0">Campeão: ${esc((S.champs.find(x => x.lid === club(M.club).lg) || {}).name || '—')}. Nova meta: ${esc(M.obj.text)}.</p>`;
+  }
+  const sacked = M.conf <= 6 && M.played >= 6; saveGame(true); mgrRender();
+  if (sacked) { modal(`<h2>Você foi demitido</h2><p>A diretoria do ${esc(club(M.club).name)} perdeu a confiança. Procure outro clube para recomeçar.</p><div class="row"><button class="btn pri" data-act="close-modal" id="mg-sack">Procurar novo clube</button></div>`); M.sacked = true; saveGame(true); const b = document.getElementById('mg-sack'); if (b) b.addEventListener('click', () => { MGMODE = 'pick'; MGP.club = null; MGP.co = club(M.club).lg ? (LEAGUE_DEFS.find(l => l.id === club(M.club).lg) || {}).co || 'BRA' : 'BRA'; mgrRender(); }); return; }
+  modal(`<h2>Fim da rodada ${w + 1}</h2>${body}${end}<div class="row" style="margin-top:12px"><button class="btn pri" style="flex:1" data-act="close-modal">Continuar</button></div>`);
+}
+function mgrTakeJob(cid) {
+  const M = G.mgr, p = up(); moveClub(p, cid); G.user.contract = { club: cid, years: 99, wage: 250, since: G.season }; M.club = cid; M.conf = 55; M.played = 0; M.sel = []; M.sacked = false; M.obj = mgObjective(); M.jobs.push({ club: club(cid).name, s: genSeasonLabel() }); strCache.key = ''; MGMODE = 'main'; MGTAB = 'home'; saveGame(true); mgrRender();
+  modal(`<h2>Novo desafio: ${esc(club(cid).name)}</h2><p>Meta da diretoria: <b>${esc(M.obj.text)}</b>.</p><div class="row"><button class="btn pri" data-act="close-modal">Começar</button></div>`);
+}
+function mgPickView() {
+  const cos = [...new Set(LEAGUE_DEFS.map(l => l.co))]; const lgs = LEAGUE_DEFS.filter(l => l.co === MGP.co); if (!MGP.lg || !lgs.find(l => l.id === MGP.lg)) MGP.lg = lgs[0].id;
+  const clubs = G.leagues[MGP.lg].clubs.map(club).sort((a, b) => b.rep - a.rep); const sack = G.mgr && G.mgr.sacked;
+  return `<div class="pagehead"><div><span class="lbl">${sack ? 'Demitido' : 'Modo Técnico'}</span><h2 style="font-size:38px">${sack ? 'Escolha um novo clube' : 'Qual clube você vai comandar?'}</h2></div><div class="row">${sack ? '' : '<button class="btn ghost" data-m="menu">← Menu</button>'}<button class="btn pri" data-m="${sack ? 'job' : 'start'}" ${MGP.club ? '' : 'disabled'}>${sack ? 'Assumir' : 'Começar'}</button></div></div>
+  ${sack ? '' : `<div class="field"><label class="lbl" for="mg-name">Nome do técnico</label><input id="mg-name" maxlength="24" value="${esc(MGP.name)}"></div>`}
+  <div class="tabs">${cos.map(co => `<button data-m="co" data-v="${co}" aria-pressed="${co === MGP.co}">${NATIONS[co].n}</button>`).join('')}</div>
+  <div class="tabs">${lgs.map(l => `<button data-m="lg" data-v="${l.id}" aria-pressed="${l.id === MGP.lg}">${l.n}</button>`).join('')}</div>
+  <div class="clubgrid">${clubs.map(c => `<button class="clubcard" data-m="club" data-v="${c.id}" aria-pressed="${MGP.club === c.id}">${badge(c, 34)}<div><b>${esc(c.name)}</b><small>Elenco ${Math.round(clubAvg(c.id))} OVR</small></div></button>`).join('')}</div>`;
+}
+function mgBar(v) { return `<div class="bar" style="height:10px;border-radius:6px;overflow:hidden;background:rgba(255,255,255,.1)"><i style="display:block;height:100%;width:${Math.round(v)}%;background:${v < 25 ? '#ff5a5a' : v < 50 ? '#ffb347' : '#3fc27a'}"></i></div>`; }
+function mgPlayerRow(p, extra) { return `<div class="drow"><span class="rk" style="width:34px">${POSN[p.pos].slice(0, 3).toUpperCase()}</span><span class="nm">${esc(fullName(p))}<small>${p.age} anos${p.s && p.s.ap ? ' · ' + p.s.ap + ' jogos · ' + p.s.g + ' gols' : ''}</small></span><b>${p.ovr}</b>${extra || ''}</div>`; }
+function mgrMain() {
+  const M = G.mgr, c = club(M.club), L = LDEF[c.lg]; const t = table(c.lg); const pos = t.findIndex(r => r.c === c.id) + 1; const row = t.find(r => r.c === c.id) || { pts: 0, p: 0, form: [] };
+  const tabs = [['home', 'Painel'], ['xi', 'Escalação'], ['sq', 'Elenco'], ['tb', 'Tabela'], ['bd', 'Diretoria']];
+  let h = `<div class="pagehead"><div class="row" style="gap:12px">${badge(c, 44)}<div><h2 style="font-size:30px;margin:0">${esc(c.name)}</h2><span class="mut">${esc(L.n)} · Temporada ${esc(genSeasonLabel())} · Rodada ${Math.min(G.week + 1, G.leagues[c.lg].rounds.length)}/${G.leagues[c.lg].rounds.length}</span></div></div><div class="row"><button class="btn ghost" data-m="save">Salvar</button><button class="btn ghost" data-m="menu">Menu</button></div></div>
+  <div class="seg" style="margin-bottom:12px">${tabs.map(x => `<button type="button" data-m="tab" data-v="${x[0]}" aria-pressed="${MGTAB === x[0]}">${x[1]}</button>`).join('')}</div>`;
+  if (MGTAB === 'home') {
+    const f = mgFixture(), st = mgrStats(); let nx = '<p class="mut" style="margin:0">Sem jogo da liga nesta semana.</p>';
+    if (f) { const home = f.h === c.id, oc = club(home ? f.a : f.h), os = xiStr(pickXI(oc.id)); nx = `<div class="fixture"><div class="tm">${badge(club(f.h), 56)}<b>${esc(club(f.h).name)}</b></div><div class="vs">×</div><div class="tm">${badge(club(f.a), 56)}<b>${esc(club(f.a).name)}</b></div></div><p class="mut" style="margin:0;text-align:center">${home ? 'Em casa' : 'Fora'} · sua força ${Math.round(st.str)} × ${Math.round(os)}</p>`; }
+    const cf = userCupFixture(); const cup = cf ? `<p class="fine" style="margin:8px 0 0;text-align:center">Também joga: ${esc(COMPDEF[cf.comp.id].n)} · ${esc(ent(cf.m.h).name)} × ${esc(ent(cf.m.a).name)}</p>` : '';
+    h += `<div class="grid2"><div class="card stack"><span class="lbl">Próxima partida</span>${nx}${cup}<button class="btn pri" data-m="play">Simular rodada</button></div>
+    <div class="card stack"><span class="lbl">Tática</span><div class="seg">${Object.keys(MG_TAC).map(k => `<button type="button" data-m="tac" data-v="${k}" aria-pressed="${M.tac === k}">${MG_TAC[k].n}</button>`).join('')}</div><span class="fine">${esc(MG_TAC[M.tac].t)}</span>
+      <span class="lbl" style="margin-top:6px">Formação</span><div class="seg">${Object.keys(MG_FORMS).map(k => `<button type="button" data-m="form" data-v="${k}" aria-pressed="${M.form === k}">${k}</button>`).join('')}</div></div></div>
+    <div class="card stack" style="margin-top:12px"><div class="row" style="justify-content:space-between"><span class="lbl">Campanha</span><span class="chip">${pos}º · ${row.pts} pts · ${row.p} jogos</span></div><div class="row">${(row.form || []).map(x => `<span class="chip ${x === 'V' ? 'good' : x === 'D' ? 'bad' : ''}">${x}</span>`).join('') || '<span class="mut">Sem jogos ainda.</span>'}</div><span class="fine">Meta: ${esc(M.obj.text)}</span><div><span class="fine">Confiança da diretoria · ${Math.round(M.conf)}%</span>${mgBar(M.conf)}</div></div>`;
+  } else if (MGTAB === 'xi') {
+    const xi = mgrXI(c.id), slots = xi.__slots, sel = M.sel;
+    h += `<div class="row" style="justify-content:space-between;margin-bottom:10px"><span class="mut">Formação ${esc(M.form)} · força ${Math.round(xiStr(xi))}</span><button class="btn" data-m="auto">Escalar automaticamente</button></div>` + slots.map((pos, i) => { const p = pl(sel[i]); const off = p && p.pos !== pos; return `<button class="card row" style="width:100%;text-align:left;gap:12px;margin-bottom:8px;cursor:pointer" data-m="slot" data-v="${i}"><span class="chip acc" style="min-width:48px;text-align:center">${POSN[pos].slice(0, 3).toUpperCase()}</span><span style="flex:1"><b>${p ? esc(fullName(p)) : '—'}</b>${off ? ' <span class="chip bad">fora de posição</span>' : ''}<small class="mut" style="display:block">${p ? p.age + ' anos · ' + POSN[p.pos] : ''}</small></span><b style="font-family:var(--display);font-size:24px">${p ? p.ovr : ''}</b></button>`; }).join('');
+  } else if (MGTAB === 'sq') {
+    const all = c.sq.map(pl).filter(p => p && !p.u); h += POS.map(pp => { const ls = all.filter(p => p.pos === pp).sort((a, b) => b.ovr - a.ovr); return ls.length ? `<div class="card stack" style="margin-bottom:10px"><span class="lbl">${POSN[pp]}</span>${ls.map(p => mgPlayerRow(p, p.inj > 0 ? '<span class="chip bad">lesão ' + p.inj + ' sem.</span>' : p.sus > 0 ? '<span class="chip bad">suspenso</span>' : M.sel.includes(p.id) ? '<span class="chip good">titular</span>' : '')).join('')}</div>` : ''; }).join('');
+  } else if (MGTAB === 'tb') {
+    h += `<div class="card stack">${t.map((r, i) => `<div class="drow ${r.c === c.id ? 'me' : ''}"><span class="rk">${i + 1}</span><span class="nm">${esc(club(r.c).name)}<small>${r.p} jogos · SG ${r.gd}</small></span><span></span><b>${r.pts}</b></div>`).join('')}</div>`;
+  } else {
+    h += `<div class="card stack"><span class="lbl">Diretoria</span><span>Meta: <b>${esc(M.obj.text)}</b></span><span class="fine">Confiança · ${Math.round(M.conf)}%</span>${mgBar(M.conf)}<span class="fine">Abaixo de 7% depois de 6 jogos, você é demitido.</span></div>
+    <div class="card stack" style="margin-top:12px"><span class="lbl">Histórico</span>${M.hist.length ? M.hist.map(x => `<div class="row" style="justify-content:space-between"><span>${esc(x.s)} · ${esc(x.club)}</span><span><b>${x.pos}º</b> <span class="chip ${x.ok ? 'good' : 'bad'}">${x.ok ? 'meta ok' : 'meta falhou'}</span></span></div>`).join('') : '<span class="mut">Nenhuma temporada concluída.</span>'}<span class="fine">Clubes: ${M.jobs.map(j => esc(j.club) + ' (' + esc(j.s) + ')').join(' → ')}</span></div>`;
+  }
+  return h;
+}
+function mgrRender() { const r = $('#mgr-root'); if (!r) return; r.innerHTML = MGMODE === 'pick' ? mgPickView() : mgrMain(); }
+function mgSlotModal(i) {
+  const M = G.mgr, c = club(M.club), slots = mgSlots(M.form), pos = slots[i];
+  const pool = c.sq.map(pl).filter(p => p && !p.u).sort((a, b) => (b.pos === pos) - (a.pos === pos) || b.ovr - a.ovr);
+  modal(`<h2>Escalar: ${POSN[pos]}</h2><div class="stack" style="max-height:60vh;overflow:auto">${pool.map(p => { const out = !mgAvail(p); return `<button class="card row" style="text-align:left;gap:10px;opacity:${out ? 0.45 : 1}" ${out ? 'disabled' : ''} data-m="pick" data-v="${p.id}" data-i="${i}"><span class="chip ${p.pos === pos ? 'good' : ''}">${POSN[p.pos].slice(0, 3).toUpperCase()}</span><span style="flex:1">${esc(fullName(p))}<small class="mut" style="display:block">${p.age} anos${p.inj > 0 ? ' · lesionado' : p.sus > 0 ? ' · suspenso' : M.sel.includes(p.id) ? ' · já escalado' : ''}</small></span><b>${p.ovr}</b></button>`; }).join('')}</div><div class="row" style="margin-top:12px"><button class="btn ghost" data-act="close-modal">Fechar</button></div>`);
+}
+function mgrClick(e) {
+  const b = e.target.closest('[data-m]'); if (!b || !G) return; const m = b.dataset.m, v = b.dataset.v;
+  if (m === 'menu') { try { if (G.mgr && !G.mgr.sacked) saveGame(true); } catch (x) { } show('s-menu'); refreshSaves(); return; }
+  if (m === 'save') { saveGame(true); toast('Carreira salva'); return; }
+  if (MGMODE === 'pick') { if (m === 'co') { MGP.co = v; MGP.lg = null; MGP.club = null; } else if (m === 'lg') { MGP.lg = v; MGP.club = null; } else if (m === 'club') MGP.club = v; else if (m === 'start') return mgrStart(); else if (m === 'job') return mgrTakeJob(MGP.club); mgrRender(); return; }
+  const M = G.mgr;
+  if (m === 'tab') MGTAB = v; else if (m === 'tac') { M.tac = v; saveGame(true); } else if (m === 'form') { M.form = v; M.sel = []; strCache.key = ''; saveGame(true); } else if (m === 'auto') { M.sel = []; strCache.key = ''; saveGame(true); }
+  else if (m === 'play') return mgrPlay(); else if (m === 'slot') return mgSlotModal(+v);
+  else if (m === 'pick') { const i = +b.dataset.i, id = +v || v; const old = M.sel.indexOf(id); const prev = M.sel[i]; if (old >= 0) M.sel[old] = prev; M.sel[i] = id; strCache.key = ''; saveGame(true); closeModal(); }
+  mgrRender();
+}
+(function () { const r = document.getElementById('mgr-root'); if (r) { r.addEventListener('click', mgrClick); r.addEventListener('input', e => { if (e.target.id === 'mg-name') MGP.name = e.target.value; }); } const t = document.getElementById('tile-mgr'); if (t && CREATOR) t.hidden = false; })();
 
 const SOC_ENABLED = CREATOR;  /* Rodix Social desativado por enquanto: mude para true para voltar */
 function socOn() { return SOC_ENABLED && !(G && G.user && G.user.socOn === false); }
@@ -4622,7 +4769,7 @@ function openControls() {
   $('#modal-box').oninput = cfgInput;
 }
 function openAbout() {
-  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 50). Escudos, Data Pack e nomes de jogadores por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
+  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 51). Escudos, Data Pack e nomes de jogadores por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
 }
 async function openProfiles() {
   const all = await refreshSaves();
@@ -4656,7 +4803,6 @@ function renderMatch() {
   E.cx = hw * 2 > FL + 10 ? FL / 2 : clamp(E.cx, hw - (PADC ? 14 : 6), FL - hw + (PADC ? 18 : 6)); E.cy = hh * 2 > FW + 10 ? FW / 2 : clamp(E.cy, hh - 6, FW - hh + 6);
   const X = x => (x - E.cx) * S + w / 2, Y = (y, z) => (y - E.cy) * S * T + h / 2 - (z || 0) * S * 0.95;
   ctx.fillStyle = '#25763a'; ctx.fillRect(0, 0, w, h);
-  if (FX2()) drawStands(ctx, X, Y, S, w, h);
   for (let i = -3; i < 18; i++) { ctx.fillStyle = i % 2 ? '#2b8a43' : '#2f9549'; const x0 = X(i * 7.5), x1 = X(i * 7.5 + 7.5); ctx.fillRect(x0, Y(-1.5), x1 - x0 + 1, Y(FW + 1.5) - Y(-1.5)); }
   ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = Math.max(1.5, S * 0.12);
   const rect = (x0, y0, x1, y1) => ctx.strokeRect(X(x0), Y(y0), X(x1) - X(x0), Y(y1) - Y(y0));
@@ -4711,7 +4857,6 @@ function renderMatch() {
     const sx = X(p.x), sy = Y(p.y);
     if (p.user) { ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.ellipse(sx, sy, S * 0.62, S * 0.26, 0, 0, 7); ctx.stroke(); }
     else if (b.owner === p) { ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(sx, sy, S * 0.55, S * 0.22, 0, 0, 7); ctx.stroke(); }
-    if (FX2()) { const spd = Math.hypot(p.vx, p.vy); if (spd > 5.2 && E.t - (p.dustT || 0) > 0.13) { p.dustT = E.t; fxPuff(p.x - (p.fx || 0) * 0.35, p.y - (p.fy || 0) * 0.2, 1, 0.5, 0.2); } }
     drawFig(ctx, sx, sy, S, figOpts(p.look, kit, { sp: clamp(Math.hypot(p.vx, p.vy) / 8, 0, 1), num: p.num, phase: p.phase, moving: Math.hypot(p.vx, p.vy) > 0.4, fx: p.fx, dive: p.dive ? Math.sign(p.dive.vy) * (p.team === 0 ? 1 : -1) : 0, down: p.down > 0 && !p.dive && !p.slide, slide: p.slide ? Math.max(0.03, 1 - p.slide.t / 0.5) : 0, jump: p.jump, kick: p.kickA, back: p.fy < -0.6, gk: p.pos === 'GOL', ready: p.pos === 'GOL' && p.react != null && !p.dive && !p.hold }));
     if (p.user) { const ty2 = sy - S * 2.35; ctx.fillStyle = '#ffd23f'; ctx.beginPath(); ctx.moveTo(sx, ty2 + S * 0.3); ctx.lineTo(sx - S * 0.25, ty2); ctx.lineTo(sx + S * 0.25, ty2); ctx.fill(); }
   }
@@ -5048,6 +5193,7 @@ async function act(a, el) {
     case 'new-career': closeModal(); CR = defaultCreate(); DF = 'semi'; newWorld(); CP = { co: 'BRA', lg: 'BRA3', club: null }; renderCreate(); show('s-create'); break;
     case 'continue': openContinue(); break;
     case 'play-main': playMain(); break;
+    case 'mgr-new': mgrNew(); break;
     case 'profiles': openProfiles(); break;
     case 'practice': closeModal(); openPractice(); break;
     case 'prac': closeModal(); startDrill(el.dataset.k, false); break;

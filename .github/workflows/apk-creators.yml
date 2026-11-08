@@ -1,0 +1,32 @@
+name: Android APK Creators
+on: workflow_dispatch
+permissions:
+  contents: write
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21 }
+      - name: Troca o jogo pela Edição Creators
+        run: |
+          cp creators/index.html www/index.html
+          sed -i 's/"appId": "com.rodix.football"/"appId": "com.rodix.football.creators"/; s/"appName": "Rodix Football"/"appName": "Rodix Creators"/' capacitor.config.json
+      - run: npm ci && npx cap sync android
+      - name: Ajusta pacote e nome do app
+        run: |
+          sed -i 's/applicationId "com.rodix.football"/applicationId "com.rodix.football.creators"/' android/app/build.gradle
+          sed -i 's#<string name="app_name">Rodix Football</string>#<string name="app_name">Rodix Creators</string>#' android/app/src/main/res/values/strings.xml
+      - name: Build debug APK
+        working-directory: android
+        run: chmod +x gradlew && ./gradlew assembleDebug
+      - name: Publica APK na aba Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk Rodix-Creators.apk
+          gh release delete apk-creators-latest --yes --cleanup-tag || true
+          gh release create apk-creators-latest Rodix-Creators.apk --title "Rodix Creators (APK de teste)" --notes "Edição Creators (build 57), assinatura de debug, instala ao lado do jogo normal."

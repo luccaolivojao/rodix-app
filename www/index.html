@@ -1092,7 +1092,6 @@ function newWorld() {
   }
   for (const id in G.clubs) fillSquad(G.clubs[id]);
   try { packApply(); } catch (e) { }
-  if (CREATOR) { try { addRareCards(); } catch (e) { } }
   for (const lid in G.leagues) makeFixtures(lid);
   initComps(null);
 }
@@ -3611,7 +3610,7 @@ function renderHub() {
   $('#hub-season').textContent = 'Temporada ' + genSeasonLabel() + ' · Semana ' + Math.min(G.week + 1, totalWeeks()) + '/' + totalWeeks();
   drawAvatar($('#hub-av'), p.look, userKit(), p.num, false);
   if (hubTab === 'shop' && !IAP.tried && iapPlugin()) iapLoad().then(() => { if (hubTab === 'shop' && curScreen === 's-hub') renderHub(); });
-  const f = (G.mgr ? { home: mgrHome, xi: mgrXIView, club: mgrClubView, comp: vComp, cal: vCal, stats: vStats, bd: mgrBoardView, shop: vShop, tr: mgrTrView, fn: mgRolesView, sp: mgSpView, nw: mgrNewsView } : { home: vHome, me: vMe, club: vClub, comp: vComp, cal: vCal, market: vMarket, train: vTrain, stats: vStats, nat: vNat, hist: vHist, social: vSocial, shop: vShop })[hubTab] || (G.mgr ? mgrHome : vHome);
+  const f = (G.mgr ? { home: mgrHome, xi: mgrXIView, club: mgrClubView, comp: vComp, cal: vCal, stats: vStats, bd: mgrBoardView, shop: vShop, tr: mgrTrView, fn: mgRolesView, sp: mgSpView, nw: mgrNewsView, social: mgrSocView } : { home: vHome, me: vMe, club: vClub, comp: vComp, cal: vCal, market: vMarket, train: vTrain, stats: vStats, nat: vNat, hist: vHist, social: vSocial, shop: vShop })[hubTab] || (G.mgr ? mgrHome : vHome);
   $('#view').innerHTML = f();
   if (hubTab === 'me') { const cvs = $('#me-av'); if (cvs) drawAvatar(cvs, p.look, userKit(), p.num, true); }
 }
@@ -3964,7 +3963,7 @@ const MG_FORMS = {
 const MG_TAC = { atk: { n: 'Ataque total', a: 1.14, d: 1.14, t: 'Mais gols dos dois lados.' }, bal: { n: 'Equilibrado', a: 1, d: 1, t: 'Sem riscos extras.' }, cnt: { n: 'Contra-ataque', a: 1.03, d: 0.92, t: 'Fecha a defesa e sai rápido.' }, def: { n: 'Retranca', a: 0.86, d: 0.84, t: 'Poucos gols, jogos travados.' } };
 let MGMODE = 'main', MGP = { co: 'BRA', lg: null, club: null, name: 'Técnico Novo' };
 function mgSlots(form) { const f = MG_FORMS[form] || MG_FORMS['4-3-3']; const s = ['GOL']; for (const k of ['ZAG', 'LAT', 'VOL', 'MEI', 'PON', 'ATA']) for (let i = 0; i < f[k]; i++) s.push(k); return s; }
-function mgAvail(p) { return p && !p.u && p.inj === 0 && p.sus === 0; }
+function mgAvail(p) { return p && (!p.u || (G.mgr && G.mgr.playAs === p.id)) && p.inj === 0 && p.sus === 0; }
 function mgAuto(cid, form, keep) {
   const slots = mgSlots(form), c = club(cid), used = new Set(), out = [];
   const pool = c.sq.map(pl).filter(mgAvail).sort((a, b) => b.ovr - a.ovr);
@@ -3996,7 +3995,7 @@ function mgObjective() {
 }
 function mgrInit(cid, name) {
   const cfg = defaultCreate(); cfg.fn = 'Técnico'; cfg.ln = name; cfg.pos = 'GOL'; cfg.age = 16; cfg.mgr = true; cfg.style = Object.keys(STYLES).find(s => /goleiro/i.test(s)) || cfg.style;
-  const p = startCareer(cfg, cid); G.news = G.news.filter(n => !/primeiro contrato profissional/.test(n.t)); for (const k in p.a) p.a[k] = 12; p.ovr = ovrOf(p.a, p.pos); p.pot = p.ovr; p.num = 99; G.user.diff = 'semi'; G.user.hidden = true; G.user.contract.years = 99; G.user.socOn = false;
+  const p = startCareer(cfg, cid); G.news = G.news.filter(n => !/primeiro contrato profissional/.test(n.t)); for (const k in p.a) p.a[k] = 12; p.ovr = ovrOf(p.a, p.pos); p.pot = p.ovr; p.num = 99; G.user.diff = 'semi'; G.user.hidden = true; G.user.contract.years = 99; G.user.socOn = true;
   G.mgr = { club: cid, name, form: '4-3-3', tac: 'bal', sel: [], conf: 55, played: 0, hist: [], jobs: [{ club: club(cid).name, s: genSeasonLabel() }], startSeason: G.season }; G.mgr.obj = mgObjective(); mgEnsure();
 }
 async function mgrNew() { closeModal(); newWorld(); MGMODE = 'pick'; MGP = { co: 'BRA', lg: null, club: null, name: 'Técnico Novo' }; show('s-mgr'); mgrRender(); }
@@ -4006,10 +4005,10 @@ async function mgrStart() {
   SLOT = slot; mgrInit(MGP.club, (MGP.name || 'Técnico').trim().slice(0, 24)); strCache.key = ''; saveGame(true); MGMODE = 'main'; hubTab = 'home'; openHub();
   modal(`<h2>Bem-vindo ao ${esc(club(MGP.club).name)}</h2><p>Você é o novo técnico. A diretoria espera: <b>${esc(G.mgr.obj.text)}</b>.</p><p class="mut">Monte o time na aba Escalação, escolha a tática e simule as rodadas. Se a confiança da diretoria chegar a zero, você é demitido.</p><div class="row"><button class="btn pri" data-act="close-modal">Começar</button></div>`);
 }
-function openMgr() { if (G.mgr.sacked) { MGMODE = 'pick'; MGP = { co: 'BRA', lg: null, club: null, name: G.mgr.name }; show('s-mgr'); mgrRender(); } else { MGMODE = 'main'; hubTab = 'home'; openHub(); } }
+function openMgr() { mgrRestore(); if (G.mgr.sacked) { MGMODE = 'pick'; MGP = { co: 'BRA', lg: null, club: null, name: G.mgr.name }; show('s-mgr'); mgrRender(); } else { MGMODE = 'main'; hubTab = 'home'; openHub(); } }
 function mgFixture() { const c = club(G.mgr.club); const r = G.leagues[c.lg].rounds[G.week]; return r ? r.find(f => f.h === c.id || f.a === c.id) || null : null; }
-async function mgrPlay() {
-  const M = G.mgr, c = club(M.club); const f = mgFixture(), w = G.week; let pre = null;
+async function mgrPlay(opt) {
+  const M = G.mgr, c = club(M.club); const realModal = window.modal; const MGW = !!(opt && opt.watch && mgFixture()); const modal = h => { if (MGW && !MGW_USED) { MGW_USED = true; mgLive(f, () => realModal(h)); } else realModal(h); }; let MGW_USED = false; const f = mgFixture(), w = G.week; let pre = null;
   if (f) { const home = f.h === c.id, opp = home ? f.a : f.h; const my = xiStr(mgrXI(c.id)) + (home ? 2.2 : 0), op = xiStr(pickXI(opp)) + (home ? 0 : 2.2); pre = { opp, home, e: 1 / (1 + Math.exp(-(my - op) / 7)) }; }
   G.user.contract.years = Math.max(G.user.contract.years, 3); G.offers = [];
   const cupBefore = userCupFixture();
@@ -4017,7 +4016,7 @@ async function mgrPlay() {
   let body = '';
   if (f && f.hg != null) {
     const home = f.h === c.id, gf = home ? f.hg : f.ag, ga = home ? f.ag : f.hg, a = gf > ga ? 1 : gf === ga ? 0.5 : 0;
-    const delta = (a - pre.e) * 10 + (a === 1 ? 1 : 0); M.conf = clamp(M.conf + delta, 0, 100); M.played++; if (gf > ga) M.sp.wins++;
+    const delta = (a - pre.e) * 10 + (a === 1 ? 1 : 0); M.conf = clamp(M.conf + delta, 0, 100); M.played++; if (gf > ga) M.sp.wins++; try { mgrSocAfter(f, gf, ga, home); } catch (e) { }
     const sc = (f.sc || []).map(id => pl(id)), hs = sc.slice(0, f.hg), as = sc.slice(f.hg);
     const nm = p => p ? esc(shortName(p)) : '?';
     body = `<div class="row" style="justify-content:center;gap:16px;align-items:center">${badge(club(f.h), 46)}<b style="font-family:var(--display);font-size:44px">${f.hg} × ${f.ag}</b>${badge(club(f.a), 46)}</div><p class="mut" style="text-align:center;margin:4px 0">${esc(club(f.h).name)} × ${esc(club(f.a).name)}</p><p style="text-align:center;margin:8px 0"><b>${gf > ga ? 'Vitória!' : gf === ga ? 'Empate' : 'Derrota'}</b> · diretoria ${delta >= 0 ? '+' : ''}${Math.round(delta)}</p>${hs.length || as.length ? `<p class="fine" style="margin:0;text-align:center">${hs.length ? '⚽ ' + esc(club(f.h).name) + ': ' + hs.map(nm).join(', ') : ''}${hs.length && as.length ? '<br>' : ''}${as.length ? '⚽ ' + esc(club(f.a).name) + ': ' + as.map(nm).join(', ') : ''}</p>` : ''}`;
@@ -4053,7 +4052,7 @@ function mgPlayerRow(p, extra) { return `<div class="drow"><span class="rk" styl
 function mgrRefresh() { if (typeof curScreen !== 'undefined' && curScreen === 's-hub') renderHub(); else mgrRender(); }
 function mgrTiles() {
   const M = G.mgr, c = club(M.club), t = table(c.lg), pos = t.findIndex(r => r.c === c.id) + 1;
-  const T = [['xi', 'Gestão do time', 'whistle', M.form + ' · ' + MG_TAC[M.tac].n], ['tr', 'Transferências', 'swap', 'Orçamento ' + mgMoney(mgEnsure().cash)], ['fn', 'Funções', 'flag', 'Capitão e cobradores'], ['sp', 'Patrocínios', 'coin', M.sp.active ? M.sp.active.brand : 'Propostas disponíveis'], ['club', 'Clube', 'shield', c.name], ['comp', 'Competições', 'table', LDEF[c.lg].n + ' · ' + pos + 'º'], ['cal', 'Calendário', 'calendar', 'Semana ' + Math.min(G.week + 1, totalWeeks())], ['stats', 'Estatísticas', 'chart', 'Artilharia e prêmios'], ['nw', 'Notícias', 'news', 'Últimas do mundo'], ['bd', 'Diretoria', 'crown', 'Confiança ' + Math.round(M.conf) + '%'], ['shop', 'Loja', 'bag', coinsOf() + ' Coins']];
+  const T = [['xi', 'Gestão do time', 'whistle', M.form + ' · ' + MG_TAC[M.tac].n], ['tr', 'Transferências', 'swap', 'Orçamento ' + mgMoney(mgEnsure().cash)], ['fn', 'Funções', 'flag', 'Capitão e cobradores'], ['sp', 'Patrocínios', 'coin', M.sp.active ? M.sp.active.brand : 'Propostas disponíveis'], ['club', 'Clube', 'shield', c.name], ['comp', 'Competições', 'table', LDEF[c.lg].n + ' · ' + pos + 'º'], ['cal', 'Calendário', 'calendar', 'Semana ' + Math.min(G.week + 1, totalWeeks())], ['stats', 'Estatísticas', 'chart', 'Artilharia e prêmios'], ['social', 'Rodix Social', 'user', soc().fol.toLocaleString('pt-BR') + ' seguidores'], ['nw', 'Notícias', 'news', 'Últimas do mundo'], ['bd', 'Diretoria', 'crown', 'Confiança ' + Math.round(M.conf) + '%'], ['shop', 'Loja', 'bag', coinsOf() + ' Coins']];
   return T.map(([k, n, ic, sub]) => `<button class="tile" data-tab="${k}"><i>${ico(ic, 30)}</i><span><b>${n}</b><small>${esc(sub)}</small></span></button>`).join('');
 }
 function mgrHome() {
@@ -4063,7 +4062,7 @@ function mgrHome() {
     nx = `<div class="card next stack"><div class="row" style="justify-content:space-between"><span class="lbl">Próxima partida · ${esc(L.n)} · rodada ${G.week + 1}/${G.leagues[c.lg].rounds.length}</span><span class="chip acc">${home ? 'Em casa' : 'Fora'}</span></div>
     <div class="fixture"><div class="tm">${badge(H, 60)}<b>${esc(H.name)}</b><span class="mut num">Força ${Math.round(home ? st : os)}</span></div><div class="vs">×</div><div class="tm">${badge(A, 60)}<b>${esc(A.name)}</b><span class="mut num">Força ${Math.round(home ? os : st)}</span></div></div>
     ${cf ? `<p class="mut" style="margin:0">Também nesta semana: ${esc(COMPDEF[cf.comp.id].n)} · ${esc(ent(cf.m.h).name)} × ${esc(ent(cf.m.a).name)}</p>` : ''}
-    <div class="row"><button class="btn pri" data-act="mgr-play">Simular partida</button><button class="btn" data-tab="xi">Escalação e tática</button><span class="mut" style="margin-left:auto">Seu clube: ${pos}º lugar</span></div></div>`;
+    <div class="row"><button class="btn pri" data-act="mgr-play">Simular partida</button><button class="btn" data-act="mgr-watch">Ver o time jogar</button><button class="btn" data-act="mgr-playas">Jogar com um jogador</button><button class="btn" data-tab="xi">Escalação</button><span class="mut" style="margin-left:auto">Seu clube: ${pos}º lugar</span></div></div>`;
   } else nx = `<div class="card next stack"><h3>Sem jogo do ${esc(c.name)} nesta semana</h3><p class="mut" style="margin:0">${cf ? esc(COMPDEF[cf.comp.id].n) + ': ' + esc(ent(cf.m.h).name) + ' × ' + esc(ent(cf.m.a).name) : 'A rodada segue sem a sua equipe.'}</p><button class="btn pri" data-act="mgr-play">Avançar semana</button></div>`;
   const row = t.find(r => r.c === c.id) || { pts: 0, p: 0, form: [] };
   const side = `<div class="card stack"><div class="row" style="justify-content:space-between"><span class="lbl">Diretoria · ${esc(M.name)}</span><span class="chip acc">${Math.round(M.conf)}% de confiança</span></div>${mgBar(M.conf)}<div class="row"><span class="chip">Orçamento ${mgMoney(mgEnsure().cash)}</span></div><p class="mut" style="margin:0">Meta da temporada: <b style="color:var(--fg)">${esc(M.obj.text)}</b></p>
@@ -4167,8 +4166,8 @@ function mgFeedView() {
   <div class="card">${L.map(t => `<div class="row" style="gap:10px;padding:7px 0;border-bottom:1px solid var(--line,#2a2a2a)"><span style="flex:1;min-width:0"><b>${esc(t.name)}</b><small class="mut" style="display:block">${esc(t.from)} → ${esc(t.to)} · ${esc(t.s)}</small></span><b>${t.fee ? money(t.fee) : 'livre'}</b></div>`).join('') || '<p class="mut" style="margin:0">Sem transferências ainda.</p>'}</div>`;
 }
 function mgrTrView() {
-  const M = mgEnsure(); const tabs = [['busca', 'Busca de jogadores'], ['saida', 'Saída'], ['feed', 'Últimas transferências']];
-  return head('Transferências', `<span class="chip acc">Orçamento ${mgMoney(M.cash)}</span>`) + `<div class="seg" style="margin-bottom:12px">${tabs.map(([k, n]) => `<button type="button" data-m="sub" data-v="${k}" aria-pressed="${MGSUB === k}">${n}</button>`).join('')}</div>` + (MGSUB === 'busca' ? mgSearchView() : MGSUB === 'saida' ? mgSaidaView() : mgFeedView());
+  const M = mgEnsure(); const tabs = [['busca', 'Busca de jogadores'], ['saida', 'Saída'], ['feed', 'Últimas transferências'], ['rara', '★ Cartas raras']];
+  return head('Transferências', `<span class="chip acc">Orçamento ${mgMoney(M.cash)}</span>`) + `<div class="seg" style="margin-bottom:12px">${tabs.map(([k, n]) => `<button type="button" data-m="sub" data-v="${k}" aria-pressed="${MGSUB === k}">${n}</button>`).join('')}</div>` + (MGSUB === 'busca' ? mgSearchView() : MGSUB === 'saida' ? mgSaidaView() : MGSUB === 'rara' ? mgRareView() : mgFeedView());
 }
 /* ----- funções (capitão, pênaltis, falta) ----- */
 const MG_ROLES = [['cap', 'Capitão'], ['pk', 'Pênaltis'], ['fk', 'Tiro livre']];
@@ -4223,6 +4222,93 @@ function mgrXIView() {
   <div class="stack"><div class="card stack"><span class="lbl">Formação</span><div class="seg">${Object.keys(MG_FORMS).map(k => `<button type="button" data-m="form" data-v="${k}" aria-pressed="${M.form === k}">${k}</button>`).join('')}</div><span class="lbl" style="margin-top:6px">Mentalidade</span><div class="seg">${Object.keys(MG_TAC).map(k => `<button type="button" data-m="tac" data-v="${k}" aria-pressed="${M.tac === k}">${MG_TAC[k].n}</button>`).join('')}</div><span class="fine">${esc(MG_TAC[M.tac].t)}</span><button class="btn" data-m="auto">Escalar automaticamente</button></div>
   <div class="card stack"><span class="lbl">Reservas (${bench.length})</span><div class="row" style="flex-wrap:wrap;gap:6px">${bench.map(p => `<span class="chip ${mgAvail(p) ? '' : 'bad'}" title="${esc(fullName(p))}">${p.pos} · ${esc(p.ln || fullName(p))} · <b>${p.ovr}</b>${p.inj > 0 ? ' +' : ''}${p.sus > 0 ? ' S' : ''}</span>`).join('')}</div></div></div></div>`;
 }
+/* ---------- MODO TÉCNICO 3: ao vivo, jogar com jogador, carta rara, social ---------- */
+let MGLV = null;
+function mgLive(f, done) {
+  if (MGLV && MGLV.timer) clearInterval(MGLV.timer);
+  const H = club(f.h), A = club(f.a), sc = (f.sc || []).map(id => pl(id)), hs = sc.slice(0, f.hg), as = sc.slice(f.hg), used = new Set();
+  const mm = () => { let m, g = 0; do { m = ri(2, 90); g++; } while (used.has(m) && g < 80); used.add(m); return m; };
+  const nm = p => p ? shortName(p) : 'um jogador'; const ev = [];
+  hs.forEach(p => ev.push({ m: mm(), g: 1, side: 0, t: 'GOL do ' + H.name + '! ' + nm(p) + ' balança as redes.' }));
+  as.forEach(p => ev.push({ m: mm(), g: 1, side: 1, t: 'GOL do ' + A.name + '! ' + nm(p) + ' marca.' }));
+  const XH = pickXI(f.h), XA = pickXI(f.a);
+  const T = [p => nm(p) + ' arrisca de fora da área e a bola passa perto.', p => 'Grande defesa! O goleiro espalma o chute de ' + nm(p) + '.', p => nm(p) + ' cabeceia por cima do gol.', p => 'Falta dura em ' + nm(p) + '. O árbitro marca.', p => 'A bola explode na trave após chute de ' + nm(p) + '!', p => nm(p) + ' recebe cartão amarelo.', p => nm(p) + ' dribla dois e é desarmado na entrada da área.', p => 'Escanteio cobrado por ' + nm(p) + ', a defesa afasta.', p => 'Pressão do ' + 'time: ' + nm(p) + ' finaliza e o goleiro segura.'];
+  for (let i = 0; i < 14; i++) { const side = rnd() < 0.5 ? 0 : 1, X = side ? XA : XH, p = pick(X); ev.push({ m: mm(), g: 0, side, t: pick(T)(p) }); }
+  ev.sort((a, b) => a.m - b.m);
+  MGLV = { ev, i: 0, min: 0, sp: 1, score: [0, 0], timer: null, feed: ['0\' Bola rolando! ' + H.name + ' × ' + A.name + '.'], done };
+  const render = () => {
+    const el = document.getElementById('lv-min'); if (!el) { finish(true); return; }
+    el.textContent = MGLV.min + "'"; document.getElementById('lv-sc').textContent = MGLV.score[0] + ' × ' + MGLV.score[1];
+    document.getElementById('lv-feed').innerHTML = MGLV.feed.slice(0, 7).map((x, k) => `<div style="padding:6px 0;border-bottom:1px solid var(--line,#2a2a2a);${k === 0 ? 'font-weight:700' : 'opacity:.8'}">${esc(x)}</div>`).join('');
+    document.getElementById('lv-bar').style.width = Math.min(100, MGLV.min / 90 * 100) + '%';
+  };
+  const finish = quiet => { if (!MGLV) return; clearInterval(MGLV.timer); const d = MGLV.done; MGLV = null; if (!quiet) { /* mostra o resumo */ } d(); };
+  const tick = () => {
+    if (!MGLV) return; MGLV.min++;
+    while (MGLV.i < ev.length && ev[MGLV.i].m <= MGLV.min) { const e = ev[MGLV.i++]; MGLV.feed.unshift(e.m + "' " + e.t); if (e.g) { MGLV.score[e.side]++; try { sfx('goal'); } catch (x) { } } }
+    if (MGLV.min === 45) MGLV.feed.unshift("45' Fim do primeiro tempo.");
+    if (MGLV.min >= 90) { MGLV.feed.unshift("90' Fim de jogo! " + H.name + ' ' + f.hg + ' × ' + f.ag + ' ' + A.name + '.'); MGLV.score = [f.hg, f.ag]; render(); clearInterval(MGLV.timer); setTimeout(() => finish(), 1400); return; }
+    render();
+  };
+  const start = () => { clearInterval(MGLV.timer); MGLV.timer = setInterval(tick, [0, 420, 200, 90][MGLV.sp]); };
+  modal(`<div class="row" style="justify-content:space-between"><span class="lbl">${esc(LDEF[club(G.mgr.club).lg].n)} · Ao vivo</span><b id="lv-min" style="font-size:20px">0'</b></div>
+  <div class="row" style="justify-content:center;gap:16px;align-items:center;margin:8px 0">${badge(H, 52)}<b id="lv-sc" style="font-family:var(--display);font-size:46px">0 × 0</b>${badge(A, 52)}</div><div class="row" style="justify-content:center;gap:24px"><b>${esc(H.name)}</b><b>${esc(A.name)}</b></div>
+  <div class="bar" style="margin:10px 0"><i id="lv-bar" style="width:0"></i></div><div id="lv-feed" style="min-height:190px"></div>
+  <div class="row" style="margin-top:10px"><button class="btn" id="lv-sp">Velocidade 1×</button><button class="btn pri" style="flex:1" id="lv-skip">Pular para o fim</button></div>`);
+  document.getElementById('lv-sp').onclick = e => { MGLV.sp = MGLV.sp % 3 + 1; e.target.textContent = 'Velocidade ' + [0, 1, 2, 4][MGLV.sp] + '×'; start(); };
+  document.getElementById('lv-skip').onclick = () => { if (MGLV) { MGLV.score = [f.hg, f.ag]; finish(); } };
+  render(); start();
+}
+function mgrPlayModal() {
+  const M = mgEnsure(), xi = mgrXI(M.club);
+  modal(`<h2>Jogar com quem?</h2><p class="mut" style="margin:0 0 8px">Você controla os lances decisivos do jogador escolhido; o resto do time joga sozinho.</p><div class="stack" style="max-height:60vh;overflow:auto">${xi.map(p => `<button class="card row" style="text-align:left;gap:10px" data-m="playas" data-v="${p.id}"><span class="chip">${p.pos}</span><span style="flex:1">${esc(fullName(p))}${rareMark(p)}<small class="mut" style="display:block">${p.age} anos</small></span><b>${p.ovr}</b></button>`).join('')}</div><div class="row" style="margin-top:10px"><button class="btn" data-act="close-modal">Cancelar</button></div>`);
+}
+function mgrPlayAs(pid) {
+  const M = mgEnsure(), f = mgFixture(), X = pl(pid); closeModal();
+  if (!f || !X || X.club !== M.club) { toast('Sem jogo da liga nesta semana.'); return; }
+  M.playAs = X.id; M.dummy = G.user.pid; if (!X.a) X.a = Object.assign({}, attrsOf(X)); X.u = 1; X.num = X.num || (DEF_NUM[X.pos] || [10])[0]; G.user.pid = X.id; strCache.key = ''; saveGame(true);
+  startPlayed('league');
+}
+function mgrRestore() {
+  if (!G || !G.mgr || !G.mgr.playAs) return; const M = G.mgr, X = pl(M.playAs); if (X) delete X.u; if (M.dummy) G.user.pid = M.dummy; M.playAs = null; M.dummy = null; strCache.key = '';
+}
+/* ----- carta rara (contratação especial) ----- */
+function mgRareView() {
+  const M = mgEnsure(); if (!M.rare) M.rare = {};
+  return RARE_CARDS.map(r => { const got = M.rare[r.ln]; const a = genAttrs(r.ovr, r.pos, 7);
+    return `<div class="card stack" style="border-color:var(--acc,#d9534f)"><div class="row" style="justify-content:space-between"><span class="lbl">Carta rara · ${esc(r.by)}</span><span class="chip acc">★ ${r.ovr} OVR</span></div><b style="font-size:26px">${esc(r.ln)}</b><div class="row" style="gap:8px"><span class="chip">${r.pos}</span><span class="chip">${r.age} anos</span><span class="chip">Jogador livre</span></div>
+    <dl class="kv"><dt>Finalização</dt><dd>${a.fin}</dd><dt>Velocidade</dt><dd>${a.vel}</dd><dt>Drible</dt><dd>${a.dri}</dd><dt>Passe</dt><dd>${a.pas}</dd></dl>
+    <p class="mut" style="margin:0">Sem clube e sem taxa de transferência. Só pode ser contratado por quem é técnico — uma vez por carreira.</p>
+    <button class="btn pri" ${got ? 'disabled' : ''} data-m="rsign" data-v="${r.ln}">${got ? 'Já contratado' : 'Contratar ' + esc(r.ln)}</button></div>`; }).join('');
+}
+function mgRareSign(ln) {
+  const M = mgEnsure(); if (!M.rare) M.rare = {}; const r = RARE_CARDS.find(x => x.ln === ln); if (!r || M.rare[ln]) return;
+  if (mgOwn().length >= 30) { modal('<h2>Elenco cheio</h2><p>Venda um jogador antes (limite de 30).</p><div class="row"><button class="btn pri" data-act="close-modal">Ok</button></div>'); return; }
+  const p = newPlayer({ fn: r.fn, ln: r.ln, nat: r.nat, age: r.age, pos: r.pos, ovr: r.ovr, pot: r.pot, club: null, num: r.num, rare: r.ln, foot: 'D', height: 183, weight: 77 });
+  moveClub(p, M.club); M.rare[ln] = p.id; M.sel = []; addNews(r.ln + ' (carta rara, ' + r.ovr + ' OVR) assina com o ' + club(M.club).name + ' como jogador livre.', 'good'); strCache.key = ''; saveGame(true);
+  modal(`<h2>${esc(r.ln)} é seu!</h2><p>Carta rara de creator, ${r.ovr} de overall, chega sem custo ao ${esc(club(M.club).name)}.</p><div class="row"><button class="btn pri" data-act="close-modal">Escalar agora</button></div>`);
+}
+/* ----- redes sociais do técnico ----- */
+const MG_POSTS = { mot: ['Motivar o elenco', 'Grupo fechado, domingo é dia de resposta! 💪', 0.004, 1], torc: ['Agradecer a torcida', 'Sem vocês nada disso faz sentido. Obrigado, torcida! ❤️', 0.012, 0], arb: ['Criticar a arbitragem', 'Não vou falar de arbitragem... mas todo mundo viu. 🤐', 0.03, -2], hype: ['Anunciar novidade', 'Preparem-se: vem coisa boa por aí no clube. 👀', 0.015, 0] };
+function mgrSocView() {
+  const S = soc(), M = mgEnsure(); const can = M.postWk !== G.week + '/' + G.season;
+  const btns = Object.entries(MG_POSTS).map(([k, v]) => `<button class="btn" ${can ? '' : 'disabled'} data-m="mpost" data-v="${k}">${v[0]}</button>`).join('');
+  return head('Rodix Social', '<span class="sc-fol"><b>' + S.fol.toLocaleString('pt-BR') + '</b> seguidores</span>') + `<div class="card stack" style="margin-bottom:12px"><span class="lbl">Postar como técnico (1 por semana)</span><div class="row" style="flex-wrap:wrap">${btns}</div><span class="fine">Posts movem seguidores e a confiança da diretoria. Críticas à arbitragem engajam, mas desagradam o clube.</span></div>` + (S.posts.map(socPostHtml).join('') || '<span class="mut">Sem posts.</span>');
+}
+function mgrSocPost(k) {
+  const S = soc(), M = mgEnsure(), v = MG_POSTS[k]; if (!v || M.postWk === G.week + '/' + G.season) return; M.postWk = G.week + '/' + G.season;
+  socPost({ n: M.name, c: '#4cc9f0', i: 'T' }, v[1], { mul: k === 'arb' ? 4 : 2 }); S.fol = Math.round(S.fol * (1 + v[2])); M.conf = clamp(M.conf + v[3], 0, 100);
+  if (k === 'arb' && rnd() < 0.5) socPost({ n: pick(SOC_HATERS), c: '#ff5a5a', i: 'H' }, 'Culpar o juiz é fácil. Cadê o futebol?', { hate: true }); saveGame(true);
+}
+function mgrSocAfter(f, gf, ga, home) {
+  if (!socOn()) return; const S = soc(), M = G.mgr, me = club(M.club), opp = club(home ? f.a : f.h), pl2 = gf + 'x' + ga, derby = isDerby(me.name, opp.name); let d = 0;
+  const mine = { n: 'Torcida do ' + me.name, c: '#ffd23f', i: me.name[0] }, tor = { n: 'Torcida do ' + opp.name, c: '#ff5a5a', i: opp.name[0] };
+  if (gf > ga) { socPost(mine, pick([`${pl2} contra o ${opp.name}! O professor ${M.name} acertou em tudo. 👏`, `Vitória! Time organizado, é isso que a gente quer ver. 🔥`, `Mais três pontos! ${M.name} merece moral. 🙌`]), { mul: derby ? 4 : 1.5 }); d += 0.012 + (gf - ga) * 0.004 + (derby ? 0.03 : 0); if (derby) socPost(tor, `Perdemos o clássico. Diretoria, acorda!`, { hate: true, mul: 2 }); }
+  else if (gf < ga) { socPost({ n: pick(SOC_HATERS), c: '#ff5a5a', i: 'H' }, pick([`${M.name} fora! Time sem padrão de jogo.`, `${pl2} para o ${opp.name}? Pede pra sair, professor.`, 'Esse esquema não funciona, dá pra ver da arquibancada.']), { hate: true }); if (M.conf < 30) socPost('cro', `Pressão sobre ${M.name} cresce nos bastidores do ${me.name}.`, { mul: 2 }); if (derby) socPost(tor, `${pl2} NO CLÁSSICO! Hoje tem churrasco! 😂`, { hate: true, mul: 3 }); d -= 0.014 + (derby ? 0.03 : 0); }
+  else socPost('cro', `Empate em ${pl2} entre ${me.name} e ${opp.name}. Cada torcida acha que mereceu mais.`);
+  const cnt = {}; (f.sc || []).forEach(id => { cnt[id] = (cnt[id] || 0) + 1; }); const top = Object.entries(cnt).sort((a, b) => b[1] - a[1])[0]; if (top && top[1] >= 2) { const p = pl(+top[0] || top[0]); if (p && p.club === M.club) socPost('res', `${shortName(p)} marcou ${top[1]} vezes pelo ${me.name}. Craque da rodada. ⚽⚽`, { mul: 2 }); d += 0.01; }
+  S.fol = Math.max(50, Math.round(S.fol * (1 + d))); socMilestone(S);
+}
 function mgrNewsView() { return head('Notícias e transferências') + `<div class="card stack">${newsHtml(40)}</div>`; }
 function mgrRender() { const r = $('#mgr-root'); if (!r) return; if (MGMODE === 'pick') r.innerHTML = mgPickView(); }
 function mgSlotModal(i) {
@@ -4245,6 +4331,9 @@ function mgrClick(e) {
   else if (m === 'offrej') M.off = M.off.filter(x => x.id !== v);
   else if (m === 'qsell') { const p = pl(+v || v); if (p && p.club === M.club && !mgCanLose(p)) { const bs = mgBuyers(p).filter(d => d.rep <= club(M.club).rep + 25); const d = bs.length ? pick(bs) : null; if (d) { mgSell(p, d.id, Math.round(valueOf(p) * 0.8 / 1e4) * 1e4); saveGame(true); } } }
   else if (m === 'role') return mgRoleModal(v);
+  else if (m === 'rsign') { mgRareSign(v); }
+  else if (m === 'playas') return mgrPlayAs(+v || v);
+  else if (m === 'mpost') mgrSocPost(v);
   else if (m === 'rolepick') { M.role[b.dataset.k] = +v || v; saveGame(true); closeModal(); }
   else if (m === 'spacc') { const o = M.sp.offers.find(x => x.id === v); if (o && !M.sp.active) { M.sp.active = o; M.sp.wins = 0; M.cash += o.pay; addNews('Patrocínio fechado com a ' + o.brand + ': ' + money(o.pay) + '.', 'good'); saveGame(true); } }
   else if (m === 'pick') { const i = +b.dataset.i, id = +v || v; const old = M.sel.indexOf(id); const prev = M.sel[i]; if (old >= 0) M.sel[old] = prev; M.sel[i] = id; strCache.key = ''; saveGame(true); closeModal(); }
@@ -4869,6 +4958,7 @@ function showPost(MC) {
   if (MU) MU.post = MC;
 }
 async function postContinue() {
+  if (G && G.mgr && G.mgr.playAs) { const MC0 = MU ? MU.post : null; closeModal(); MU = null; E = null; mgrRestore(); openHub(); if (MC0 && MC0.kind === 'league') await mgrPlay(); else await saveGame(true); return; }
   closeModal(); const MC = MU ? MU.post : null; MU = null; E = null;
   if (MC && MC.kind === 'league') { const r = advanceWeek(); await saveGame(true); openHub(); if (r.seasonEnded) showSeasonSummary(r.summary); else if (r.msgs.length) toast(r.msgs[0]); }
   else { await saveGame(true); openHub(); }
@@ -4943,7 +5033,7 @@ function openControls() {
   $('#modal-box').oninput = cfgInput;
 }
 function openAbout() {
-  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 54). Escudos, Data Pack e nomes de jogadores por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
+  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 55). Escudos, Data Pack e nomes de jogadores por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
 }
 async function openProfiles() {
   const all = await refreshSaves();
@@ -5369,6 +5459,8 @@ async function act(a, el) {
     case 'play-main': playMain(); break;
     case 'mgr-new': mgrNew(); break;
     case 'mgr-play': mgrPlay(); break;
+    case 'mgr-watch': mgrPlay({ watch: true }); break;
+    case 'mgr-playas': mgrPlayModal(); break;
     case 'profiles': openProfiles(); break;
     case 'practice': closeModal(); openPractice(); break;
     case 'prac': closeModal(); startDrill(el.dataset.k, false); break;

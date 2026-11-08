@@ -3067,6 +3067,7 @@ function sub(dt) {
   if (E.cele > 0) { celebrate(dt); return; }
   if (E.pause > 0) { E.pause -= dt; return; }
   runTimers();
+  if (E.mgrCtl) engAutoSwitch(dt);
   if (E.awaitDive > 0) { E.awaitDive -= dt; if (E.awaitDive <= 0 && E.user && !E.diveDone) { const g = E.user; startDive(g, interceptY(g) * 0.55 + g.y * 0.45, 0.8); } }
   E.defT -= dt; if (E.defT <= 0) { E.defT = 0.2; if (E.ball.owner) assignDefense(1 - E.ball.owner.team); }
   computeChasers();
@@ -3075,6 +3076,14 @@ function sub(dt) {
   separate(); ballStep(dt); interactions(dt); boundsCheck();
   if (E.aiKickAt && E.t >= E.aiKickAt && E.frozen) { E.aiKickAt = 0; const s = E.ball.owner; if (s) aiShoot(s, 9); }
   checkEnd(dt);
+}
+/* Modo técnico: você comanda sempre o jogador com a bola (ou o mais próximo dela, sem a bola) */
+function engAutoSwitch(dt) {
+  if (!E || E.frozen || E.over || E.pause > 0 || !E.user) return; if (['pen', 'fk', 'gkpen', 'gk'].includes(E.type) || E.awaitDive > 0) return;
+  E.swT = (E.swT || 0) - dt; const b = E.ball; let tgt = null;
+  if (b.owner && b.owner.team === 0) { if (b.owner !== E.user && b.owner.pos !== 'GOL' && b.owner.down <= 0) tgt = b.owner; }
+  else if (E.swT <= 0) { let best = null, bd = 1e9; for (const q of E.players) { if (q.team !== 0 || q.pos === 'GOL' || q.down > 0) continue; const d = D(q.x, q.y, b.x, b.y); if (d < bd) { bd = d; best = q; } } if (best && best !== E.user && D(E.user.x, E.user.y, b.x, b.y) > bd + 4) tgt = best; E.swT = 0.35; }
+  if (tgt) { const o = E.user; o.user = false; o.manualT = 0; o.chase = null; o.burst = 0; tgt.user = true; tgt.chase = null; E.user = tgt; E.swT = 0.35; E.pulseT = 0.4; }
 }
 function engStep(dtReal) {
   const b = E.ball; const u = E.user;
@@ -4062,7 +4071,7 @@ function mgrHome() {
     nx = `<div class="card next stack"><div class="row" style="justify-content:space-between"><span class="lbl">Próxima partida · ${esc(L.n)} · rodada ${G.week + 1}/${G.leagues[c.lg].rounds.length}</span><span class="chip acc">${home ? 'Em casa' : 'Fora'}</span></div>
     <div class="fixture"><div class="tm">${badge(H, 60)}<b>${esc(H.name)}</b><span class="mut num">Força ${Math.round(home ? st : os)}</span></div><div class="vs">×</div><div class="tm">${badge(A, 60)}<b>${esc(A.name)}</b><span class="mut num">Força ${Math.round(home ? os : st)}</span></div></div>
     ${cf ? `<p class="mut" style="margin:0">Também nesta semana: ${esc(COMPDEF[cf.comp.id].n)} · ${esc(ent(cf.m.h).name)} × ${esc(ent(cf.m.a).name)}</p>` : ''}
-    <div class="row"><button class="btn pri" data-act="mgr-play">Simular partida</button><button class="btn" data-act="mgr-watch">Ver o time jogar</button><button class="btn" data-act="mgr-playas">Jogar com um jogador</button><button class="btn" data-tab="xi">Escalação</button><span class="mut" style="margin-left:auto">Seu clube: ${pos}º lugar</span></div></div>`;
+    <div class="row"><button class="btn pri" data-act="mgr-play">Simular partida</button><button class="btn" data-act="mgr-watch">Ver o time jogar</button><button class="btn" data-act="mgr-playas">Jogar com o time</button><button class="btn" data-tab="xi">Escalação</button><span class="mut" style="margin-left:auto">Seu clube: ${pos}º lugar</span></div></div>`;
   } else nx = `<div class="card next stack"><h3>Sem jogo do ${esc(c.name)} nesta semana</h3><p class="mut" style="margin:0">${cf ? esc(COMPDEF[cf.comp.id].n) + ': ' + esc(ent(cf.m.h).name) + ' × ' + esc(ent(cf.m.a).name) : 'A rodada segue sem a sua equipe.'}</p><button class="btn pri" data-act="mgr-play">Avançar semana</button></div>`;
   const row = t.find(r => r.c === c.id) || { pts: 0, p: 0, form: [] };
   const side = `<div class="card stack"><div class="row" style="justify-content:space-between"><span class="lbl">Diretoria · ${esc(M.name)}</span><span class="chip acc">${Math.round(M.conf)}% de confiança</span></div>${mgBar(M.conf)}<div class="row"><span class="chip">Orçamento ${mgMoney(mgEnsure().cash)}</span></div><p class="mut" style="margin:0">Meta da temporada: <b style="color:var(--fg)">${esc(M.obj.text)}</b></p>
@@ -4263,11 +4272,16 @@ function mgrPlayModal() {
   const M = mgEnsure(), xi = mgrXI(M.club);
   modal(`<h2>Jogar com quem?</h2><p class="mut" style="margin:0 0 8px">Você controla os lances decisivos do jogador escolhido; o resto do time joga sozinho.</p><div class="stack" style="max-height:60vh;overflow:auto">${xi.map(p => `<button class="card row" style="text-align:left;gap:10px" data-m="playas" data-v="${p.id}"><span class="chip">${p.pos}</span><span style="flex:1">${esc(fullName(p))}${rareMark(p)}<small class="mut" style="display:block">${p.age} anos</small></span><b>${p.ovr}</b></button>`).join('')}</div><div class="row" style="margin-top:10px"><button class="btn" data-act="close-modal">Cancelar</button></div>`);
 }
+function mgrPlayTeam() {
+  const M = mgEnsure(), xi = mgrXI(M.club); if (!mgFixture()) { toast('Sem jogo da liga nesta semana.'); return; }
+  const pr = xi.filter(p => ['ATA', 'PON', 'MEI'].includes(p.pos)).sort((a, b) => b.ovr - a.ovr)[0] || xi.filter(p => p.pos !== 'GOL').sort((a, b) => b.ovr - a.ovr)[0];
+  modal(`<h2>Jogar com o time</h2><p style="margin:0 0 8px">Você controla sempre o jogador que está com a bola. Sem a bola, o comando vai para o jogador mais próximo dela. Os lances decisivos da partida são seus; o resto é simulado.</p><div class="row"><button class="btn pri" style="flex:1" data-m="playas" data-v="${pr.id}">Começar partida</button><button class="btn" data-act="close-modal">Cancelar</button></div>`);
+}
 function mgrPlayAs(pid) {
   const M = mgEnsure(), f = mgFixture(), X = pl(pid); closeModal();
   if (!f || !X || X.club !== M.club) { toast('Sem jogo da liga nesta semana.'); return; }
   M.playAs = X.id; M.dummy = G.user.pid; if (!X.a) X.a = Object.assign({}, attrsOf(X)); X.u = 1; X.num = X.num || (DEF_NUM[X.pos] || [10])[0]; G.user.pid = X.id; strCache.key = ''; saveGame(true);
-  startPlayed('league');
+  startPlayed('league'); try { feedMsg('Você comanda o jogador que está com a bola.'); } catch (e) { }
 }
 function mgrRestore() {
   if (!G || !G.mgr || !G.mgr.playAs) return; const M = G.mgr, X = pl(M.playAs); if (X) delete X.u; if (M.dummy) G.user.pid = M.dummy; M.playAs = null; M.dummy = null; strCache.key = '';
@@ -4841,7 +4855,7 @@ function startMoment(e, sub) {
   if (!sub) sfx('whistle');
   KB.aimY = 0; KB.ch = null; MU.repChk = false; recStart();
   const MC = MU.MC, us = MC.uSide;
-  engNew([engTeamOf(MC.teams[us], MU.kits[0], 0), engTeamOf(MC.teams[1 - us], MU.kits[1], 1)], e.kind); E.derby = mcDerby(MC);
+  engNew([engTeamOf(MC.teams[us], MU.kits[0], 0), engTeamOf(MC.teams[1 - us], MU.kits[1], 1)], e.kind); E.derby = mcDerby(MC); E.mgrCtl = !!(G.mgr && G.mgr.playAs);
   E.prevYc = MC.st.yc;
   setupMoment(e.kind, e.opts || { x: rf(FL - 30, FL - 20), y: rf(16, 52) });
   E.pause = sub ? 0.5 : 0.8;
@@ -5033,7 +5047,7 @@ function openControls() {
   $('#modal-box').oninput = cfgInput;
 }
 function openAbout() {
-  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 55). Escudos, Data Pack e nomes de jogadores por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
+  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 56). Escudos, Data Pack e nomes de jogadores por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
 }
 async function openProfiles() {
   const all = await refreshSaves();
@@ -5460,7 +5474,7 @@ async function act(a, el) {
     case 'mgr-new': mgrNew(); break;
     case 'mgr-play': mgrPlay(); break;
     case 'mgr-watch': mgrPlay({ watch: true }); break;
-    case 'mgr-playas': mgrPlayModal(); break;
+    case 'mgr-playas': mgrPlayTeam(); break;
     case 'profiles': openProfiles(); break;
     case 'practice': closeModal(); openPractice(); break;
     case 'prac': closeModal(); startDrill(el.dataset.k, false); break;

@@ -1072,6 +1072,18 @@ function makeFixtures(lid) {
   const L = G.leagues[lid];
   L.rounds = roundRobin(shuffle(L.clubs.slice())).slice(0, (LDEF[lid] && LDEF[lid].maxR) || 999).map(rd => rd.map(([h, a]) => ({ h, a, hg: null, ag: null })));
 }
+/* cartas raras de creators: jogadores únicos, só na Edição Creators */
+const RARE_CARDS = [{ fn: '', ln: 'Cellin', pos: 'ATA', ovr: 94, pot: 94, age: 25, nat: 'BRA', lg: 'BRA1', num: 10, by: 'Creator' }];
+function rareMark(p) { return p && p.rare ? ' <span class="chip acc" title="Carta rara de creator">★ Creator</span>' : ''; }
+function addRareCards() {
+  RARE_CARDS.forEach(r => {
+    if (Object.values(G.players).some(q => q.rare === r.ln)) return;
+    const cl = Object.values(G.clubs).filter(c => c.lg === r.lg).sort((a, b) => a.rep - b.rep); const c = cl[Math.floor(cl.length * 0.45)] || cl[0]; if (!c) return;
+    const p = newPlayer({ fn: r.fn, ln: r.ln, nat: r.nat, age: r.age, pos: r.pos, ovr: r.ovr, pot: r.pot, club: null, num: r.num, rare: r.ln, foot: 'D', height: 183, weight: 77 });
+    if (c.sq.length >= 30) { const w = c.sq.map(pl).filter(q => q && !q.u && q.pos === r.pos).sort((a, b) => a.ovr - b.ovr)[0] || c.sq.map(pl).filter(q => q && !q.u).sort((a, b) => a.ovr - b.ovr)[0]; if (w) { c.sq = c.sq.filter(id => id !== w.id); delete G.players[w.id]; } }
+    moveClub(p, c.id); addNews('Carta rara de creator: ' + r.ln + ' (' + r.ovr + ' OVR, ' + POSN[r.pos].toLowerCase() + ') defende o ' + c.name + '.', 'good');
+  });
+}
 function newWorld() {
   G = { v: 1, season: 2026, startSeason: 2026, week: 0, nextP: 1, nextC: 1, clubs: {}, players: {}, leagues: {}, champions: {}, news: [], offers: [], awards: [], records: { season: null, nextId: 1 }, user: null, pendingIntl: null, tlog: [] };
   for (const L of LEAGUE_DEFS) {
@@ -1080,6 +1092,7 @@ function newWorld() {
   }
   for (const id in G.clubs) fillSquad(G.clubs[id]);
   try { packApply(); } catch (e) { }
+  if (CREATOR) { try { addRareCards(); } catch (e) { } }
   for (const lid in G.leagues) makeFixtures(lid);
   initComps(null);
 }
@@ -4061,7 +4074,7 @@ function mgrHome() {
 function mgrClubView() {
   const M = G.mgr, c = club(M.club), t = table(c.lg); const pos = t.findIndex(r => r.c === c.id) + 1;
   const tt = Object.entries(c.tt).map(([l, n]) => `${n}× ${compName(l)}`).join(' · ') || 'Nenhum título registrado desde 2026';
-  const rows = POS.map(ps => c.sq.map(pl).filter(p => p && !p.u && p.pos === ps).sort((a, b) => b.ovr - a.ovr).map(p => `<tr><td><span class="chip" style="padding:1px 6px">${ps}</span></td><td>${esc(fullName(p))}${p.inj > 0 ? ' <span class="bad">+</span>' : ''}${p.sus > 0 ? ' <span class="bad">S</span>' : ''}${M.sel.includes(p.id) ? ' <span class="chip good" style="padding:0 5px">T</span>' : ''}</td><td class="r">${p.age}</td><td class="r">${ovrB(p.ovr, false)}</td><td class="r">${p.s.ap}</td><td class="r">${p.s.g}</td><td class="r">${p.s.a}</td><td class="r">${p.s.ap ? (p.s.r / p.s.ap).toFixed(1) : '—'}</td></tr>`).join('')).join('');
+  const rows = POS.map(ps => c.sq.map(pl).filter(p => p && !p.u && p.pos === ps).sort((a, b) => b.ovr - a.ovr).map(p => `<tr><td><span class="chip" style="padding:1px 6px">${ps}</span></td><td>${esc(fullName(p))}${rareMark(p)}${p.inj > 0 ? ' <span class="bad">+</span>' : ''}${p.sus > 0 ? ' <span class="bad">S</span>' : ''}${M.sel.includes(p.id) ? ' <span class="chip good" style="padding:0 5px">T</span>' : ''}</td><td class="r">${p.age}</td><td class="r">${ovrB(p.ovr, false)}</td><td class="r">${p.s.ap}</td><td class="r">${p.s.g}</td><td class="r">${p.s.a}</td><td class="r">${p.s.ap ? (p.s.r / p.s.ap).toFixed(1) : '—'}</td></tr>`).join('')).join('');
   return head(esc(c.name), `<span class="chip">${pos}º na ${esc(LDEF[c.lg].n)}</span>`) + `<div class="grid2"><div class="card row" style="gap:14px">${badge(c, 64)}<dl class="kv" style="flex:1"><dt>Liga</dt><dd>${esc(LDEF[c.lg].n)}</dd><dt>Reputação</dt><dd>${c.rep}/100</dd><dt>Força do time titular</dt><dd>${Math.round(xiStr(mgrXI(c.id)))}</dd><dt>Formação</dt><dd>${esc(M.form)} · ${esc(MG_TAC[M.tac].n)}</dd></dl></div><div class="card"><span class="lbl">Títulos</span><p style="margin:6px 0 0">${esc(tt)}</p></div></div>
   <div class="card" style="margin-top:14px"><span class="lbl">Elenco (${c.sq.length - 1})</span><div class="tblw"><table><thead><tr><th>Pos</th><th>Nome</th><th class="r">Idade</th><th class="r">OVR</th><th class="r">J</th><th class="r">G</th><th class="r">A</th><th class="r">Nota</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
 }
@@ -4098,7 +4111,7 @@ function mgGenOffers() {
   M.off.push({ id: 'o' + G.season + '_' + G.week + '_' + p.id, pid: p.id, club: d.id, fee: Math.round(valueOf(p) * (1.02 + rnd() * 0.38) / 1e4) * 1e4, exp: G.week + 3 });
 }
 function mgBidChance(p, ratio) {
-  const sc = club(p.club); let ch = ratio < 0.95 ? 0 : ratio < 1.05 ? 0.4 : ratio < 1.2 ? 0.72 : ratio < 1.4 ? 0.9 : 1;
+  const sc = club(p.club); if (p.rare && ratio < 1.3) return 0; let ch = ratio < 0.95 ? 0 : ratio < 1.05 ? 0.4 : ratio < 1.2 ? 0.72 : ratio < 1.4 ? 0.9 : 1;
   if (p.ovr - clubAvg(sc.id) >= 6) ch -= 0.15; if (sc.rep > club(G.mgr.club).rep + 20) ch -= 0.1; return clamp(ch, 0, 1);
 }
 function mgBuyBlock(p) {
@@ -4110,7 +4123,7 @@ function mgBuyBlock(p) {
 function mgBidModal(pid) {
   const M = mgEnsure(), p = pl(pid); if (!p) return; const s = club(p.club), v = valueOf(p), blk = mgBuyBlock(p);
   const btn = r => { const fee = Math.round(v * r / 1e4) * 1e4, no = fee > M.cash || blk; return `<button class="btn ${r === 1.15 ? 'pri' : ''}" ${no ? 'disabled' : ''} data-m="bid" data-v="${p.id}" data-r="${r}">${money(fee)}<small style="display:block;opacity:.75">${Math.round(mgBidChance(p, r) * 100)}% de aceitar</small></button>`; };
-  modal(`<h2>Proposta por ${esc(fullName(p))}</h2><div class="row" style="gap:12px">${badge(s, 44)}<div><b>${esc(s.name)}</b><div class="mut">${POSN[p.pos]} · ${p.age} anos · OVR ${p.ovr} · pot. ${p.pot || p.ovr}</div></div></div>
+  modal(`<h2>Proposta por ${esc(fullName(p))}${rareMark(p)}</h2><div class="row" style="gap:12px">${badge(s, 44)}<div><b>${esc(s.name)}</b><div class="mut">${POSN[p.pos]} · ${p.age} anos · OVR ${p.ovr} · pot. ${p.pot || p.ovr}</div></div></div>
   <dl class="kv" style="margin:12px 0"><dt>Valor de mercado</dt><dd>${money(v)}</dd><dt>Seu orçamento</dt><dd>${mgMoney(M.cash)}</dd></dl>${blk ? `<p class="bad" style="margin:0 0 10px">${esc(blk)}</p>` : ''}
   <div class="row" style="flex-wrap:wrap">${[1, 1.15, 1.3, 1.5].map(btn).join('')}</div><div class="row" style="margin-top:12px"><button class="btn" data-act="close-modal">Cancelar</button></div>`);
 }
@@ -4131,7 +4144,7 @@ function mgSearch() {
 function mgSel(id, opts, cur) { return `<select id="${id}" class="inp" style="min-width:130px">${opts.map(([v, t]) => `<option value="${v}" ${String(v) === String(cur) ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>`; }
 function mgSearchView() {
   const f = MGF, r = mgSearch(); const stepO = (a, b, s) => { const o = []; for (let i = a; i <= b; i += s) o.push([i, String(i)]); return o; };
-  const rows = r.slice(0, 40).map(p => `<button class="row" style="width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line,#2a2a2a);color:inherit;padding:8px 0;gap:10px;cursor:pointer" data-m="bidopen" data-v="${p.id}"><span class="chip">${p.pos}</span><span style="flex:1;min-width:0">${esc(fullName(p))}<small class="mut" style="display:block">${esc(club(p.club).name)} · ${p.age} anos · ${(NATIONS[p.nat] || {}).n || p.nat || ''}</small></span><b style="min-width:30px;text-align:right">${p.ovr}</b><span class="mut" style="min-width:70px;text-align:right">${money(valueOf(p))}</span></button>`).join('');
+  const rows = r.slice(0, 40).map(p => `<button class="row" style="width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line,#2a2a2a);color:inherit;padding:8px 0;gap:10px;cursor:pointer" data-m="bidopen" data-v="${p.id}"><span class="chip">${p.pos}</span><span style="flex:1;min-width:0">${esc(fullName(p))}${rareMark(p)}<small class="mut" style="display:block">${esc(club(p.club).name)} · ${p.age} anos · ${(NATIONS[p.nat] || {}).n || p.nat || ''}</small></span><b style="min-width:30px;text-align:right">${p.ovr}</b><span class="mut" style="min-width:70px;text-align:right">${money(valueOf(p))}</span></button>`).join('');
   return `<div class="card stack"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px"><label class="stack" style="gap:4px"><span class="lbl">Nome</span><input id="mf-name" class="inp" value="${esc(f.name)}" placeholder="Digite para filtrar"></label>
   <label class="stack" style="gap:4px"><span class="lbl">Posição</span>${mgSel('mf-pos', [['', 'Qualquer']].concat(POS.map(p => [p, POSN[p]])), f.pos)}</label>
   <label class="stack" style="gap:4px"><span class="lbl">Pontuação mín.</span>${mgSel('mf-lo', stepO(40, 95, 5), f.lo)}</label><label class="stack" style="gap:4px"><span class="lbl">Pontuação máx.</span>${mgSel('mf-hi', [[99, 'Qualquer']].concat(stepO(45, 95, 5)), f.hi)}</label>
@@ -4930,7 +4943,7 @@ function openControls() {
   $('#modal-box').oninput = cfgInput;
 }
 function openAbout() {
-  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 53). Escudos, Data Pack e nomes de jogadores por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
+  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 54). Escudos, Data Pack e nomes de jogadores por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
 }
 async function openProfiles() {
   const all = await refreshSaves();

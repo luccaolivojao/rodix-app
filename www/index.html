@@ -119,7 +119,15 @@ main#view{min-width:0;padding-bottom:40px}
 .news{display:flex;flex-direction:column;gap:8px;font-size:14px}
 .sc-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .sc-fol{font-size:13px;color:var(--mut)}.sc-fol b{color:var(--fg);font-size:20px}
-.paper{background:#f4efe3;color:#111;border-radius:6px;padding:0 0 12px;box-shadow:0 6px 24px rgba(0,0,0,.4)}.paper-top{background:#d3161c;color:#fff;text-align:center;font-family:var(--display);font-size:34px;font-weight:900;letter-spacing:.04em;padding:6px}.paper-ed{font-size:10px;text-align:center;border-bottom:2px solid #c33;margin:4px 12px;color:#333}.paper-body{display:flex;gap:12px;padding:10px 14px}.paper-tx h1{font-family:var(--display);font-size:clamp(22px,5vw,36px);line-height:1;margin:0 0 8px;text-transform:uppercase;font-weight:900;color:#111}.paper-tx p{font-style:italic;font-size:13px;color:#333;margin:0}.paper-img{flex:none;width:34%;background:linear-gradient(#0d2b1a,#1f5b36);border:2px solid #333}.paper-img canvas{width:100%;display:block}.sc-img{width:100%;max-width:360px;border-radius:10px;margin-top:10px;display:block}#invnews .in-skip{pointer-events:auto;margin-top:6px;background:#fff;color:#111;border:0;font-family:var(--display);font-weight:900;font-size:14px;letter-spacing:.06em;padding:6px 14px;cursor:pointer}
+.pp{border-radius:8px;overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,.45);color:#111;background:var(--pbg,#f4efe3)}.pp h1{margin:0}.pp .pp-img{background:linear-gradient(#0d2b1a,#1f5b36);border:2px solid #333;flex:none}.pp .pp-img canvas{width:100%;display:block}
+.pp-tab .pp-mast{background:var(--c1);color:var(--c2);text-align:center;font-family:var(--display);font-size:34px;font-weight:900;letter-spacing:.04em;padding:6px}.pp-tab .pp-ed{display:flex;justify-content:space-between;font-size:10px;border-bottom:2px solid var(--c1);margin:4px 12px;color:#333}.pp-tab .pp-rib{background:#111;color:#ffd23f;text-align:center;font-family:var(--display);font-weight:900;letter-spacing:.14em;font-size:13px;padding:3px;margin:6px 12px 0}.pp-tab .pp-body{display:flex;gap:12px;padding:10px 14px 14px}.pp-tab h1{font-family:var(--display);font-size:clamp(22px,5vw,36px);line-height:1;text-transform:uppercase;font-weight:900;margin-bottom:8px}.pp-tab p{font-style:italic;font-size:13px;color:#333;margin:0}.pp-tab .pp-img{width:34%}.pp-score{margin-top:10px;display:inline-block;background:var(--c1);color:var(--c2);font-family:var(--display);font-weight:900;font-size:13px;padding:3px 8px;letter-spacing:.04em}
+.pp-broad{padding:10px 16px 16px;font-family:Georgia,'Times New Roman',serif}.pp-broad .pp-mast{text-align:center;font-size:30px;font-weight:700;color:var(--c1);border-top:4px double var(--c1);border-bottom:4px double var(--c1);padding:6px 0;letter-spacing:.02em}.pp-broad .pp-ed{display:flex;justify-content:space-between;font-size:10px;font-family:system-ui,sans-serif;color:#444;margin:4px 0 8px;border-bottom:1px solid #999;padding-bottom:4px}.pp-extra{text-align:center;font-family:system-ui,sans-serif;font-size:11px;font-weight:800;letter-spacing:.2em;color:var(--c1);margin-bottom:4px}.pp-broad h1{font-size:clamp(22px,4.6vw,32px);line-height:1.08;font-weight:800;color:#111}.pp-sub{font-style:italic;color:#333;margin:8px 0;font-size:14px}.pp-cols{display:flex;gap:14px}.pp-broad .pp-img{width:38%}.pp-broad .pp-img small{display:block;background:#fff;color:#333;font-size:10px;padding:3px 5px;font-family:system-ui,sans-serif}.pp-art p{margin:0 0 8px;font-size:13px;line-height:1.4;color:#222}.pp-q{font-style:italic;border-left:3px solid var(--c1);padding-left:8px}
+.pp-mag{background:radial-gradient(circle at 50% 30%,#3b1f55,#150a20 75%);color:#fff;padding:0 0 16px;text-align:center}.pp-mag .pp-mast{background:var(--c1);color:var(--c2);font-family:var(--display);font-size:40px;font-weight:900;letter-spacing:.2em;padding:6px}.pp-mag .pp-ed{display:flex;justify-content:space-between;font-size:10px;padding:4px 12px;opacity:.8}.pp-stage{position:relative;height:230px;margin:4px 0}.pp-giant{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-size:230px;font-weight:900;color:rgba(255,255,255,.1);line-height:1}.pp-mag .pp-img{position:relative;width:150px;margin:8px auto 0;border-color:#fff;background:linear-gradient(#2b1445,#53207a)}.pp-kick{display:inline-block;background:#ffd23f;color:#111;font-weight:900;font-size:11px;letter-spacing:.16em;text-transform:uppercase;padding:3px 10px;margin:6px 0}.pp-mag h1{font-family:var(--display);font-size:clamp(24px,5.4vw,38px);line-height:1;text-transform:uppercase;padding:0 14px;color:#fff}.pp-mag p{margin:8px 18px 0;font-size:13px;opacity:.85}
+.pp-web{background:var(--pbg);color:#eaf2f7;font-family:system-ui,sans-serif}.pp-bar{background:var(--c1);color:var(--c2);display:flex;justify-content:space-between;align-items:baseline;padding:8px 14px}.pp-bar b{font-family:var(--display);font-size:24px;letter-spacing:.04em}.pp-bar span{font-size:10px;opacity:.8}.pp-wb{padding:12px 14px 4px}.pp-tags{display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap}.pp-tags em{background:#e53935;color:#fff;font-style:normal;font-weight:800;font-size:10px;padding:2px 7px;border-radius:3px;letter-spacing:.08em}.pp-tags span{background:rgba(255,255,255,.12);font-size:10px;padding:2px 7px;border-radius:3px}.pp-web h1{font-size:clamp(20px,4.4vw,28px);line-height:1.15;font-weight:800;color:#fff}.pp-web .pp-wb p{margin:8px 0;color:#b8c7d2;font-size:14px}.pp-meta{display:flex;gap:12px;font-size:11px;color:#8fa3b0;flex-wrap:wrap}.pp-wi{display:flex;gap:12px;padding:10px 14px}.pp-web .pp-img{width:34%;border-radius:8px;border:0}.pp-lede p{margin:0;font-size:13px;color:#cfdbe3;line-height:1.45}.pp-share{display:flex;justify-content:space-between;padding:8px 14px;border-top:1px solid rgba(255,255,255,.1);font-size:12px;color:#8fa3b0}
+.nwfeed{display:flex;flex-direction:column;gap:8px;width:100%;min-width:0}.nwgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:8px;min-width:0}.nwgrid>*,.nw{min-width:0}.nw-top{min-width:0}.nw-out{flex:none}.nw-dt{flex:0 1 auto;min-width:0}
+.nw{display:flex;gap:12px;text-align:left;width:100%;background:var(--panel2,rgba(255,255,255,.04));border:1px solid var(--line);border-left:4px solid var(--nc);border-radius:12px;padding:10px 12px;color:inherit;cursor:pointer;font:inherit}.nw:hover{background:rgba(255,255,255,.07)}.nw-ic{flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:color-mix(in srgb,var(--nc) 22%,transparent);color:var(--nc)}.nw-b{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}.nw-top{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--mut,#9db1a3)}.nw-out{color:var(--oc);text-transform:uppercase;letter-spacing:.06em;font-size:10.5px}.nw-dt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.nw-h{font-weight:700;font-size:14px;line-height:1.3}.nw-pill{display:inline-flex;gap:4px;align-items:center;align-self:flex-start;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--nc);background:color-mix(in srgb,var(--nc) 16%,transparent);border-radius:99px;padding:2px 8px}.nw.nwhero{padding:16px;background:linear-gradient(135deg,color-mix(in srgb,var(--nc) 22%,var(--panel,#10161f)),var(--panel,#10161f));border-left-width:5px}.nw.nwhero .nw-h{font-family:var(--display);font-size:clamp(20px,4vw,28px);line-height:1.1;font-weight:800}.nw.nwhero .nw-ic{width:54px;height:54px}
+.art{display:flex;flex-direction:column;gap:8px}.art-mast{background:var(--c1);color:var(--c2);display:flex;justify-content:space-between;align-items:baseline;padding:8px 12px;border-radius:6px}.art-mast b{font-family:var(--display);font-size:22px;letter-spacing:.04em;text-transform:uppercase}.art-mast span{font-size:10px;opacity:.8}.art h2{margin:4px 0 0;font-size:22px;line-height:1.2}.art p{margin:0;line-height:1.5;color:var(--mut2,#c9d6cf)}
+.paperOLD{background:#f4efe3;color:#111;border-radius:6px;padding:0 0 12px;box-shadow:0 6px 24px rgba(0,0,0,.4)}.paper-top{background:#d3161c;color:#fff;text-align:center;font-family:var(--display);font-size:34px;font-weight:900;letter-spacing:.04em;padding:6px}.paper-ed{font-size:10px;text-align:center;border-bottom:2px solid #c33;margin:4px 12px;color:#333}.paper-body{display:flex;gap:12px;padding:10px 14px}.paper-tx h1{font-family:var(--display);font-size:clamp(22px,5vw,36px);line-height:1;margin:0 0 8px;text-transform:uppercase;font-weight:900;color:#111}.paper-tx p{font-style:italic;font-size:13px;color:#333;margin:0}.paper-img{flex:none;width:34%;background:linear-gradient(#0d2b1a,#1f5b36);border:2px solid #333}.paper-img canvas{width:100%;display:block}.sc-img{width:100%;max-width:360px;border-radius:10px;margin-top:10px;display:block}#invnews .in-skip{pointer-events:auto;margin-top:6px;background:#fff;color:#111;border:0;font-family:var(--display);font-weight:900;font-size:14px;letter-spacing:.06em;padding:6px 14px;cursor:pointer}
 #mgr-root{padding:16px 18px 40px;max-width:1040px;margin:0 auto}
 .sc-post{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px}
 .sc-post.hate{border-color:#ff5a5a}
@@ -1629,7 +1637,7 @@ function finishMatch(MC) {
       u.intl.caps++; u.intl.g += st.g; u.intl.a += st.a; if (MC.kind === 'wc' && !G.comps[MC.comp].q) { u.wc.ap++; u.wc.g += st.g; u.wc.a += st.a; }
     }
     u.ratings.push(rating); if (u.ratings.length > 8) u.ratings.shift();
-    socAfterMatch(MC, rating, mins, st, gf, ga); creatorAfterMatch(MC, rating, mins, st, gf, ga);
+    socAfterMatch(MC, rating, mins, st, gf, ga); try { paperAfterMatch(MC, rating, st, gf, ga); } catch (e) { } creatorAfterMatch(MC, rating, mins, st, gf, ga);
     u.form = u.ratings.length ? (u.ratings.reduce((s, x) => s + x, 0) / u.ratings.length - 6.6) : 0;
     if (rnd() < 0.025 * dfx().hurt * (mins / 90)) { p.inj = ri(1, 6); addNews('Lesão na partida: ' + p.inj + ' semana(s) de recuperação.'); }
     if (p.ovr > u.peakOvr) u.peakOvr = p.ovr;
@@ -3607,11 +3615,12 @@ const ICONS = {
 };
 function ico(n, s) { s = s || 28; return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n] || ICONS.ball}</svg>`; }
 function paintIcons(root) { (root || document).querySelectorAll('i[data-ico]').forEach(el => { el.innerHTML = ico(el.dataset.ico, 30); }); }
-const TILES = [['me', 'Meu jogador', 'user'], ['club', 'Clube', 'shield'], ['comp', 'Competições', 'table'], ['cal', 'Calendário', 'calendar'], ['market', 'Transferências', 'swap'], ['train', 'Treinamento', 'dumbbell'], ['stats', 'Estatísticas', 'chart'], ['nat', 'Seleção', 'flag'], ['hist', 'Histórico', 'history'], ['social', 'Rodix Social', 'news'], ['shop', 'Loja', 'bag']];
+const TILES = [['me', 'Meu jogador', 'user'], ['club', 'Clube', 'shield'], ['comp', 'Competições', 'table'], ['cal', 'Calendário', 'calendar'], ['market', 'Transferências', 'swap'], ['train', 'Treinamento', 'dumbbell'], ['stats', 'Estatísticas', 'chart'], ['nat', 'Seleção', 'flag'], ['hist', 'Histórico', 'history'], ['social', 'Rodix Social', 'user'], ['news', 'Notícias', 'news'], ['shop', 'Loja', 'bag']];
 function openHub() { applyClubTheme(); show('s-hub'); renderHub(); if (!G.mgr) setTimeout(maybeIntro, 250); }
 function userKit() { const c = userClub(); return c ? { c1: c.c1, c2: c.c2 } : { c1: '#888888', c2: '#ffffff' }; }
 function refreshMenuCoins() { const e = $('#menu-coins'); if (e) e.textContent = coinsOf() + ' Coins'; const h = $('#hub-coins'); if (h) h.textContent = coinsOf(); }
 function renderHub() {
+  try { showPendingPaper(); } catch (e) { }
   if (CREATOR) { try { creatorHub(); } catch (e) { } }
   const p = up(), c = userClub(), u = G.user; applyClubTheme();
   refreshMenuCoins(); $('#hub-name').textContent = G.mgr ? G.mgr.name : fullName(p);
@@ -3619,7 +3628,7 @@ function renderHub() {
   $('#hub-season').textContent = 'Temporada ' + genSeasonLabel() + ' · Semana ' + Math.min(G.week + 1, totalWeeks()) + '/' + totalWeeks();
   drawAvatar($('#hub-av'), p.look, userKit(), p.num, false);
   if (hubTab === 'shop' && !IAP.tried && iapPlugin()) iapLoad().then(() => { if (hubTab === 'shop' && curScreen === 's-hub') renderHub(); });
-  const f = (G.mgr ? { home: mgrHome, xi: mgrXIView, club: mgrClubView, comp: vComp, cal: vCal, stats: vStats, bd: mgrBoardView, shop: vShop, tr: mgrTrView, fn: mgRolesView, sp: mgSpView, nw: mgrNewsView, social: mgrSocView } : { home: vHome, me: vMe, club: vClub, comp: vComp, cal: vCal, market: vMarket, train: vTrain, stats: vStats, nat: vNat, hist: vHist, social: vSocial, shop: vShop })[hubTab] || (G.mgr ? mgrHome : vHome);
+  const f = (G.mgr ? { home: mgrHome, xi: mgrXIView, club: mgrClubView, comp: vComp, cal: vCal, stats: vStats, bd: mgrBoardView, shop: vShop, tr: mgrTrView, fn: mgRolesView, sp: mgSpView, nw: vNews, news: vNews, social: mgrSocView } : { home: vHome, me: vMe, club: vClub, comp: vComp, cal: vCal, market: vMarket, train: vTrain, stats: vStats, nat: vNat, hist: vHist, social: vSocial, shop: vShop, news: vNews })[hubTab] || (G.mgr ? mgrHome : vHome);
   $('#view').innerHTML = f();
   if (hubTab === 'me') { const cvs = $('#me-av'); if (cvs) drawAvatar(cvs, p.look, userKit(), p.num, true); }
 }
@@ -3816,35 +3825,119 @@ const SOC_OUT=[["love","c","Recebi com muito respeito, valeu mesmo! Sem a torcid
 
 /* ---------- EDIÇÃO CREATORS (recursos exclusivos; ligados só quando CREATOR = true) ---------- */
 const absWk = () => (G.season - G.startSeason) * 60 + G.week;
-const PAPER_HEAD = [
-  ['{NOME} FAZ {N} E ENCANTA A TORCIDA', 'Atuação de gala contra o {adv} entra para a história do clube.'],
-  ['{NOME}, CAMPEÃO DE ELEGÂNCIA: CAMISA PARA O PEQUENO TORCEDOR RIVAL', 'Depois do gol na casa do {adv}, um gesto que correu a arquibancada inteira.'],
-  ['NOITE DE {NOME}: {N} GOLS E ESTÁDIO DE PÉ', 'O {adv} não encontrou resposta para o camisa {num}.'],
-  ['{NOME} DEIXA O {ADV} DE JOELHOS', '{N} gols em uma tarde inspirada e a bola do jogo já tem dono.'],
-  ['É DELE! {NOME} LEVA A BOLA PARA CASA', 'Três ou mais gols garantem o troféu simbólico da rodada.'],
-  ['{NOME} VIRA ASSUNTO NACIONAL APÓS {N} GOLS', 'Redes sociais não falam de outra coisa desde o apito final.'],
-  ['SHOW DO CAMISA {NUM}: {N} GOLS CONTRA O {ADV}', 'Torcida pede renovação na saída do gramado.'],
-  ['{NOME} NÃO PERDOA E FAZ {N}', 'O artilheiro foi implacável em cada chance que teve.'],
-  ['CHUVA DE GOLS: {NOME} ABRE O JOGO E FECHA A CONTA', 'O {adv} saiu de campo sem saber como parar o atacante.'],
-  ['HOJE É DIA DE {NOME}', 'Lance a lance, o jogo teve um único protagonista.'],
-  ['TÉCNICO DO {ADV} RENDIDO: "{NOME} ESTAVA INSPIRADO"', 'Elogio veio na entrevista coletiva, depois de {N} gols.'],
-  ['{NOME} ENTRA PARA A GALERIA DOS CRAQUES DA RODADA', '{N} gols dão ao jogador o posto de destaque da semana.'],
-  ['TORCIDA DO {CLUBE} CANTA O NOME DE {NOME}', 'A noite de {N} gols virou festa dentro e fora do estádio.'],
-  ['O JOGO DA VIDA DE {NOME}', 'Com {N} gols, o camisa {num} mostra por que está no radar dos grandes.']
+/* ===== IMPRENSA: jornais fictícios, capas de hat-trick e feed de notícias ===== */
+const PAPERS = [
+  { id: 'gz', n: 'Gazeta da Bola', sub: 'O jornal do torcedor', st: 'tab', c1: '#d3161c', c2: '#ffffff', bg: '#f4efe3' },
+  { id: 'dg', n: 'O Diário dos Gols', sub: 'Fundado em 1948 · Edição da manhã', st: 'broad', c1: '#161616', c2: '#f4efe3', bg: '#f1ead9' },
+  { id: 'cq', n: 'Craque do Dia', sub: 'Todo dia tem um craque', st: 'tab', c1: '#f6c500', c2: '#161616', bg: '#fffbe6' },
+  { id: 'ca', n: 'Correio da Arquibancada', sub: 'A voz das gerais desde 1971', st: 'broad', c1: '#0b3d91', c2: '#ffffff', bg: '#eef3fb' },
+  { id: 'tr', n: 'A Tribuna Esportiva', sub: 'Jornalismo de campo desde 1962', st: 'broad', c1: '#1b5e20', c2: '#ffffff', bg: '#eef6ee' },
+  { id: 'c10', n: 'Camisa 10', sub: 'A revista do futebol', st: 'mag', c1: '#7b1fa2', c2: '#ffffff', bg: '#1b0f26' },
+  { id: 'gn', n: 'GolNet', sub: 'Portal de esportes · AO VIVO', st: 'web', c1: '#00b8d4', c2: '#00131a', bg: '#0e1720' },
+  { id: 'ml', n: 'Meia-Lua Esportes', sub: 'Esporte 24 horas por dia', st: 'web', c1: '#ff6f00', c2: '#1a0d00', bg: '#1a1410' }
 ];
-const PAPER_REACT = ['A torcida adorou 😍', 'O vestiário vibrou 🙌', 'As redes explodiram 🔥', 'A imprensa se rendeu 📰', 'Até o rival aplaudiu 👏'];
-function paperFill(s, d) { return s.replace(/\{NOME\}/g, d.nome.toUpperCase()).replace(/\{ADV\}/g, d.adv.toUpperCase()).replace(/\{adv\}/g, d.adv).replace(/\{CLUBE\}/g, d.clube.toUpperCase()).replace(/\{N\}/g, d.g).replace(/\{num\}/g, d.num); }
-function paperModal(P) {
-  const d = P; const h = PAPER_HEAD[P.hi % PAPER_HEAD.length];
-  const title = paperFill(h[0], d).replace(/ (\d)$/, ' $1'); const sub = paperFill(h[1], d);
-  modal(`<div class="paper"><div class="paper-top">GAZETA DA BOLA</div><div class="paper-ed">Edição da manhã · ${esc(genSeasonLabel())}</div><div class="paper-body"><div class="paper-tx"><h1>${esc(title.replace(/\b(\d+)\b/, g => g === '3' ? 'TRÊS' : g === '4' ? 'QUATRO' : g === '5' ? 'CINCO' : g === '6' ? 'SEIS' : g))}</h1><p>${esc(sub)}</p></div><div class="paper-img"><canvas id="paper-av" width="180" height="220"></canvas></div></div></div><p style="text-align:center;margin:12px 0 0"><b>${esc(PAPER_REACT[P.hi % PAPER_REACT.length])} · 👥 +${P.fol}</b></p><div class="row" style="margin-top:12px"><button class="btn pri" style="flex:1" data-act="close-modal">Continuar</button></div>`);
-  try { const p = up(); drawAvatar($('#paper-av'), p.look, userKit(), p.num, true); } catch (e) { }
+const NUM_W = { 3: 'três', 4: 'quatro', 5: 'cinco', 6: 'seis', 7: 'sete', 8: 'oito' };
+const PH = {
+  tab: {
+    h: [['{NOME} faz {N} e encanta a torcida', 'Atuação de gala contra o {ADV} entra para a história do {CLUBE}.'], ['Noite de {NOME}: {N} gols e estádio de pé', 'O {ADV} não encontrou resposta para o camisa {num}.'], ['É dele! {NOME} leva a bola para casa', 'Hat-trick garante o troféu simbólico da rodada.'], ['{NOME} deixa o {ADV} de joelhos', '{N} gols em uma tarde inspirada: {PL} no placar.'], ['Torcida do {CLUBE} canta o nome de {NOME}', 'A noite de {N} gols virou festa dentro e fora do estádio.'], ['O jogo da vida de {NOME}', 'Com {N} gols, o camisa {num} mostra por que está no radar dos grandes.']],
+    p: [['Poker! {NOME} faz {N} e entra para a história', '{PL} sobre o {ADV}: o artilheiro não quis parar.'], ['Quatro na rede! {NOME} está on fire', 'O {ADV} saiu de campo sem saber como parar o atacante.'], ['{NOME} não perdoa e faz {N}', 'Artilheiro foi implacável em cada chance que teve.'], ['Chuva de gols: {NOME} abre o jogo e fecha a conta', '{PL} e a bola do jogo já tem dono.']],
+    m: [['Manita! {NOME} marca {N} e escreve seu nome na história', 'Ninguém no {CLUBE} lembra de uma tarde assim.'], ['Inacreditável! {N} gols de {NOME}', 'O {ADV} foi atropelado: {PL}.'], ['Ele não é humano: {NOME} faz {N} contra o {ADV}', 'Recorde da rodada e talvez da temporada.']],
+    d: [['Clássico é de {NOME}: {N} gols no {ADV}', 'Torcida rival calada, {CLUBE} em festa.']]
+  },
+  broad: {
+    h: [['{NOME} marca {N} vezes e conduz o {CLUBE} à vitória sobre o {ADV}', 'Atacante foi decisivo em partida de grande atuação coletiva; placar final {PL}.'], ['Hat-trick de {NOME} resume tarde de superioridade do {CLUBE}', 'Camisa {num} foi o nome do jogo diante do {ADV}.'], ['Em tarde inspirada, {NOME} anota {N} e leva a bola para casa', 'Técnico do {ADV} reconhece: "Foi impossível marcá-lo".'], ['{NOME} desequilibra e o {ADV} sucumbe: {PL}', 'Análise: movimentação e frieza explicam a atuação do camisa {num}.'], ['Artilheiro em alta: {NOME} faz {N} e assume protagonismo no {CLUBE}', 'Desempenho coloca o atleta na disputa pela seleção da rodada.']],
+    p: [['Quatro gols: {NOME} protagoniza uma das maiores atuações da temporada', '{CLUBE} vence o {ADV} por {PL} em noite de poker.'], ['Poker de {NOME} garante goleada do {CLUBE}', 'Camisa {num} converteu todas as chances criadas.'], ['{NOME} faz {N} e entra no rol dos grandes artilheiros do campeonato', 'Marca rara será lembrada por anos.']],
+    m: [['Manita histórica: {NOME} marca {N} gols e escreve página inédita no {CLUBE}', 'Feito raro foi celebrado pela torcida e pela imprensa.'], ['{N} gols em uma só partida: a noite inesquecível de {NOME}', 'O {ADV} sofreu {PL} e viu o camisa {num} brilhar.']],
+    d: [['{NOME} decide o clássico com {N} gols', 'Vitória sobre o {ADV} reforça o momento do {CLUBE}.']]
+  },
+  mag: {
+    h: [['O dia em que {NOME} virou craque', 'Hat-trick contra o {ADV} e uma noite para guardar.'], ['{N} vezes {NOME}', 'Perfil: como o camisa {num} chegou ao ápice da carreira.'], ['A noite perfeita de {NOME}', 'Bastidores do hat-trick que parou o {CLUBE}.'], ['{NOME}: o nome da rodada', 'Entrevista exclusiva após {N} gols no {ADV}.']],
+    p: [['Poker de ouro: {NOME}', 'Quatro gols, uma noite: a conversa exclusiva com o artilheiro.'], ['Ele fez {N}: a história de {NOME}', 'O que se passa na cabeça de quem marca tantas vezes?']],
+    m: [['Manita! {NOME} em capa especial', 'Cinco gols ou mais: a tarde que ninguém esquece.'], ['{N} gols: o dia em que {NOME} parou o futebol', 'Edição histórica sobre uma atuação inesquecível.']],
+    d: [['Clássico pra guardar: {NOME} e seus {N} gols', 'Rivalidade, pressão e um herói improvável.']]
+  },
+  web: {
+    h: [['URGENTE: {NOME} marca {N} e o {ADV} não sabe o que fazer', 'Veja os gols e a repercussão do hat-trick.'], ['Hat-trick! Veja como {NOME} destruiu o {ADV}', 'Vídeo e melhores momentos disponíveis.'], ['{NOME} faz {N} e vira assunto em todo o país', 'Torcida se rende nas redes sociais: confira.'], ['Você não vai acreditar: {NOME} anota {N} contra o {ADV}', 'Atuação do camisa {num} divide opiniões... só que não.']],
+    p: [['POKER! {NOME} marca {N} gols e bate recorde', 'Confira todos os gols da partida.'], ['{NOME} faz {N}: veja os gols e a reação do técnico', '{PL}: o {CLUBE} passeia contra o {ADV}.']],
+    m: [['MANITA: {NOME} faz {N} gols e quebra a internet', 'Reveja os lances da noite histórica.'], ['{N} gols! {NOME} protagoniza jogo para a história', 'O {ADV} foi atropelado por {PL}.']],
+    d: [['Clássico! {NOME} faz {N} e silencia o {ADV}', 'Veja a festa da torcida.']]
+  }
+};
+const PAPER_LEDE = ['{NOME} foi o dono da partida. O camisa {num} balançou as redes {N} vezes e o {CLUBE} fechou o jogo em {PL}.', 'Com atuação inspirada, {NOME} anotou {N} gols diante do {ADV}. A torcida saiu cantando o nome do atacante.', 'Não houve defesa que segurasse {NOME}. Em {N} lances de pura categoria, o jogador decidiu a partida e dominou o noticiário.'];
+const PAPER_QUOTE = ['"Fizemos o possível, mas ele estava iluminado hoje." — treinador do {ADV}', '"Marcar três é bom, mas o importante é o time." — {NOME}', '"Um jogador assim muda o patamar do clube." — dirigente do {CLUBE}', '"Nunca vi uma tarde dessas, estou arrepiado." — torcedor na saída do estádio'];
+const PAPER_REACT = ['A torcida adorou', 'O vestiário vibrou', 'As redes explodiram', 'A imprensa se rendeu', 'Até o rival aplaudiu'];
+function paperFill(s, d) { return s.replace(/\{NOME\}/g, d.nome).replace(/\{ADV\}/g, d.adv).replace(/\{CLUBE\}/g, d.clube).replace(/\{N\}/g, NUM_W[d.g] || d.g).replace(/\{num\}/g, d.num || '10').replace(/\{PL\}/g, d.ps); }
+function paperPick(P) { const o = PAPERS[P.oi % PAPERS.length]; const st = PH[o.st]; const tier = P.g >= 5 ? 'm' : P.g === 4 ? 'p' : 'h'; const pool = P.derby && P.hi % 10 < 6 ? st.d : st[tier]; const h = pool[P.hi % pool.length]; const cap = t => t.charAt(0).toUpperCase() + t.slice(1); return { o, head: cap(paperFill(h[0], P)), sub: cap(paperFill(h[1], P)), lede: paperFill(PAPER_LEDE[P.hi % PAPER_LEDE.length], P), quote: paperFill(PAPER_QUOTE[P.hi % PAPER_QUOTE.length], P) }; }
+function paperHtml(P) {
+  const x = paperPick(P), o = x.o, g = P.g, extra = g >= 4 ? (g >= 5 ? 'EDIÇÃO HISTÓRICA' : 'EDIÇÃO EXTRA') : '', vars = `--c1:${o.c1};--c2:${o.c2};--pbg:${o.bg}`, dt = esc(P.s) + ' · sem. ' + (P.w + 1), cv = '<canvas id="paper-av" width="180" height="220"></canvas>';
+  if (o.st === 'tab') return `<div class="pp pp-tab" style="${vars}"><div class="pp-mast">${esc(o.n.toUpperCase())}</div><div class="pp-ed"><span>${esc(o.sub)}</span><span>${dt}</span></div>${extra ? `<div class="pp-rib">${extra}</div>` : ''}<div class="pp-body"><div class="pp-tx"><h1>${esc(x.head)}</h1><p>${esc(x.sub)}</p><div class="pp-score">${esc(P.clube)} ${esc(P.ps)} ${esc(P.adv)}</div></div><div class="pp-img">${cv}</div></div></div>`;
+  if (o.st === 'broad') return `<div class="pp pp-broad" style="${vars}"><div class="pp-mast">${esc(o.n)}</div><div class="pp-ed"><span>${esc(o.sub)}</span><span>${dt}</span></div>${extra ? `<div class="pp-extra">${extra}</div>` : ''}<h1>${esc(x.head)}</h1><p class="pp-sub">${esc(x.sub)}</p><div class="pp-cols"><div class="pp-img">${cv}<small>${esc(P.nome)} comemora um de seus ${NUM_W[g] || g} gols.</small></div><div class="pp-art"><p>${esc(x.lede)}</p><p class="pp-q">${esc(x.quote)}</p></div></div></div>`;
+  if (o.st === 'mag') return `<div class="pp pp-mag" style="${vars}"><div class="pp-mast">${esc(o.n.toUpperCase())}</div><div class="pp-ed"><span>${esc(o.sub)}</span><span>${dt}</span></div><div class="pp-stage"><div class="pp-giant">${g}</div><div class="pp-img">${cv}</div></div><div class="pp-kick">${extra || 'Especial'} · ${NUM_W[g] || g} gols</div><h1>${esc(x.head)}</h1><p>${esc(x.sub)}</p></div>`;
+  return `<div class="pp pp-web" style="${vars}"><div class="pp-bar"><b>${esc(o.n)}</b><span>${esc(o.sub)}</span></div><div class="pp-wb"><div class="pp-tags"><em>URGENTE</em><span>Futebol</span>${extra ? `<span>${extra}</span>` : ''}</div><h1>${esc(x.head)}</h1><p>${esc(x.sub)}</p><div class="pp-meta"><span>Por Redação ${esc(o.n)}</span><span>${dt}</span><span>${ri(2, 4)} min de leitura</span></div></div><div class="pp-wi"><div class="pp-img">${cv}</div><div class="pp-lede"><p>${esc(x.lede)}</p></div></div><div class="pp-share"><span>Comentários ${ri(300, 9000).toLocaleString('pt-BR')}</span><span>Compartilhar</span></div></div>`;
 }
+function paperModal(P) {
+  const rc = PAPER_REACT[P.hi % PAPER_REACT.length];
+  modal(paperHtml(P) + `<p style="text-align:center;margin:12px 0 0"><b>${esc(rc)}${P.fol && socOn() ? ' · +' + P.fol + ' seguidores' : ''}</b></p><div class="row" style="margin-top:12px"><button class="btn pri" style="flex:1" data-act="close-modal">Continuar</button></div>`);
+  try { const p = pl(P.pid) || up(); drawAvatar($('#paper-av'), p.look, userKit(), p.num, true); } catch (e) { }
+}
+function paperAfterMatch(MC, rating, st, gf, ga) {
+  if (!G || G.mgr || !st || st.g < 3) return; const u = G.user, p = up();
+  const P = { nome: shortName(p), adv: MC.teams[1 - MC.uSide].name, clube: MC.teams[MC.uSide].name, g: st.g, num: p.num || '', ps: gf + ' a ' + ga, derby: !!(typeof mcDerby === 'function' && mcDerby(MC)), oi: ri(0, PAPERS.length - 1), hi: ri(0, 99), fol: 20 + st.g * 14 + ri(0, 20), s: genSeasonLabel(), w: G.week, pid: p.id };
+  u.paper = P; u.press = u.press || []; u.press.unshift(P); if (u.press.length > 40) u.press.length = 40;
+  G.news.unshift({ t: paperPick(P).head, w: G.week, s: P.s, k: 'good', pp: P }); if (G.news.length > 80) G.news.length = 80;
+  if (CREATOR && socOn()) { soc().fol += P.fol; }
+}
+function showPendingPaper() { const u = G && G.user; if (u && u.paper && !G.mgr) { const P = u.paper; u.paper = null; saveGame(true); setTimeout(() => paperModal(P), 350); } }
+/* ----- feed de notícias ----- */
+const NW_CATS = [[/lesão|lesion|recupera/i, 'Lesão', 'medkit', '#ff6b6b'], [/suspens|cartão|expuls|amarelo/i, 'Disciplina', 'whistle', '#ffb347'], [/convoc|seleção|lista final|eliminatórias/i, 'Seleção', 'flag', '#4cc9f0'], [/campe|título|troféu|acesso|liderança|rebaix/i, 'Títulos', 'trophy', '#f6c500'], [/assina|contrat|vendid|emprest|renova|proposta|mercado|anunciad|transfer|pediu/i, 'Mercado', 'swap', '#7bd88f'], [/patroc|coins|pagou|prêmio/i, 'Dinheiro', 'coin', '#f6c500'], [/gols|goleia|zebra|marca |hat-trick|poker/i, 'Resultado', 'ball', '#8ab4ff'], [/potencial|olheiros|treino|temporada/i, 'Evolução', 'chart', '#b388ff']];
+const NW_BODY = {
+  'Lesão': ['O departamento médico acompanha a evolução diariamente e a comissão técnica avalia o retorno com cautela.', 'Fisioterapeutas trabalham em ritmo intenso para encurtar o período de afastamento.', 'A diretoria afirma que não há pressa: a prioridade é a recuperação completa.'],
+  'Disciplina': ['A comissão técnica já traça alternativas para a ausência nas próximas partidas.', 'O desfalque deve mexer na escalação, e o treinador pediu atenção redobrada ao grupo.', 'Os jogadores foram lembrados de que a disciplina também ganha jogos.'],
+  'Seleção': ['A convocação movimenta a imprensa e a torcida, que acompanha cada nome da lista com atenção.', 'O treinador da seleção justificou as escolhas pela fase e pela regularidade dos atletas.', 'Os convocados se apresentam na Data FIFA e ficam à disposição da comissão técnica.'],
+  'Títulos': ['A conquista foi celebrada por jogadores, comissão e torcedores, que tomaram conta das ruas.', 'O resultado coroa um trabalho de bastidores que vinha sendo construído há meses.', 'A imprensa já fala em momento histórico e a festa deve durar a semana inteira.'],
+  'Mercado': ['Os valores e as condições seguem sob sigilo, mas os envolvidos já tratam o acordo como certo.', 'O negócio reforça o elenco e movimenta o mercado, com outros clubes de olho em novas oportunidades.', 'Nos bastidores, a negociação foi considerada rápida e sem grandes entraves.'],
+  'Dinheiro': ['O acordo comercial dá fôlego às contas e abre espaço para novos investimentos.', 'Executivos dizem que a parceria se baseia em metas esportivas e visibilidade do clube.', 'A cifra surpreendeu o mercado e deve ser comentada nos próximos dias.'],
+  'Resultado': ['A rodada teve atuações marcantes e o resultado repercutiu nas redes e nas mesas redondas.', 'Analistas destacam a intensidade e a frieza dentro da área como diferenciais da partida.', 'A torcida lotou as arquibancadas e fez do jogo uma verdadeira festa.'],
+  'Evolução': ['Olheiros e analistas de desempenho seguem monitorando de perto o atleta.', 'O trabalho diário de treinos e a regularidade nos jogos explicam a evolução apontada.', 'A expectativa é que o ritmo se mantenha ao longo do restante da temporada.'],
+  'Notícia': ['A informação circulou rapidamente nos bastidores e deve gerar novos desdobramentos nas próximas semanas.', 'Procurado, o clube preferiu não comentar além do que já foi divulgado.', 'A imprensa acompanha o caso e promete novidades nos próximos dias.']
+};
+function nwHash(s) { let h = 7; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return h; }
+function newsMeta(x) {
+  let m = ['Notícia', 'news', '#9db1a3']; if (x.pp) m = ['Capa', 'news', '#ff5a5a']; else for (const c of NW_CATS) if (c[0].test(x.t)) { m = [c[1], c[2], c[3]]; break; }
+  const h = nwHash(x.t + x.s + x.w); let pool = PAPERS; if (m[0] === 'Mercado' || m[0] === 'Dinheiro') pool = PAPERS.filter(p => p.st === 'web'); else if (m[0] === 'Seleção' || m[0] === 'Títulos') pool = PAPERS.filter(p => p.st === 'broad'); else if (m[0] === 'Resultado') pool = PAPERS.filter(p => p.st !== 'mag');
+  const o = x.pp ? PAPERS[x.pp.oi % PAPERS.length] : pool[h % pool.length]; return { cat: m[0], ic: m[1], col: m[2], o };
+}
+let NWC = [], NWF = 'all';
+function newsDate(x) { return esc(x.s) + ' · sem. ' + (x.w + 1) + (x.tag === 'me' ? ' · ' + esc(tr('Você')) : x.lid && LDEF[x.lid] ? ' · ' + esc(LDEF[x.lid].n) : ''); }
+function newsCard(x, i, hero) {
+  const m = newsMeta(x), o = m.o;
+  return `<button type="button" class="nw ${hero ? 'nwhero' : ''} ${x.k || ''}" data-ni="${i}" style="--nc:${m.col};--oc:${o.c1 === '#161616' ? '#888' : o.c1}"><i class="nw-ic">${ico(m.ic, hero ? 30 : 22)}</i><span class="nw-b"><span class="nw-top"><b class="nw-out">${esc(o.n)}</b><span class="nw-dt">${newsDate(x)}</span></span><span class="nw-h">${esc(x.t)}</span><span class="nw-pill">${esc(m.cat)}${x.pp ? ' · toque para ver a capa' : ''}</span></span></button>`;
+}
+function newsList(f) {
+  let L = allNews(); if (f === 'me') L = L.filter(x => x.tag === 'me'); else if (f === 'mundo') L = L.filter(x => x.tag !== 'me'); else if (f === 'mercado') L = L.filter(x => newsMeta(x).cat === 'Mercado'); else if (f === 'capas') L = L.filter(x => x.pp); return L;
+}
+function newsHtml(n) {
+  NWC = newsList('all').slice(0, n || 8); if (!NWC.length) return '<span class="mut">Sem notícias.</span>';
+  return `<div class="nwfeed">${newsCard(NWC[0], 0, true)}<div class="nwgrid">${NWC.slice(1, 6).map((x, i) => newsCard(x, i + 1)).join('')}</div>${NWC.length > 1 ? '<button class="btn sm" data-tab="news" style="margin-top:10px">Ver todas as notícias</button>' : ''}</div>`;
+}
+function vNews() {
+  NWC = newsList(NWF).slice(0, 60); const u = G.user, nc = (u.press || []).length;
+  const tabs = [['all', 'Todas'], ['me', G.mgr ? 'Meu clube' : 'Sobre você'], ['mercado', 'Mercado'], ['mundo', 'Mundo'], ['capas', 'Capas (' + nc + ')']];
+  return head('Notícias') + `<div class="seg" style="margin-bottom:12px;flex-wrap:wrap">${tabs.map(([k, n]) => `<button type="button" data-nf="${k}" aria-pressed="${NWF === k}">${n}</button>`).join('')}</div>` + (NWC.length ? `<div class="nwfeed">${newsCard(NWC[0], 0, true)}<div class="nwgrid">${NWC.slice(1).map((x, i) => newsCard(x, i + 1)).join('')}</div></div>` : `<p class="mut">${NWF === 'capas' ? 'Faça três gols ou mais em uma partida para sair na capa dos jornais.' : 'Sem notícias nesta aba.'}</p>`);
+}
+function newsOpen(i) {
+  const x = NWC[i]; if (!x) return; if (x.pp) { paperModal(x.pp); return; }
+  const m = newsMeta(x), o = m.o, h = nwHash(x.t), pool = NW_BODY[m.cat] || NW_BODY['Notícia'];
+  modal(`<div class="art" style="--c1:${o.c1};--c2:${o.c2}"><div class="art-mast"><b>${esc(o.n)}</b><span>${esc(o.sub)}</span></div><span class="nw-pill" style="--nc:${m.col};align-self:flex-start">${ico(m.ic, 14)} ${esc(m.cat)}</span><h2>${esc(x.t)}</h2><div class="mut" style="font-size:12px">${newsDate(x)}</div><p>${esc(pool[h % pool.length])}</p><p>${esc(pool[(h + 1) % pool.length])}</p></div><div class="row" style="margin-top:14px"><button class="btn pri" style="flex:1" data-act="close-modal">Fechar</button></div>`);
+}
+document.addEventListener('click', e => {
+  if (!G) return; const a = e.target.closest && e.target.closest('[data-ni]'); if (a) { newsOpen(+a.dataset.ni); return; }
+  const f = e.target.closest && e.target.closest('[data-nf]'); if (f) { NWF = f.dataset.nf; if (curScreen === 's-hub') renderHub(); }
+});
 function creatorAfterMatch(MC, rating, mins, st, gf, ga) {
   if (!CREATOR) return;
   try {
     const u = G.user, p = up(), opp = MC.teams[1 - MC.uSide].name, me = MC.teams[MC.uSide].name;
-    if (st.g >= 3) { const fol = 20 + st.g * 14 + ri(0, 20); u.paper = { nome: shortName(p), adv: opp, clube: me, g: st.g, num: p.num || '', hi: ri(0, PAPER_HEAD.length - 1), fol }; if (socOn()) { const S = soc(); S.fol += fol; } }
     if (!socOn()) return;
     const S = soc();
     /* pedido de seguidor: avalia o anterior e cria um novo */
@@ -3929,7 +4022,7 @@ function sponProgress(A) { const u = G.user, c = u.career, b = A.base; const d =
 function sponOk(A) { const d = sponProgress(A), c = A.cond; return (!c.g || d.g >= c.g) && (!c.ga || d.ga >= c.ga) && (!c.ap || d.ap >= c.ap) && (!c.r || d.r >= c.r); }
 function creatorHub() {
   if (!CREATOR || !G || !G.user) return;
-  const u = G.user; if (u.paper) { const P = u.paper; u.paper = null; saveGame(true); setTimeout(() => paperModal(P), 350); }
+  const u = G.user;
   if (!socOn()) return;
   const S = soc(), A = S.spon && S.spon.active;
   if (A && absWk() >= A.endAbs) { const ok = sponOk(A); if (ok) { u.sponEarned = (u.sponEarned || 0) + A.pay; addNews(A.brand + ' pagou ' + money(A.pay) + ': metas do patrocínio cumpridas.', 'good'); socPost('mkt', `${A.brand} renova elogios ao camisa ${up().num || ''}: metas batidas e bônus pago.`, { mul: 2 }); S.fol += Math.round(S.fol * 0.01); } else { addNews(A.brand + ' encerrou o patrocínio: metas não cumpridas, sem pagamento.', 'bad'); S.fol = Math.max(50, S.fol - Math.round(S.fol * 0.01)); } S.spon.active = null; S.spon.offers = null; S.spon.at = absWk(); saveGame(true); }
@@ -4370,8 +4463,6 @@ const SOC_ENABLED = CREATOR;  /* Rodix Social desativado por enquanto: mude para
 function socOn() { return SOC_ENABLED && !(G && G.user && G.user.socOn === false); }
 function head(t, right) { return `<div class="pagehead"><div class="row" style="gap:14px"><button class="back" data-act="home" aria-label="Voltar ao início">${ico('back', 22)}</button><h2>${t}</h2></div>${right ? `<div class="row">${right}</div>` : ''}</div>`; }
 function allNews() { const me = (G.news || []).map(x => Object.assign({ tag: 'me' }, x)); return me.concat(G.wnews || []).sort((a, b) => (b.s > a.s ? 1 : b.s < a.s ? -1 : 0) || b.w - a.w); }
-function newsItem(x) { return `<div class="${x.k}"><span class="mut" style="font-size:12px">${esc(x.s)} · sem. ${x.w + 1}${x.tag === 'me' ? ' · ' + esc(tr('Você')) : x.lid && LDEF[x.lid] ? ' · ' + esc(LDEF[x.lid].n) : ''}</span><br>${esc(x.t)}</div>`; }
-function newsHtml(n) { return `<div class="news">${allNews().slice(0, n || 8).map(newsItem).join('') || '<span class="mut">Sem notícias.</span>'}</div>`; }
 function nextCard() {
   const p = up(), u = G.user;
   if (u.forcedRetire) return `<div class="card next stack"><h3>Hora de pendurar as chuteiras</h3><p>Aos ${p.age} anos, seu corpo pede descanso. Encerre a carreira para ver o resumo.</p><button class="btn pri" data-act="retire-now">Encerrar carreira</button></div>`;
@@ -4447,7 +4538,7 @@ function vShop() { return head('Loja') + shopBody(true); }
 function menuShop() { const sc = $('#modal-box').scrollTop; modal(`<h2>Loja</h2>${shopBody(false)}<div class="row" style="margin-top:14px"><button class="btn ghost" data-act="close-modal">Fechar</button></div>`); $('#modal-box').classList.add('wide'); $('#modal-box').scrollTop = sc; }
 function vHome() {
   const p = up(), u = G.user, c = userClub();
-  const sub = { me: `Overall ${p.ovr}`, club: c ? c.name : 'Sem clube', comp: c ? LDEF[c.lg].n : '—', cal: `Semana ${Math.min(G.week + 1, totalWeeks())}`, shop: coinsOf() + ' Coins', market: G.offers.length ? G.offers.length + ' proposta(s)' : 'Sem propostas', train: u.trained ? 'Feito nesta semana' : p.inj > 0 ? 'Lesionado' : 'Treino disponível', stats: 'Artilharia e prêmios', nat: G.pendingIntl ? 'Convocado!' : NATIONS[p.nat].n, hist: `${u.history.length} temporada(s)`, social: ((u.soc ? u.soc.fol : 0) || 0).toLocaleString('pt-BR') + ' seguidores' };
+  const sub = { news: (allNews()[0] || { t: 'Sem notícias' }).t.slice(0, 30), me: `Overall ${p.ovr}`, club: c ? c.name : 'Sem clube', comp: c ? LDEF[c.lg].n : '—', cal: `Semana ${Math.min(G.week + 1, totalWeeks())}`, shop: coinsOf() + ' Coins', market: G.offers.length ? G.offers.length + ' proposta(s)' : 'Sem propostas', train: u.trained ? 'Feito nesta semana' : p.inj > 0 ? 'Lesionado' : 'Treino disponível', stats: 'Artilharia e prêmios', nat: G.pendingIntl ? 'Convocado!' : NATIONS[p.nat].n, hist: `${u.history.length} temporada(s)`, social: ((u.soc ? u.soc.fol : 0) || 0).toLocaleString('pt-BR') + ' seguidores' };
   const bd = { market: G.offers.length || '', train: !u.trained && p.inj === 0 && p.club ? '!' : '', nat: G.pendingIntl ? '!' : '', social: (u.soc && socOn()) ? (Math.max(0, u.soc.nid - (u.socSeen || 1)) || '') : '' };
   const tiles = TILES.filter(t => t[0] !== 'social' || socOn()).map(([k, n, ic]) => `<button class="tile" data-tab="${k}"><i>${ico(ic, 30)}</i><span><b>${n}</b><small>${esc(sub[k])}</small></span>${bd[k] ? `<em class="tbadge">${bd[k]}</em>` : ''}</button>`).join('');
   return `<div class="home-top">${nextCard()}${depthCard()}</div><div class="tilegrid">${tiles}</div><div class="card stack" style="margin-top:20px"><span class="lbl">Notícias</span>${newsHtml(10)}</div>`;
@@ -5056,7 +5147,7 @@ function openControls() {
   $('#modal-box').oninput = cfgInput;
 }
 function openAbout() {
-  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 58). Escudos, Data Pack e nomes de jogadores por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
+  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 59). Escudos, Data Pack e nomes de jogadores por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
 }
 async function openProfiles() {
   const all = await refreshSaves();

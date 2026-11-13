@@ -28,10 +28,6 @@ jobs:
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           VERSION_CODE: ${{ github.run_number }}
         run: chmod +x gradlew && ./gradlew bundleRelease
-      - uses: actions/upload-artifact@v4
-        with:
-          name: rodix-football-aab
-          path: android/app/build/outputs/bundle/release/app-release.aab
       - name: Publica AAB na aba Releases
         env:
           GH_TOKEN: ${{ github.token }}

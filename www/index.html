@@ -2193,6 +2193,27 @@ const CONF = {};
 [['UEFA', 'POR ESP FRA ENG GER ITA NED BEL CRO SUI DEN AUT NOR POL SRB TUR SCO UKR CZE HUN ROU SVK SWE GRE WAL IRL SVN ALB GEO BIH ISL FIN'], ['CONMEBOL', 'BRA ARG URU COL CHI PAR ECU PER BOL VEN'],
  ['CONCACAF', 'USA MEX CAN CRC PAN JAM HON HAI SLV'], ['CAF', 'SEN MAR NGA EGY ALG TUN CIV GHA CMR RSA MLI COD CPV BFA'], ['AFC', 'JPN KOR IRN KSA QAT UZB AUS IRQ UAE JOR CHN OMA'], ['OFC', 'NZL']]
   .forEach(([c, s]) => s.split(' ').forEach(n => CONF[n] = c));
+/* +16 seleções (build 60) */
+Object.assign(NAMES, {
+  id: ['Rizky Ahmad Muhammad Dimas Arif Fajar Bagus Eko Agus Yoga Rafli Egy Witan Marselino Pratama Ivan Asnawi Elkan', 'Pratama Saputra Wijaya Kurniawan Santoso Hidayat Setiawan Nugroho Ramadhan Firmansyah Susanto Permana Hakim Siregar'],
+  th: ['Somchai Anan Chanathip Teerasil Supachok Weerathep Kritsada Sarach Pathompol Ekanit Theerathon Narubadin', 'Srisai Kaewprom Suksawat Phiphat Charoen Wongsa Jaidee Boonmee Rattanakul Sutthisak Thongkham'],
+  vn: ['Quang Hai Van Duc Tien Hoang Minh Thanh Cong Tuan Hung Viet Nam', 'Nguyen Tran Le Pham Hoang Vu Dang Bui Do Ngo Duong Phan'],
+  in2: ['Arjun Rohan Vikram Sunil Rahul Aditya Karan Ravi Sandesh Anirudh Lallian Amarjit', 'Sharma Singh Kumar Patel Reddy Chhetri Jhingan Das Yadav Gupta Thapa Verma'],
+  ph: ['Jose Miguel Carlo Paolo Angel Marco Neil Jesus Diego Mark Gabriel Rafael', 'Reyes Santos Cruz Bautista Garcia Aquino Mendoza Ramos Villanueva Castillo Navarro Dizon'],
+});
+for (const k of ['id', 'th', 'vn', 'in2', 'ph']) NPOOL[k] = [NAMES[k][0].split(' '), NAMES[k][1].split(' ')];
+Object.assign(NATIONS, {
+  IDN: { n: 'Indonésia', pool: 'id', str: 64, c1: '#d3202b', c2: '#ffffff' }, THA: { n: 'Tailândia', pool: 'th', str: 63, c1: '#1f3a8a', c2: '#d3202b' },
+  VIE: { n: 'Vietnã', pool: 'vn', str: 62, c1: '#da251d', c2: '#ffcd00' }, MAS: { n: 'Malásia', pool: 'id', str: 58, c1: '#f9c900', c2: '#010066' },
+  IND: { n: 'Índia', pool: 'in2', str: 56, c1: '#1f6fd1', c2: '#ff9933' }, PHI: { n: 'Filipinas', pool: 'ph', str: 55, c1: '#0038a8', c2: '#ce1126' },
+  BHR: { n: 'Bahrein', pool: 'ar2', str: 60, c1: '#ce1126', c2: '#ffffff' }, SYR: { n: 'Síria', pool: 'ar2', str: 62, c1: '#f4f4f4', c2: '#ce1126' },
+  BUL: { n: 'Bulgária', pool: 'sl', str: 66, c1: '#f4f4f4', c2: '#00966e' }, MKD: { n: 'Macedônia do Norte', pool: 'sl', str: 66, c1: '#d20000', c2: '#f8e92e' },
+  UGA: { n: 'Uganda', pool: 'af', str: 62, c1: '#fcdc04', c2: '#151515' }, ZAM: { n: 'Zâmbia', pool: 'af', str: 62, c1: '#198a00', c2: '#ef7d00' },
+  KEN: { n: 'Quênia', pool: 'af', str: 58, c1: '#bb0000', c2: '#151515' }, GUA: { n: 'Guatemala', pool: 'es', str: 60, c1: '#4997d0', c2: '#ffffff' },
+  TRI: { n: 'Trinidad e Tobago', pool: 'en', str: 57, c1: '#ce1126', c2: '#151515' }, CUB: { n: 'Cuba', pool: 'es', str: 55, c1: '#002a8f', c2: '#cf142b' },
+});
+[['UEFA', 'BUL MKD'], ['CONCACAF', 'GUA TRI CUB'], ['CAF', 'UGA ZAM KEN'], ['AFC', 'IDN THA VIE MAS IND PHI BHR SYR']]
+  .forEach(([c, t]) => t.split(' ').forEach(n => CONF[n] = c));
 
 /* ---------- Definições ---------- */
 const COMPDEF = {
@@ -2386,7 +2407,7 @@ function wcQualified() {
 function eurTeams() { return Object.keys(NATIONS).filter(n => CONF[n] === 'UEFA').sort((a, b) => (NATSTR(b) + randn() * 2) - (NATSTR(a) + randn() * 2)).slice(0, 24); }
 function copaTeams() { const s = Object.keys(NATIONS).filter(n => CONF[n] === 'CONMEBOL'); return s.concat(Object.keys(NATIONS).filter(n => CONF[n] === 'CONCACAF').sort((a, b) => (NATSTR(b) + randn() * 2) - (NATSTR(a) + randn() * 2)).slice(0, 6)); }
 /* Eliminatórias: 6 datas FIFA em 2 temporadas (3 + 3). UEFA 8 grupos de 4; CAF 4 grupos; AFC 3 grupos; CONMEBOL 2 grupos de 5 (turno único); CONCACAF 2 grupos de 3 (+ anfitriões USA/MEX/CAN); OFC: Nova Zelândia */
-const WCQ_CONF = { UEFA: { g: 8, adv: 2, wild: 0, dbl: true }, CAF: { g: 4, adv: 2, wild: 1, pos: 2, dbl: true }, AFC: { g: 3, adv: 2, wild: 2, pos: 2, dbl: true }, CONMEBOL: { g: 2, adv: 3, wild: 0, dbl: false }, CONCACAF: { g: 2, adv: 1, wild: 1, pos: 1, dbl: true } };
+const WCQ_CONF = { UEFA: { g: 8, adv: 2, wild: 0, dbl: true }, CAF: { g: 4, adv: 2, wild: 1, pos: 2, dbl: true }, AFC: { g: 4, adv: 2, wild: 0, pos: 2, dbl: true }, CONMEBOL: { g: 2, adv: 3, wild: 0, dbl: false }, CONCACAF: { g: 2, adv: 1, wild: 1, pos: 1, dbl: true } };
 function makeWCQ(s0) {
   const comp = { id: 'WCQ', q: true, season: s0 + '–' + (s0 + 1), s0, teams: [], groups: [], gn: [], gc: [], matches: [], ties: [], stage: 'G', champ: null, nextM: 1, done: false, base: 0 };
   for (const cf in WCQ_CONF) {
@@ -5147,7 +5168,7 @@ function openControls() {
   $('#modal-box').oninput = cfgInput;
 }
 function openAbout() {
-  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 59). Escudos, Data Pack e nomes de jogadores por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
+  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.1 (build 60). Escudos, Data Pack e nomes de jogadores por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
 }
 async function openProfiles() {
   const all = await refreshSaves();

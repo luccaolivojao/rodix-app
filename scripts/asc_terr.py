@@ -47,7 +47,7 @@ while url:
     for d in r['data']:
         tot+=1; a=d['attributes']
         t=(d.get('relationships',{}).get('territory',{}).get('data') or {}).get('id')
-        if not a.get('available') or t=='PRT': L('T',t,json.dumps(a))
+        if not a.get('available') or a.get('contentStatuses')!=['AVAILABLE']: L('T',t,a.get('available'),a.get('contentStatuses'))
         if not a.get('available'): bad.append(t)
     url=r.get('links',{}).get('next')
 L('TOTAL',tot,'UNAVAILABLE',bad)

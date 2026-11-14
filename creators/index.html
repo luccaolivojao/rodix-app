@@ -36,6 +36,24 @@ h1,h2,h3{font-family:var(--display);font-weight:800;letter-spacing:.01em;margin:
 .num,table,.tab{font-variant-numeric:tabular-nums}
 .screen{position:fixed;inset:0;overflow:auto;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));background:var(--bg)}
 .screen[hidden]{display:none!important}
+/* Drop 2 */
+.d2seg{display:flex;overflow-x:auto;gap:6px;margin:0 0 12px;padding-bottom:4px}.d2seg button{white-space:nowrap;flex:none}
+.d2big{font-family:var(--display);font-size:30px;line-height:1.1}.card.cur{border-color:#ffd23f}
+.d2img{width:100%;height:auto;border-radius:10px;display:block;margin:6px 0;background:#000}
+.d2gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}.d2th{background:#0b140f;border:1px solid #234a33;border-radius:8px;padding:0;overflow:hidden;aspect-ratio:16/9;color:#456;display:flex;align-items:center;justify-content:center;font-size:22px}.d2th svg{margin:0;border-radius:0}
+.d2scene{position:fixed;inset:0;z-index:9999;background:radial-gradient(circle at 50% 20%,#14305a,#050a14);display:flex;align-items:center;justify-content:center;overflow:auto;padding:14px}
+.d2in{max-width:640px;width:100%;display:flex;flex-direction:column;gap:12px;align-items:stretch;text-align:center;color:#eef5ee}.d2in h2{font-family:var(--display);font-size:34px;margin:0}.d2k{letter-spacing:.2em;color:#ffd23f;font-weight:800}
+.d2paper{background:#f4efe3;color:#222;border-radius:8px;padding:14px;position:relative;text-align:left}.d2paper p{margin:6px 0}.d2sig{width:100%;height:auto;background:#fffdf6;border:2px dashed #999;border-radius:8px;touch-action:none;cursor:crosshair}
+.d2stamp{position:absolute;right:14px;top:14px;border:4px solid #1b9a4b;color:#1b9a4b;font-weight:900;font-size:26px;padding:4px 12px;transform:rotate(-12deg);border-radius:6px;animation:d2st .35s ease-out}@keyframes d2st{from{transform:rotate(-12deg) scale(3);opacity:0}to{transform:rotate(-12deg) scale(1);opacity:1}}
+.d2flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none}.d2flash.go{animation:d2fl .5s ease-out}@keyframes d2fl{0%{opacity:.9}100%{opacity:0}}
+.d2road{position:relative;overflow:hidden;border-radius:12px;background:#000}.d2veh{position:absolute;bottom:8px;left:-40%;width:44%;animation:d2drive 3.6s ease-out forwards}@keyframes d2drive{to{left:28%}}
+.d2crowd{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-around;pointer-events:none}.d2crowd i{width:14px;height:14px;border-radius:50%;margin-bottom:2px;animation:d2jump 1s ease-in-out infinite alternate}.d2crowd i:nth-child(odd){animation-delay:.3s}@keyframes d2jump{to{transform:translateY(-10px)}}
+.d2items{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}.d2item{background:#12241a;border:2px solid #234a33;border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:6px;align-items:center}.d2item.done{border-color:#1b9a4b;opacity:.75}.d2it{width:90px}.d2sgi canvas{width:100%;background:#fffdf6;border:2px dashed #999;border-radius:6px;touch-action:none}
+.d2tv{background:#070d1c;border:2px solid #223a7a;border-radius:14px;padding:12px}.d2tvhd{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:8px}.live{background:#d33;color:#fff;border-radius:4px;padding:2px 8px;font-weight:800;font-size:12px;animation:d2bl 1.2s infinite}@keyframes d2bl{50%{opacity:.5}}
+.d2anc{width:100%;height:auto;border-radius:10px;display:block}.d2lower{background:linear-gradient(90deg,#c1121f,#7a0c14);border-radius:6px;padding:10px 14px;margin-top:-6px;position:relative}.d2lower b{font-size:11px;letter-spacing:.14em;color:#ffd23f}.d2lower h3{margin:4px 0;font-size:20px}.d2lower p{margin:0;opacity:.85}
+.d2tick{overflow:hidden;white-space:nowrap;background:#ffd23f;color:#111;border-radius:6px;font-weight:700}.d2tick div{display:inline-block;padding:6px 0;animation:d2tk 60s linear infinite}.d2tick span{margin:0 28px}.d2tick span:before{content:"● ";color:#c1121f}@keyframes d2tk{to{transform:translateX(-50%)}}
+
+[hidden]{display:none!important}
 .wrap{max-width:1180px;margin:0 auto}
 .lbl{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--mut);font-weight:600}
 .mut{color:var(--mut)} .good{color:var(--good)} .bad{color:var(--bad)} .acc{color:var(--acc)}
@@ -1209,7 +1227,7 @@ function doTraining(focus, inten, mult, tb) {
   u.gains = {};
   for (const k of TRAIN[focus].k) addProg(k, f * (TRAIN[focus].k.length > 2 ? 0.75 : 1));
   const d = recalcUser(); u.trained = true; u.trust = clamp(u.trust + trustUp(I.trust + tb), 0, 100);
-  let injured = 0; if (!turbo && rnd() < I.risk) { injured = ri(1, 3); p.inj = injured; addNews('Lesão no treino: ' + injured + ' semana(s) fora.'); }
+  let injured = 0; if (!turbo && rnd() < I.risk) { injured = ri(1, 3); p.inj = injured; addNews('Lesão no treino: ' + injured + ' semana(s) fora.'); try { d2Injury(p, injured, 'train'); injured = p.inj; } catch (e) { } }
   const gains = u.gains; u.gains = {};
   return { ok: true, d, injured, gains };
 }
@@ -1637,9 +1655,9 @@ function finishMatch(MC) {
       u.intl.caps++; u.intl.g += st.g; u.intl.a += st.a; if (MC.kind === 'wc' && !G.comps[MC.comp].q) { u.wc.ap++; u.wc.g += st.g; u.wc.a += st.a; }
     }
     u.ratings.push(rating); if (u.ratings.length > 8) u.ratings.shift();
-    socAfterMatch(MC, rating, mins, st, gf, ga); try { paperAfterMatch(MC, rating, st, gf, ga); } catch (e) { } creatorAfterMatch(MC, rating, mins, st, gf, ga);
+    socAfterMatch(MC, rating, mins, st, gf, ga); try { paperAfterMatch(MC, rating, st, gf, ga); } catch (e) { } try { d2AfterMatch(MC, rating, st, gf, ga); } catch (e) { } creatorAfterMatch(MC, rating, mins, st, gf, ga);
     u.form = u.ratings.length ? (u.ratings.reduce((s, x) => s + x, 0) / u.ratings.length - 6.6) : 0;
-    if (rnd() < 0.025 * dfx().hurt * (mins / 90)) { p.inj = ri(1, 6); addNews('Lesão na partida: ' + p.inj + ' semana(s) de recuperação.'); }
+    if (rnd() < 0.025 * dfx().hurt * (mins / 90) * ((u.d2 && u.d2.rtp > 0) ? (u.d2.staff.fi ? 1.3 : 2) : 1)) { p.inj = ri(1, 6); addNews('Lesão na partida: ' + p.inj + ' semana(s) de recuperação.'); try { d2Injury(p, p.inj, 'match'); } catch (e) { } }
     if (p.ovr > u.peakOvr) u.peakOvr = p.ovr;
   } else if (!isNat(MC.kind)) { u.trust = clamp(u.trust - 0.1, 0, 100); if (MC.kind === 'league') u.benchRun = (u.benchRun || 0) + 1; }
   if (MC.kind === 'league') {
@@ -1716,7 +1734,7 @@ function advanceWeek() {
 function weeklyTick() {
   const p = up(), u = G.user;
   if (p.inj > 0) p.inj--;
-  u.trained = false; weeklyNatural();
+  u.trained = false; weeklyNatural(); try { d2Weekly(); } catch (e) { }
   for (const id in G.players) { const q = G.players[id]; if (!q.u && q.inj > 0) q.inj--; }
   if (rnd() < 0.02) { const all = Object.keys(G.players); for (let i = 0; i < 6; i++) { const q = G.players[pick(all)]; if (q && !q.u) q.inj = ri(1, 4); } }
   G.offers = G.offers.filter(o => o.exp > G.week);
@@ -1788,7 +1806,7 @@ function moveClub(p, toId) {
 }
 function acceptOffer(oid) {
   const o = G.offers.find(x => x.id === oid); if (!o) return null; const p = up(), u = G.user; const from = p.club ? club(p.club) : null; const to = club(o.club);
-  if (o.type === 'renew') { u.contract = { club: to.id, years: o.years, wage: o.wage, since: G.season }; u.renewOffered = false; G.offers = G.offers.filter(x => x.id !== oid); addNews('Contrato renovado até ' + (G.season + o.years) + ' por ' + money(o.wage) + '/sem.', 'good'); return 'renew'; }
+  if (o.type === 'renew') { u.contract = { club: to.id, years: o.years, wage: o.wage, since: G.season }; u.renewOffered = false; G.offers = G.offers.filter(x => x.id !== oid); addNews('Contrato renovado até ' + (G.season + o.years) + ' por ' + money(o.wage) + '/sem.', 'good'); try { d2Queue({ k: 'sign', club: to.id, wage: o.wage, years: o.years, renew: true }); } catch (e) { } return 'renew'; }
   // troca: clube comprador cede seu jogador mais fraco da posição ao antigo clube
   const out = to.sq.map(pl).filter(q => q && !q.u && q.pos === p.pos).sort((a, b) => a.ovr - b.ovr)[0];
   moveClub(p, to.id); if (out) { if (from) moveClub(out, from.id); else { to.sq = to.sq.filter(id => id !== out.id); delete G.players[out.id]; } }
@@ -1799,7 +1817,7 @@ function acceptOffer(oid) {
   G.offers = [];
   addNews((o.type === 'loan' ? 'Emprestado ao ' : 'Contratado pelo ') + to.name + (o.fee ? ' por ' + money(o.fee) : '') + '.', 'good');
   G.tlog.unshift({ s: genSeasonLabel(), name: fullName(p), from: from ? from.name : '—', to: to.name, fee: o.fee, u: 1 });
-  strCache.key = '';
+  strCache.key = ''; try { d2Queue({ k: 'sign', club: to.id, wage: o.wage, years: o.years, fee: o.fee }); } catch (e) { }
   return o.type;
 }
 function rejectOffer(oid) { G.offers = G.offers.filter(x => x.id !== oid); }
@@ -2193,6 +2211,27 @@ const CONF = {};
 [['UEFA', 'POR ESP FRA ENG GER ITA NED BEL CRO SUI DEN AUT NOR POL SRB TUR SCO UKR CZE HUN ROU SVK SWE GRE WAL IRL SVN ALB GEO BIH ISL FIN'], ['CONMEBOL', 'BRA ARG URU COL CHI PAR ECU PER BOL VEN'],
  ['CONCACAF', 'USA MEX CAN CRC PAN JAM HON HAI SLV'], ['CAF', 'SEN MAR NGA EGY ALG TUN CIV GHA CMR RSA MLI COD CPV BFA'], ['AFC', 'JPN KOR IRN KSA QAT UZB AUS IRQ UAE JOR CHN OMA'], ['OFC', 'NZL']]
   .forEach(([c, s]) => s.split(' ').forEach(n => CONF[n] = c));
+/* +16 seleções (build 60) */
+Object.assign(NAMES, {
+  id: ['Rizky Ahmad Muhammad Dimas Arif Fajar Bagus Eko Agus Yoga Rafli Egy Witan Marselino Pratama Ivan Asnawi Elkan', 'Pratama Saputra Wijaya Kurniawan Santoso Hidayat Setiawan Nugroho Ramadhan Firmansyah Susanto Permana Hakim Siregar'],
+  th: ['Somchai Anan Chanathip Teerasil Supachok Weerathep Kritsada Sarach Pathompol Ekanit Theerathon Narubadin', 'Srisai Kaewprom Suksawat Phiphat Charoen Wongsa Jaidee Boonmee Rattanakul Sutthisak Thongkham'],
+  vn: ['Quang Hai Van Duc Tien Hoang Minh Thanh Cong Tuan Hung Viet Nam', 'Nguyen Tran Le Pham Hoang Vu Dang Bui Do Ngo Duong Phan'],
+  in2: ['Arjun Rohan Vikram Sunil Rahul Aditya Karan Ravi Sandesh Anirudh Lallian Amarjit', 'Sharma Singh Kumar Patel Reddy Chhetri Jhingan Das Yadav Gupta Thapa Verma'],
+  ph: ['Jose Miguel Carlo Paolo Angel Marco Neil Jesus Diego Mark Gabriel Rafael', 'Reyes Santos Cruz Bautista Garcia Aquino Mendoza Ramos Villanueva Castillo Navarro Dizon'],
+});
+for (const k of ['id', 'th', 'vn', 'in2', 'ph']) NPOOL[k] = [NAMES[k][0].split(' '), NAMES[k][1].split(' ')];
+Object.assign(NATIONS, {
+  IDN: { n: 'Indonésia', pool: 'id', str: 64, c1: '#d3202b', c2: '#ffffff' }, THA: { n: 'Tailândia', pool: 'th', str: 63, c1: '#1f3a8a', c2: '#d3202b' },
+  VIE: { n: 'Vietnã', pool: 'vn', str: 62, c1: '#da251d', c2: '#ffcd00' }, MAS: { n: 'Malásia', pool: 'id', str: 58, c1: '#f9c900', c2: '#010066' },
+  IND: { n: 'Índia', pool: 'in2', str: 56, c1: '#1f6fd1', c2: '#ff9933' }, PHI: { n: 'Filipinas', pool: 'ph', str: 55, c1: '#0038a8', c2: '#ce1126' },
+  BHR: { n: 'Bahrein', pool: 'ar2', str: 60, c1: '#ce1126', c2: '#ffffff' }, SYR: { n: 'Síria', pool: 'ar2', str: 62, c1: '#f4f4f4', c2: '#ce1126' },
+  BUL: { n: 'Bulgária', pool: 'sl', str: 66, c1: '#f4f4f4', c2: '#00966e' }, MKD: { n: 'Macedônia do Norte', pool: 'sl', str: 66, c1: '#d20000', c2: '#f8e92e' },
+  UGA: { n: 'Uganda', pool: 'af', str: 62, c1: '#fcdc04', c2: '#151515' }, ZAM: { n: 'Zâmbia', pool: 'af', str: 62, c1: '#198a00', c2: '#ef7d00' },
+  KEN: { n: 'Quênia', pool: 'af', str: 58, c1: '#bb0000', c2: '#151515' }, GUA: { n: 'Guatemala', pool: 'es', str: 60, c1: '#4997d0', c2: '#ffffff' },
+  TRI: { n: 'Trinidad e Tobago', pool: 'en', str: 57, c1: '#ce1126', c2: '#151515' }, CUB: { n: 'Cuba', pool: 'es', str: 55, c1: '#002a8f', c2: '#cf142b' },
+});
+[['UEFA', 'BUL MKD'], ['CONCACAF', 'GUA TRI CUB'], ['CAF', 'UGA ZAM KEN'], ['AFC', 'IDN THA VIE MAS IND PHI BHR SYR']]
+  .forEach(([c, t]) => t.split(' ').forEach(n => CONF[n] = c));
 
 /* ---------- Definições ---------- */
 const COMPDEF = {
@@ -2386,7 +2425,7 @@ function wcQualified() {
 function eurTeams() { return Object.keys(NATIONS).filter(n => CONF[n] === 'UEFA').sort((a, b) => (NATSTR(b) + randn() * 2) - (NATSTR(a) + randn() * 2)).slice(0, 24); }
 function copaTeams() { const s = Object.keys(NATIONS).filter(n => CONF[n] === 'CONMEBOL'); return s.concat(Object.keys(NATIONS).filter(n => CONF[n] === 'CONCACAF').sort((a, b) => (NATSTR(b) + randn() * 2) - (NATSTR(a) + randn() * 2)).slice(0, 6)); }
 /* Eliminatórias: 6 datas FIFA em 2 temporadas (3 + 3). UEFA 8 grupos de 4; CAF 4 grupos; AFC 3 grupos; CONMEBOL 2 grupos de 5 (turno único); CONCACAF 2 grupos de 3 (+ anfitriões USA/MEX/CAN); OFC: Nova Zelândia */
-const WCQ_CONF = { UEFA: { g: 8, adv: 2, wild: 0, dbl: true }, CAF: { g: 4, adv: 2, wild: 1, pos: 2, dbl: true }, AFC: { g: 3, adv: 2, wild: 2, pos: 2, dbl: true }, CONMEBOL: { g: 2, adv: 3, wild: 0, dbl: false }, CONCACAF: { g: 2, adv: 1, wild: 1, pos: 1, dbl: true } };
+const WCQ_CONF = { UEFA: { g: 8, adv: 2, wild: 0, dbl: true }, CAF: { g: 4, adv: 2, wild: 1, pos: 2, dbl: true }, AFC: { g: 4, adv: 2, wild: 0, pos: 2, dbl: true }, CONMEBOL: { g: 2, adv: 3, wild: 0, dbl: false }, CONCACAF: { g: 2, adv: 1, wild: 1, pos: 1, dbl: true } };
 function makeWCQ(s0) {
   const comp = { id: 'WCQ', q: true, season: s0 + '–' + (s0 + 1), s0, teams: [], groups: [], gn: [], gc: [], matches: [], ties: [], stage: 'G', champ: null, nextM: 1, done: false, base: 0 };
   for (const cf in WCQ_CONF) {
@@ -3609,18 +3648,18 @@ const ICONS = {
   swap: '<path d="M4 8h14l-3.5-3.5M20 16H6l3.5 3.5"/>', dumbbell: '<path d="M6.5 7v10M3.5 9.5v5M17.5 7v10M20.5 9.5v5M6.5 12h11"/>',
   chart: '<path d="M4 20V11M10 20V5M16 20v-6M22 20H2"/>', flag: '<path d="M5 21V4M5 4h12l-2.5 4L17 12H5"/>', history: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>',
   back: '<path d="M15 5l-7 7 7 7"/>', whistle: '<circle cx="9" cy="14" r="5"/><path d="M12.5 10.5L20 5v5h-6"/>', glove: '<path d="M7 21v-6L4 10V7a1.5 1.5 0 0 1 3 0v2V4.5a1.5 1.5 0 0 1 3 0V9V3.5a1.5 1.5 0 0 1 3 0V9V5a1.5 1.5 0 0 1 3 0v8l-2 3v5z"/>',
-  news: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h6M7 13h10M7 16.5h10"/>',
+  news: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h6M7 13h10M7 16.5h10"/>', star: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>', flask: '<path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4A2 2 0 0 0 19 18l-5-9V3"/>',
   bag: '<path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>', medkit: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5h6v2M12 11v6M9 14h6"/>', bolt: '<path d="M13 2L5 13h6l-1 9 8-11h-6z"/>', coin: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.5"/><path d="M12 9.5v5M10.3 11h2.4a1 1 0 0 1 0 2h-1.4"/>',
   target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>', wall: '<path d="M3 20h18M5 20V9M9.5 20V7M14.5 20V7M19 20V9"/><circle cx="5" cy="6.5" r="1.5"/><circle cx="9.5" cy="4.5" r="1.5"/><circle cx="14.5" cy="4.5" r="1.5"/><circle cx="19" cy="6.5" r="1.5"/>',
 };
 function ico(n, s) { s = s || 28; return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n] || ICONS.ball}</svg>`; }
 function paintIcons(root) { (root || document).querySelectorAll('i[data-ico]').forEach(el => { el.innerHTML = ico(el.dataset.ico, 30); }); }
-const TILES = [['me', 'Meu jogador', 'user'], ['club', 'Clube', 'shield'], ['comp', 'Competições', 'table'], ['cal', 'Calendário', 'calendar'], ['market', 'Transferências', 'swap'], ['train', 'Treinamento', 'dumbbell'], ['stats', 'Estatísticas', 'chart'], ['nat', 'Seleção', 'flag'], ['hist', 'Histórico', 'history'], ['social', 'Rodix Social', 'user'], ['news', 'Notícias', 'news'], ['shop', 'Loja', 'bag']];
+const TILES = [['me', 'Meu jogador', 'user'], ['club', 'Clube', 'shield'], ['comp', 'Competições', 'table'], ['cal', 'Calendário', 'calendar'], ['market', 'Transferências', 'swap'], ['train', 'Treinamento', 'dumbbell'], ['stats', 'Estatísticas', 'chart'], ['nat', 'Seleção', 'flag'], ['hist', 'Histórico', 'history'], ['social', 'Rodix Social', 'user'], ['news', 'Notícias', 'news'], ['vida', 'Rodix Vida', 'star'], ['shop', 'Loja', 'bag']];
 function openHub() { applyClubTheme(); show('s-hub'); renderHub(); if (!G.mgr) setTimeout(maybeIntro, 250); }
 function userKit() { const c = userClub(); return c ? { c1: c.c1, c2: c.c2 } : { c1: '#888888', c2: '#ffffff' }; }
 function refreshMenuCoins() { const e = $('#menu-coins'); if (e) e.textContent = coinsOf() + ' Coins'; const h = $('#hub-coins'); if (h) h.textContent = coinsOf(); }
 function renderHub() {
-  try { showPendingPaper(); } catch (e) { }
+  try { showPendingPaper(); } catch (e) { } try { d2ShowPending(); } catch (e) { }
   if (CREATOR) { try { creatorHub(); } catch (e) { } }
   const p = up(), c = userClub(), u = G.user; applyClubTheme();
   refreshMenuCoins(); $('#hub-name').textContent = G.mgr ? G.mgr.name : fullName(p);
@@ -3628,7 +3667,7 @@ function renderHub() {
   $('#hub-season').textContent = 'Temporada ' + genSeasonLabel() + ' · Semana ' + Math.min(G.week + 1, totalWeeks()) + '/' + totalWeeks();
   drawAvatar($('#hub-av'), p.look, userKit(), p.num, false);
   if (hubTab === 'shop' && !IAP.tried && iapPlugin()) iapLoad().then(() => { if (hubTab === 'shop' && curScreen === 's-hub') renderHub(); });
-  const f = (G.mgr ? { home: mgrHome, xi: mgrXIView, club: mgrClubView, comp: vComp, cal: vCal, stats: vStats, bd: mgrBoardView, shop: vShop, tr: mgrTrView, fn: mgRolesView, sp: mgSpView, nw: vNews, news: vNews, social: mgrSocView } : { home: vHome, me: vMe, club: vClub, comp: vComp, cal: vCal, market: vMarket, train: vTrain, stats: vStats, nat: vNat, hist: vHist, social: vSocial, shop: vShop, news: vNews })[hubTab] || (G.mgr ? mgrHome : vHome);
+  const f = (G.mgr ? { home: mgrHome, xi: mgrXIView, club: mgrClubView, comp: vComp, cal: vCal, stats: vStats, bd: mgrBoardView, shop: vShop, tr: mgrTrView, fn: mgRolesView, sp: mgSpView, nw: vNews, news: vNews, social: mgrSocView } : { home: vHome, me: vMe, club: vClub, comp: vComp, cal: vCal, market: vMarket, train: vTrain, stats: vStats, nat: vNat, hist: vHist, social: vSocial, vida: vVida, shop: vShop, news: vNews })[hubTab] || (G.mgr ? mgrHome : vHome);
   $('#view').innerHTML = f();
   if (hubTab === 'me') { const cvs = $('#me-av'); if (cvs) drawAvatar(cvs, p.look, userKit(), p.num, true); }
 }
@@ -4459,6 +4498,320 @@ document.addEventListener('click', e => { if (G && e.target.closest && e.target.
 document.addEventListener('input', e => { if (e.target && e.target.id === 'mg-name') MGP.name = e.target.value; });
 (function () { const t = document.getElementById('tile-mgr'); if (t && CREATOR) t.hidden = false; })();
 
+/* ======================= DROP 2 · RODIX VIDA (build 62) ======================= */
+function d2() {
+  const u = G.user; if (!u.d2) {
+    const w = (u.contract && u.contract.wage) || 200;
+    u.d2 = { bank: Math.round(w * 6), fame: 8 + Math.round(((userClub() || { rep: 40 }).rep) / 6), house: 0, car: 0, staff: {}, spons: [], offers: null, offAt: -9, inbox: [], feed: [], q: [], frag: { own: {}, on: null, lab: null }, inj: null, rtp: 0, hist: [], seen: {}, nid: 1, tvI: 0, tab: 'sum', earned: 0, spent: 0, log: [] };
+    d2Feed('rod', 'Bem-vindo ao Rodix Vida: dinheiro, fama, patrocínios, perfume e o jornal da TV acompanham a sua carreira.', 0);
+  } return u.d2;
+}
+const D2_HOUSE = [['Kitnet alugada', 0, 100, 0, 0], ['Apartamento alugado', 40000, 350, 0, .05], ['Casa no condomínio', 180000, 900, 5, .12], ['Cobertura', 700000, 2500, 10, .25], ['Mansão com spa', 2500000, 7000, 18, .45], ['Mansão na praia + clínica', 9000000, 20000, 25, .75]];
+const D2_CAR = [['Sem carro', 0, 0, .0], ['Compacto', 25000, 10, .02], ['Sedã', 80000, 30, .06], ['SUV blindado', 200000, 80, .12], ['Esportivo', 600000, 240, .28], ['Superesportivo', 2200000, 900, .55], ['Jatinho particular', 8000000, 3200, .9]];
+const D2_STAFF = { ag: ['Agente', 0, 'Fica com 5% do salário. Traz uma proposta extra de patrocínio por rodada.'], fi: ['Fisioterapeuta pessoal', 600, 'Lesões graves saem 1 semana mais cedo e reduz o risco no retorno.'], ch: ['Chef nutricionista', 450, 'Melhora a forma física pouco a pouco, semana após semana.'], im: ['Assessor de imagem', 700, 'Mais fama por semana e menos estrago com críticas.'] };
+function d2Fmt(v) { return (v < 0 ? '−' : '') + money(Math.abs(v)); }
+function d2Log(t, v) { const D = d2(); D.log.unshift({ w: absWk(), t, v }); if (D.log.length > 30) D.log.length = 30; }
+function d2Pay(v, why) { const D = d2(); D.bank += v; if (v > 0) D.earned += v; else D.spent -= v; if (why) d2Log(why, v); }
+/* ---------------- patrocínios ---------------- */
+const D2_BR = [['Velox Chuteiras', 'calç'], ['Forza Esportes', 'calç'], ['Turbo Energy', 'beb'], ['Aqua Nova', 'beb'], ['Banco Delta', 'ban'], ['Cofre Digital', 'ban'], ['Pixel Mobile', 'tec'], ['Arena Games', 'tec'], ['Nexo Telecom', 'tec'], ['Rota Viagens', 'via'], ['Sol&Mar Hotéis', 'via'], ['AeroVia', 'via'], ['Nutri Max', 'sau'], ['Vita Plus', 'sau'], ['Gol de Placa Seguros', 'seg'], ['Ponto Verde Mercados', 'var'], ['Casa Prime', 'var'], ['Motora GT', 'aut'], ['Linha Urbana', 'mod'], ['Essenza Perfumaria', 'per']];
+const D2_CATN = { calç: 'Calçados', beb: 'Bebidas', ban: 'Bancos', tec: 'Tecnologia', via: 'Viagens', sau: 'Saúde', seg: 'Seguros', var: 'Varejo', aut: 'Automóveis', mod: 'Moda', per: 'Perfumaria' };
+const D2_SLOTS = 3, D2_SPON_WK = 19;
+function d2SponGen() {
+  const D = d2(), p = up(), u = G.user; const busy = D.spons.map(s => s.cat); let pool = D2_BR.filter(b => !busy.includes(b[1]) && !D.spons.some(s => s.brand === b[0]));
+  pool = shuffle(pool.slice()); const wage = Math.max(200, (u.contract && u.contract.wage) || 200); const lv = Math.max(.5, (p.ovr - 45) / 30 + D.fame / 80);
+  const n = 3 + (D.staff.ag ? 1 : 0); D.offers = pool.slice(0, n).map((b, i) => { const t = i % 3; const mul = [.8, 1.25, 2.1][t] * (0.9 + rnd() * .3); return { brand: b[0], cat: b[1], tier: ['Mais segura', 'Equilibrada', 'Maior retorno · mais risco'][t], t, pw: Math.round((wage * 1.1 + 400) * lv * mul / 10) * 10, cond: sponTargets(p.pos, t) }; });
+  D.offAt = absWk();
+}
+function d2SponSign(i) {
+  const D = d2(), o = D.offers && D.offers[i], c = G.user.career; if (!o) return; if (D.spons.length >= D2_SLOTS) return toast('Os 3 espaços de patrocínio estão ocupados.'); if (D.spons.some(s => s.cat === o.cat)) return toast('Você já tem um patrocinador dessa categoria.');
+  D.spons.push(Object.assign({}, o, { endAbs: absWk() + D2_SPON_WK, base: { ap: c.ap, g: c.g, a: c.a, rs: c.rsum }, got: 0 })); D.offers.splice(i, 1);
+  addNews('Você assinou com a ' + o.brand + ' (' + money(o.pw) + '/semana).', 'good'); d2Feed('spo', `${o.brand} anuncia o camisa ${up().num || ''} como novo embaixador da marca.`, 1, { brand: o.brand }); saveGame(true); renderHub(); toast('Patrocínio assinado');
+}
+function d2SponWeek() {
+  const D = d2(); D.spons = D.spons.filter(A => {
+    const base = Math.round(A.pw * .6); d2Pay(base, A.brand); A.got += base;
+    if (absWk() >= A.endAbs) { const ok = sponOk(A); if (ok) { const b = Math.round(A.pw * D2_SPON_WK * .4); d2Pay(b, 'Bônus ' + A.brand); D.fame += 3; addNews(A.brand + ' pagou bônus de ' + money(b) + ': metas cumpridas.', 'good'); d2Feed('spo', `${A.brand} elogia o camisa ${up().num || ''}: metas batidas e bônus pago.`, 2); } else { D.fame = Math.max(0, D.fame - 2); addNews(A.brand + ' encerrou o contrato: metas não cumpridas, sem bônus.', 'bad'); } return false; }
+    return true;
+  });
+  if (D.spons.length < D2_SLOTS && (!D.offers || absWk() - D.offAt >= 3)) d2SponGen();
+}
+/* ---------------- perfume ---------------- */
+const D2_FR = [['aur', 'Aurora Cítrica', 'cit', 600, 'Limão siciliano, bergamota e hortelã. Leve, desperta a arquibancada.'], ['bri', 'Brisa de Estádio', 'aqu', 900, 'Notas marinhas e grama molhada. Frescor de domingo de jogo.'], ['mad', 'Madeira Nobre', 'mad', 2500, 'Cedro, vetiver e couro claro. Cara de capitão.'], ['cou', 'Couro & Âmbar', 'ori', 6000, 'Couro, âmbar e especiarias. Presença de craque veterano.'], ['noi', 'Noite Dourada', 'doc', 12000, 'Baunilha negra, mel e fava tonka. Perfume de noite de título.'], ['ver', 'Verde Campo', 'aro', 1500, 'Lavanda, alecrim e musgo. Limpo, técnico, sério.'], ['flo', 'Flor de Arquibancada', 'flo', 1800, 'Jasmim, peônia e almíscar. A torcida jovem adora.'], ['bau', 'Baunilha Alfa', 'doc', 3500, 'Baunilha, caramelo e cardamomo. Doce e viciante.'], ['tem', 'Tempestade', 'esp', 8000, 'Pimenta-rosa, gengibre e incenso. Intenso, de quem decide jogo.']];
+const D2_FAM = { cit: 'Cítrico', aqu: 'Aquático', mad: 'Amadeirado', ori: 'Oriental', doc: 'Doce', aro: 'Aromático', flo: 'Floral', esp: 'Especiado' };
+const D2_COACH = { tra: ['Tradicional', { mad: 2, ori: 1.6, aro: 1.2, esp: .8, cit: .4, aqu: .6, doc: .2, flo: .3 }, 'Valoriza elegância e discrição.'], mod: ['Moderno', { cit: 2, aqu: 1.8, flo: 1.1, aro: 1, doc: .7, mad: .6, ori: .3, esp: .5 }, 'Gosta de leveza e frescor.'], exi: ['Exigente', { aro: 2, mad: 1.4, cit: 1.2, aqu: 1, esp: .9, ori: .6, doc: .1, flo: .2 }, 'Odeia exagero: prefere o limpo e técnico.'], car: ['Carismático', { doc: 2, esp: 1.6, ori: 1.4, flo: 1.2, mad: 1, cit: .8, aqu: .6, aro: .5 }, 'Adora personalidade marcante.'] };
+const D2_FANS = { jov: { cit: 2, aqu: 1.7, doc: 2, flo: 1.6, esp: 1, aro: .6, mad: .5, ori: .6 }, tra: { mad: 2, ori: 1.8, aro: 1.4, esp: 1.3, cit: .6, aqu: .6, doc: .4, flo: .8 } };
+const D2_NOTES = { top: [['Limão', 'cit'], ['Maçã verde', 'aqu'], ['Pimenta-rosa', 'esp'], ['Lavanda', 'aro']], mid: [['Jasmim', 'flo'], ['Cedro', 'mad'], ['Hortelã', 'cit'], ['Canela', 'esp']], base: [['Âmbar', 'ori'], ['Baunilha', 'doc'], ['Vetiver', 'mad'], ['Almíscar marinho', 'aqu']] };
+function d2CoachStyle(cid) { let h = 0; for (const ch of String(cid)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return ['tra', 'mod', 'exi', 'car'][h % 4]; }
+function d2FragInfo(id) {
+  const D = d2(); if (id === 'lab') { const L = D.frag.lab; if (!L) return null; const f = [L.top, L.mid, L.base].map((i, k) => D2_NOTES[['top', 'mid', 'base'][k]][i][1]); return { id: 'lab', n: L.name, fam: f, d: 'Criado por você: ' + [L.top, L.mid, L.base].map((i, k) => D2_NOTES[['top', 'mid', 'base'][k]][i][0]).join(' · '), price: 20000 }; }
+  const x = D2_FR.find(q => q[0] === id); return x ? { id, n: x[1], fam: [x[2]], d: x[4], price: x[3] } : null;
+}
+function d2Score(fi, tbl) { return fi.fam.reduce((a, f) => a + (tbl[f] || 0), 0) / fi.fam.length; }
+function d2FragEffect() {
+  const D = d2(), u = G.user, id = D.frag.on; if (!id) return; const own = D.frag.own[id]; if (!own || own <= 0) { D.frag.on = null; return; } const fi = d2FragInfo(id); if (!fi) return;
+  own--; D.frag.own[id] = own; const c = userClub(); const cs = d2Score(fi, D2_COACH[d2CoachStyle(c ? c.id : 'x')][1]); const fs = (d2Score(fi, D2_FANS.jov) + d2Score(fi, D2_FANS.tra)) / 2;
+  if (cs >= .9) u.trust = clamp(u.trust + (cs - .8) * .6, 0, 100); else if (cs < .45) u.trust = clamp(u.trust - .15, 0, 100);
+  D.fame += fs * .25; if (own === 0) { D.frag.on = null; d2Feed('me', 'Seu frasco de ' + fi.n + ' acabou. Hora de reabastecer.', 0); }
+  if (cs >= 1.5 && rnd() < .25) d2Inbox('coach', `O professor comentou que gostou do seu perfume (${fi.n}). Bom sinal!`);
+  if (fs >= 1.5 && rnd() < .25) d2Inbox('fan', `Torcedores no portão perguntaram qual perfume você usa. O ${fi.n} virou assunto.`);
+}
+function d2BuyFrag(id) {
+  const D = d2(), fi = d2FragInfo(id); if (!fi) return; const price = fi.price; if (D.bank < price) return toast('Saldo insuficiente.');
+  d2Pay(-price, 'Perfume ' + fi.n); D.frag.own[id] = (D.frag.own[id] || 0) + 12; if (!D.frag.on) D.frag.on = id; toast('Frasco comprado: dura 12 semanas'); saveGame(true); renderHub();
+}
+
+/* ---------------- mensagens e feed (gerador combinatório) ---------------- */
+const D2_CH = {
+  fan: { n: ['torcedor_raiz', 'maria.fc', 'joaozinho_do_gol', 'fiel_10', 'ana_na_arquibancada', 'zeca_craque', 'tio_do_estadio', 'bia_torcedora', 'dona_neide', 'lucas_fiel'],
+    o: ['Craque!', 'Fala, {n}!', 'Ei, {n},', 'Mano do céu,', 'Parabéns,', 'Sem querer exagerar,', 'Olha só,', 'Direto da arquibancada:', 'Cara,', 'Oi, ídolo!', 'Respeito total,', 'Passando pra dizer:'],
+    b: ['o que você fez nesse jogo contra o {adv} foi coisa de gente grande', 'meu filho dorme com a camisa {num} do {clube}', 'a torcida inteira do {clube} só fala de você', 'eu vim de longe só pra te ver jogar', 'pensei em desistir do time, mas você me devolveu a alegria', 'tem {pos} melhor que você no campeonato? Eu duvido', 'o vídeo do seu lance já rodou o bairro todo', 'tatuei o número {num} no braço, sem arrependimento', 'minha avó, que nunca viu futebol, agora pergunta de você', 'a resenha do trabalho hoje foi toda sobre a sua atuação', 'vendi até a TV velha pra ir ao estádio te ver', 'seu esforço em campo emociona quem está lá em cima', 'a arquibancada canta seu nome desde o aquecimento', 'o {clube} precisava de alguém com a sua garra'],
+    c: ['Segue o baile! ⚽', 'Conta com a gente!', 'Abraço da torcida!', 'Vamos pra cima!', 'Não deixa a peteca cair.', 'Tamo junto!', 'Orgulho de ter você aqui.', 'Que venha o próximo jogo!'] },
+  press: { n: ['Bola Cheia', 'Gol de Placa', 'Resenha de Vestiário', 'Meio de Campo', 'Mesa Redonda FC', 'Canal Rodix 24h', 'Folha Esportiva', 'O Diário da Bola'],
+    o: ['Reportagem:', 'Atenção, {n}:', 'Bastidores:', 'Exclusivo:', 'Análise do dia:', 'Fonte ligada ao clube conta que', 'Nos corredores do {clube},', 'Plantão esportivo:', 'Coluna de hoje:', 'Segundo apuração,', 'Em tom de elogio,', 'Fala o comentarista:'],
+    b: ['{n} ganhou moral com a comissão técnica depois do jogo contra o {adv}', 'o camisa {num} voltou a ser tema de reunião da diretoria', 'sua nota {nota} na última rodada chamou atenção do mercado', 'olheiros foram vistos acompanhando seus treinos', 'o {pos} do {clube} tem sido a melhor notícia da temporada', 'sua rotina de cuidados e alimentação virou pauta', 'há quem veja na sua evolução o maior ganho do elenco', 'o perfume que você usa virou assunto até no vestiário', 'a diretoria teria feito sondagem para ampliar seu contrato', 'a imprensa de {pais} já acompanha seus números', 'seus patrocinadores elogiam a postura dentro e fora de campo', 'seus números dão base para sonhar com convocação', 'o torcedor já pede o camisa {num} como titular absoluto', 'a entrevista coletiva após o jogo rendeu manchete'],
+    c: ['Veja mais no jornal das 20h.', 'A conferir nas próximas rodadas.', 'Pauta quente da semana.', 'Detalhes na edição de amanhã.', 'A repercussão promete.', 'Acompanhe aqui.', 'Vem coisa por aí.', 'Que a imprensa fique de olho.'] },
+  family: { n: ['Mãe', 'Pai', 'Vovó Lúcia', 'Tio Carlão', 'Irmã', 'Primo Dudu', 'Madrinha', 'Vovô Tito'],
+    o: ['Filho,', 'Meu querido,', 'Oi, {n}!', 'Rapaz,', 'Campeão,', 'Saudade,', 'Passando pra avisar:', 'Liguei e você não atendeu, então escrevo:', 'Aqui em casa,', 'Escuta:', 'Meu orgulho,', 'Não esquece:'],
+    b: ['seu pai viu o jogo contra o {adv} três vezes na gravação', 'a vizinhança toda perguntou de você na padaria', 'a casa ficou pequena pra tanta gente na hora do jogo', 'estamos organizando um churrasco pra assistir ao próximo jogo', 'lembra de comer direito e dormir cedo', 'sua avó acendeu uma vela para o seu jogo', 'ninguém aqui acredita que você é o camisa {num} do {clube}', 'passei em frente à escola e a garotada tinha o seu nome desenhado', 'guardei todas as matérias de jornal sobre você numa pasta', 'não deixa a fama subir à cabeça, o importante é o carinho', 'avisa quando for jogar perto, queremos ir ao estádio', 'o que você faz com o dinheiro? Pensa no futuro, filho', 'cuida do joelho e do tornozelo, não banque o herói', 'temos orgulho de você em qualquer resultado'],
+    c: ['Beijo grande!', 'Deus te proteja.', 'Te amamos.', 'Manda notícia.', 'Um abraço apertado.', 'Volta logo pra visitar.', 'Mandamos comida pelo correio.', 'Fica bem!'] },
+  mate: { n: ['Marquinhos', 'Pedrão', 'Rafa', 'Capitão', 'Gui', 'Thiago', 'Jão', 'Beto'],
+    o: ['E aí, {n}!', 'Fala, parceiro,', 'Ô, craque,', 'No vestiário:', 'Brincadeira à parte,', 'Sério agora:', 'Mano,', 'Grupo do elenco:', 'Olha o que o {n} falou:', 'Resenha do time:', 'Sem zoeira,', 'Ei, camisa {num},'],
+    b: ['o lance de hoje foi pra entrar na história do {clube}', 'quem paga o churrasco depois do {adv}?', 'bora treinar cobrança de falta depois do treino', 'você mudou o jeito do time jogar, tá ligado?', 'o professor ficou impressionado com a sua intensidade', 'seu perfume tá chegando antes de você no vestiário, hein', 'o {pos} da vez é você, deixa o resto com a gente', 'tô te devendo uma pela assistência de ontem', 'aposta aí: você faz gol ou dá assistência no próximo jogo?', 'fica de olho no apito do árbitro, ele tá estressado', 'a torcida tá cantando seu nome, ouviu?', 'passa aquele café que você sempre traz', 'vamos subir juntos a tabela do campeonato', 'bora fechar o mês invictos'],
+    c: ['Tamo junto!', 'Fechou?', 'Valeu, irmão.', 'Isso aí.', 'Mantém o foco.', 'Vamos nessa!', 'Churrasco é seu, hein.', 'Segura a onda.'] },
+  coach: { n: ['Professor', 'Mister', 'Comissão técnica', 'Preparador físico', 'Auxiliar'],
+    o: ['{n} informa:', 'Recado do {n}:', 'Nota interna:', 'Reunião de hoje:', 'Atenção,', 'Segundo o {n},', 'Pediram pra avisar:', 'Observação técnica:', 'Em conversa rápida:', 'Do departamento de futebol:', 'Treino de amanhã:', 'Feedback:'],
+    b: ['sua leitura de jogo contra o {adv} agradou muito', 'precisamos ver mais disciplina tática do {pos}', 'sua intensidade nos treinos foi elogiada', 'apareça cedo para o trabalho de força', 'mais atenção na recomposição defensiva', 'o clube valoriza profissionais que cuidam da imagem e do corpo', 'seu cuidado fora de campo não passou despercebido', 'a nota {nota} é a referência que queremos ver sempre', 'quero você com a cabeça no próximo jogo', 'sua postura no vestiário faz diferença', 'o estilo que você impõe agrada à comissão', 'vamos conversar sobre sua função no esquema', 'seus números sustentam um espaço no time', 'continue assim e a vaga é sua'],
+    c: ['Sem moleza.', 'Foco total.', 'Bom trabalho.', 'Conto com você.', 'Sem desculpas.', 'Vamos evoluir.', 'Obrigado.', 'Treino às 9h.'] },
+  doc: { n: ['Dr. Almeida', 'Dra. Rocha', 'Dr. Menezes', 'Departamento médico', 'Fisioterapia'],
+    o: ['{n}:', 'Boletim médico:', 'Atenção,', 'Aviso da fisioterapia:', 'Check-up:', 'Resultado dos exames:', 'Recomendação:', 'Atualização:', 'Rotina de cuidados:', 'Orientação clínica:', 'Comunicado:', 'Plantão médico:'],
+    b: ['seu corpo respondeu bem à carga da semana', 'o risco de lesão está dentro do esperado, mas fique atento ao descanso', 'alongamento e hidratação nunca são demais', 'o tornozelo precisa de atenção extra depois do jogo contra o {adv}', 'seu sono está abaixo do ideal, e isso pesa no rendimento', 'recomendamos reduzir a carga se sentir qualquer desconforto', 'as taxas de fadiga estão altas depois de tantos jogos', 'sua musculatura está pronta para uma sequência de partidas', 'uma boa alimentação ajuda a cortar semanas de recuperação', 'nada de voltar antes da liberação completa', 'o gelo e a compressão ajudam depois do jogo', 'ficamos de olho no joelho: não force', 'a recuperação está dentro do prazo previsto', 'a liberação final depende da avaliação de amanhã'],
+    c: ['Siga o protocolo.', 'Cuide-se.', 'Qualquer dor, avise.', 'Boa recuperação.', 'Respeite o descanso.', 'Vamos reavaliar em breve.', 'Sem pressa.', 'Obrigado pela colaboração.'] }
+};
+function d2Combos() { let n = 0; for (const k in D2_CH) n += D2_CH[k].o.length * D2_CH[k].b.length * D2_CH[k].c.length; return n; }
+function d2MsgText(ch, ctx) {
+  const T = D2_CH[ch]; ctx = ctx || {}; const p = up(), c = userClub(); const fill = s => s.replace(/\{n\}/g, shortName(p)).replace(/\{clube\}/g, c ? c.name : 'clube').replace(/\{adv\}/g, ctx.adv || 'adversário').replace(/\{num\}/g, p.num || '10').replace(/\{pos\}/g, (POSN[p.pos] || 'jogador').toLowerCase()).replace(/\{nota\}/g, ctx.nota || '7,0').replace(/\{pais\}/g, NATIONS[p.nat] ? NATIONS[p.nat].n : 'seu país');
+  return fill(pick(T.o)) + ' ' + fill(pick(T.b)) + '. ' + fill(pick(T.c));
+}
+function d2Inbox(ch, text, ctx) { const D = d2(); const T = D2_CH[ch] || D2_CH.fan; D.inbox.unshift({ id: D.nid++, ch, who: ch === 'family' || ch === 'mate' ? pick(T.n) : (ch === 'fan' ? pick(T.n) : pick(T.n)), t: text || d2MsgText(ch, ctx), w: absWk(), r: null, img: rnd() < .35 ? ri(0, 99) : null }); if (D.inbox.length > 40) D.inbox.length = 40; }
+function d2Feed(kind, text, mul, o) { const D = d2(); D.feed.unshift({ id: D.nid++, k: kind, t: text, w: absWk(), lk: Math.round((80 + D.fame * 40) * (mul + 1) * (.5 + rnd())), img: (o && o.img != null) ? o.img : (rnd() < .5 ? ri(0, 99) : null) }); if (D.feed.length > 60) D.feed.length = 60; }
+const D2_ACC = { rod: ['Rodix Vida', '#ffd23f'], spo: ['Marcas', '#7c4dff'], me: ['Você', '#3fc27a'], fan: ['Torcida', '#3fc27a'], cro: ['Rodix News', '#4aa3ff'], fam: ['Família', '#ff9bd0'], med: ['Depto. Médico', '#ff6b6b'], mkt: ['Mercado', '#ffb347'] };
+function d2WeekFeed() {
+  const D = d2(), p = up(); const kinds = ['fan', 'press', 'family', 'mate', 'coach'];
+  if (rnd() < .85) d2Inbox(pick(kinds));
+  const n = 2 + ri(0, 2); for (let i = 0; i < n; i++) { const ch = pick(['fan', 'press', 'family', 'mate', 'coach', 'fan']); const a = { fan: 'fan', press: 'cro', family: 'fam', mate: 'me', coach: 'cro' }[ch]; d2Feed(a, d2MsgText(ch), rnd() * 2); }
+  if (p.inj > 0 && rnd() < .6) d2Inbox('doc');
+}
+/* ---------------- lesões realistas ---------------- */
+const D2_INJ = [['Contusão no joelho', 'Joelho', 1, 3, 'bat', 'mild'], ['Entorse de tornozelo', 'Tornozelo', 2, 6, 'any', 'mild'], ['Estiramento na coxa', 'Coxa', 2, 5, 'any', 'mild'], ['Distensão na panturrilha', 'Panturrilha', 2, 4, 'any', 'mild'], ['Pancada na costela', 'Costelas', 1, 3, 'bat', 'mild'], ['Pubalgia', 'Virilha', 4, 10, 'any', 'mid'], ['Lesão no ombro', 'Ombro', 3, 8, 'bat', 'mid'], ['Lesão meniscal', 'Joelho', 8, 16, 'bat', 'sev'], ['Fratura por estresse no pé', 'Pé', 8, 14, 'any', 'sev'], ['Ruptura do ligamento cruzado', 'Joelho', 24, 40, 'bat', 'sev'], ['Concussão leve', 'Cabeça', 1, 2, 'bat', 'mild'], ['Fadiga muscular', 'Corpo todo', 1, 2, 'trn', 'mild']];
+function d2Injury(p, hint, src) {
+  if (!p || !p.u) return; const D = d2(), u = G.user; let pool = D2_INJ.filter(x => x[4] === 'any' || x[4] === (src === 'train' ? 'trn' : 'bat') || (src === 'train' && x[5] === 'mild' && x[4] !== 'bat'));
+  const r = rnd(); const sevW = src === 'train' ? { mild: 1, mid: .12, sev: .02 } : { mild: 1, mid: .35, sev: .12 }; const old = p.age >= 31 ? 1.3 : 1; pool = pool.filter(x => rnd() < (sevW[x[5]] || 1) * old);
+  const t = pool.length ? pick(pool) : D2_INJ[1]; const weeks = ri(t[2], t[3]); const h = D2_HOUSE[D.house][3] / 100 + (D.staff.fi && weeks >= 3 ? 1 / weeks : 0);
+  const final = Math.max(1, Math.round(weeks * (1 - h)));
+  p.inj = final; D.inj = { n: t[0], part: t[1], tot: final, sev: t[5], plan: 'rest', src, w: absWk() };
+  const risk = t[5] === 'sev' ? ' Cirurgia pode reduzir o prazo e o risco de recaída.' : '';
+  addNews('Lesão (' + t[1] + '): ' + t[0] + ', ' + final + ' semana(s) fora.', 'bad');
+  d2Feed('med', `Boletim médico: ${shortName(p)} sofreu ${t[0].toLowerCase()} (${t[1].toLowerCase()}). Previsão: ${final} semana(s).`, 1, { img: [15, 35, 55, 75, 95][ri(0, 4)] });
+  d2Inbox('doc', `Boletim médico: ${t[0]} (${t[1]}). Prazo estimado de ${final} semana(s).${risk} Escolha o tratamento no Rodix Vida › Saúde.`);
+  setTimeout(() => { try { modal(`<h2>${ico('medkit', 22)} Lesão: ${esc(t[0])}</h2><p>Região: <b>${esc(t[1])}</b> · fora por <b>${final} semana(s)</b>.</p><p class="mut">Escolha o tratamento em <b>Rodix Vida › Saúde</b> para tentar voltar mais cedo.</p><div class="row"><button class="btn pri" data-act="d2-go" data-t="hp">Ver tratamentos</button><button class="btn ghost" data-act="close-modal">Fechar</button></div>`); } catch (e) { } }, 600);
+}
+const D2_PLAN = { rest: ['Repouso', 0, 0, 'Sem custo. Recuperação normal.'], fis: ['Fisioterapia intensiva', 800, .15, '−15% do prazo.'], pre: ['Clínica premium', 6000, .3, '−30% do prazo.'], sur: ['Cirurgia + reabilitação', 40000, .25, '−25% do prazo e menos recaída. Só lesões graves.'] };
+function d2SetPlan(k) {
+  const D = d2(), p = up(), I = D.inj; if (!I || p.inj <= 0) return; const P = D2_PLAN[k]; if (!P) return; if (k === 'sur' && I.sev !== 'sev') return toast('Cirurgia só para lesões graves.'); if (I.plan !== 'rest') return toast('O tratamento já foi escolhido.'); if (D.bank < P[1]) return toast('Saldo insuficiente.');
+  d2Pay(-P[1], P[0]); I.plan = k; const cut = Math.floor(p.inj * P[2]); if (cut > 0) { p.inj = Math.max(1, p.inj - cut); I.tot = p.inj; } toast(P[0] + (cut ? ': prazo reduzido em ' + cut + ' semana(s)' : '')); saveGame(true); renderHub();
+}
+function d2InjWeek() { const D = d2(), p = up(); if (D.inj && p.inj <= 0) { D.rtp = D.inj.plan === 'sur' ? 1 : 2; d2Inbox('doc', `Liberação médica: ${D.inj.n} recuperada. Retorno gradual por ${D.rtp} semana(s): o risco de recaída é maior.`); addNews('Alta médica: você está liberado após ' + D.inj.n.toLowerCase() + '.', 'good'); D.hist.unshift({ n: D.inj.n, part: D.inj.part, tot: D.inj.tot, w: D.inj.w }); D.hist.length = Math.min(D.hist.length, 12); D.inj = null; } else if (D.rtp > 0) D.rtp--; }
+
+/* ---------------- 100 ilustrações (20 cenas × 5 variações) ---------------- */
+const D2_PAL = [['#0b1b3a', '#1c3f7a', '#ffd23f'], ['#2b1055', '#7597de', '#ff6b9a'], ['#08242a', '#15776f', '#7cf2c9'], ['#3a1208', '#c2562b', '#ffe08a'], ['#0e0e14', '#33384d', '#ff4d4d']];
+const D2_SCN = ['Estádio à noite', 'Estádio de dia', 'Vestiário', 'Treino no campo', 'Coletiva de imprensa', 'Estúdio de TV', 'Avião', 'Ônibus do time', 'Carro de luxo', 'Outdoor', 'Troféu', 'Camisa emoldurada', 'Bola autografada', 'Multidão de torcedores', 'Crianças com camisa', 'Departamento médico', 'Férias na praia', 'Assinatura de contrato', 'Mansão', 'Perfume'];
+function d2Img(i) {
+  i = ((i | 0) % 100 + 100) % 100; const s = i % 20, v = Math.floor(i / 20), P = D2_PAL[v], c = userClub() || { c1: '#2a9d8f', c2: '#fff' }, A = P[2];
+  const sky = `<defs><linearGradient id="d${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${P[0]}"/><stop offset="1" stop-color="${P[1]}"/></linearGradient></defs><rect width="320" height="180" fill="url(#d${i})"/>`;
+  const grass = '<rect y="128" width="320" height="52" fill="#1f7a3d"/><rect y="128" width="320" height="4" fill="#fff" opacity=".35"/>';
+  const crowd = `<g fill="${c.c1}" opacity=".85">${Array.from({ length: 16 }, (_, k) => `<circle cx="${12 + k * 20}" cy="${112 + (k % 3) * 5}" r="${6 + (k % 2)}"/>`).join('')}</g>`;
+  const sh = { x: 0 };
+  const B = [
+    `${grass}<rect x="20" y="40" width="280" height="90" rx="10" fill="#222" opacity=".6"/>${crowd}<g fill="${A}">${Array.from({ length: 8 }, (_, k) => `<circle cx="${30 + k * 36}" cy="28" r="4"/>`).join('')}</g>`,
+    `<circle cx="260" cy="36" r="20" fill="${A}"/>${grass}<rect x="20" y="62" width="280" height="66" fill="#555"/>${crowd}`,
+    `<rect y="120" width="320" height="60" fill="#3b2b1c"/>${[0, 1, 2, 3].map(k => `<rect x="${24 + k * 74}" y="40" width="54" height="76" rx="4" fill="${c.c1}"/><text x="${51 + k * 74}" y="92" font-size="26" font-family="Arial Black" fill="${c.c2}" text-anchor="middle">${[7, 9, 10, 11][k]}</text>`).join('')}`,
+    `${grass}<circle cx="80" cy="150" r="7" fill="#fff"/><rect x="150" y="96" width="14" height="32" fill="${c.c1}"/><circle cx="157" cy="88" r="9" fill="#e0ac84"/><path d="M200 160 L260 150" stroke="#fff" stroke-width="3"/>`,
+    `<rect x="40" y="40" width="240" height="30" fill="#111"/><text x="160" y="62" font-size="16" fill="${A}" font-family="Arial Black" text-anchor="middle">COLETIVA · ${esc(c.name || 'RODIX')}</text><rect y="120" width="320" height="60" fill="#2b2b2b"/>${[0, 1, 2].map(k => `<rect x="${60 + k * 80}" y="96" width="30" height="8" fill="#888"/><circle cx="${75 + k * 80}" cy="86" r="10" fill="#e0ac84"/>`).join('')}`,
+    `<rect x="30" y="30" width="260" height="96" rx="8" fill="#0b0b12" stroke="${A}" stroke-width="3"/><circle cx="110" cy="70" r="16" fill="#e0ac84"/><rect x="90" y="86" width="40" height="30" fill="${A}"/><rect x="150" y="50" width="120" height="8" fill="${A}"/><rect x="150" y="68" width="100" height="6" fill="#fff" opacity=".7"/><text x="42" y="46" font-size="11" fill="#ff4d4d" font-family="Arial Black">● AO VIVO</text>`,
+    `<rect x="30" y="86" width="260" height="22" rx="11" fill="#e8eef5"/><path d="M250 90 L300 70 L300 84 L260 104Z" fill="#cfd8e3"/><rect x="40" y="94" width="210" height="4" fill="${c.c1}"/><circle cx="70" cy="100" r="3" fill="#345"/><circle cx="100" cy="100" r="3" fill="#345"/><path d="M0 150 q60 -26 120 -6 t200 -8 V180 H0Z" fill="#fff" opacity=".18"/>`,
+    `<rect x="40" y="76" width="240" height="46" rx="8" fill="${c.c1}"/><rect x="58" y="84" width="40" height="18" fill="#bfe3ff"/><rect x="108" y="84" width="40" height="18" fill="#bfe3ff"/><rect x="158" y="84" width="40" height="18" fill="#bfe3ff"/><circle cx="80" cy="126" r="11" fill="#111"/><circle cx="240" cy="126" r="11" fill="#111"/><text x="260" y="98" font-size="10" fill="${c.c2}">${esc((c.name || '').slice(0, 5))}</text>`,
+    `<rect y="130" width="320" height="50" fill="#222"/><path d="M70 126 q10 -40 60 -42 q60 -4 100 28 l20 6 v10 H60z" fill="${A}"/><circle cx="100" cy="132" r="14" fill="#111"/><circle cx="215" cy="132" r="14" fill="#111"/><rect x="120" y="92" width="60" height="22" fill="#bfe3ff" opacity=".8"/>`,
+    `<rect x="40" y="26" width="240" height="90" fill="#111"/><rect x="46" y="32" width="228" height="78" fill="${c.c1}"/><text x="160" y="72" font-size="22" fill="${c.c2}" font-family="Arial Black" text-anchor="middle">${esc((c.name || 'RODIX').toUpperCase().slice(0, 14))}</text><text x="160" y="96" font-size="13" fill="${A}" font-family="Arial Black" text-anchor="middle">A TORCIDA É NOSSA</text><rect x="150" y="116" width="20" height="40" fill="#555"/>`,
+    `<path d="M120 36 h80 v30 q0 40 -40 45 q-40 -5 -40 -45z" fill="${A}" stroke="#fff" stroke-width="3"/><rect x="150" y="112" width="20" height="18" fill="${A}"/><rect x="125" y="130" width="70" height="14" rx="4" fill="#8d5400"/><g fill="#fff" opacity=".8"><circle cx="60" cy="50" r="2"/><circle cx="260" cy="70" r="2"/><circle cx="90" cy="120" r="2"/><circle cx="240" cy="30" r="2"/></g>`,
+    `<rect x="70" y="24" width="180" height="130" fill="#eee" stroke="#8d5400" stroke-width="8"/><path d="M130 50 L148 42 Q160 54 172 42 L190 50 L210 74 L192 88 L186 80 L186 130 L134 130 L134 80 L128 88 L110 74Z" fill="${c.c1}"/><text x="160" y="112" font-size="22" fill="${c.c2}" font-family="Arial Black" text-anchor="middle">${esc(up().num || '10')}</text>`,
+    `<circle cx="160" cy="88" r="46" fill="#fff"/><path d="M160 60 l18 13 -7 21 h-22 l-7 -21z" fill="#111"/><path d="M110 100 q50 30 100 0" stroke="${A}" stroke-width="3" fill="none"/><path d="M120 120 q30 -12 60 -8 t40 -18" stroke="#111" stroke-width="3" fill="none"/>`,
+    `${crowd}<g>${Array.from({ length: 14 }, (_, k) => `<circle cx="${14 + k * 22}" cy="${70 + (k % 4) * 10}" r="9" fill="${k % 2 ? c.c1 : c.c2}" opacity=".9"/>`).join('')}</g><rect x="60" y="30" width="200" height="20" fill="#fff" opacity=".9"/><text x="160" y="45" font-size="12" font-family="Arial Black" fill="#222" text-anchor="middle">É HOJE!</text>`,
+    `${grass}${[0, 1, 2].map(k => `<circle cx="${100 + k * 60}" cy="98" r="10" fill="#e0ac84"/><rect x="${90 + k * 60}" y="108" width="20" height="28" rx="4" fill="${c.c1}"/>`).join('')}<text x="160" y="52" font-size="15" fill="${A}" font-family="Arial Black" text-anchor="middle">MEU ÍDOLO</text>`,
+    `<rect x="20" y="30" width="280" height="110" rx="6" fill="#f4f8f8"/><rect x="146" y="50" width="28" height="70" fill="#d33"/><rect x="125" y="71" width="70" height="28" fill="#d33"/><rect x="30" y="145" width="260" height="6" fill="#9ab"/>`,
+    `<path d="M300 130 q-70 20 -140 0 T0 130 V180 H320Z" fill="#f3d9a4"/><circle cx="250" cy="42" r="22" fill="${A}"/><path d="M0 120 q60 -20 120 0 t200 0 V135 H0Z" fill="#2b88d9"/>`,
+    `<rect x="30" y="30" width="260" height="100" rx="8" fill="#e7e2d8"/><rect x="48" y="44" width="130" height="10" fill="#aaa"/><rect x="48" y="62" width="110" height="6" fill="#bbb"/><rect x="48" y="76" width="120" height="6" fill="#bbb"/><path d="M190 108 q10 -24 20 0 t20 0 t20 0" stroke="${c.c1}" stroke-width="3" fill="none"/><rect x="170" y="120" width="100" height="3" fill="#333"/><text x="200" y="40" font-size="10" fill="#333">CONTRATO</text>`,
+    `<rect x="40" y="20" width="240" height="140" rx="10" fill="#c6a15a" opacity=".25"/><rect x="60" y="70" width="200" height="60" fill="#e7e2d8"/><rect x="80" y="40" width="160" height="40" fill="#bfd9f0"/><rect x="144" y="100" width="32" height="30" fill="#8d5400"/><circle cx="60" cy="56" r="12" fill="${A}"/>`,
+    `<rect x="130" y="40" width="60" height="90" rx="10" fill="${A}" opacity=".9"/><rect x="146" y="22" width="28" height="22" rx="4" fill="#ddd"/><rect x="140" y="56" width="40" height="30" rx="3" fill="#fff" opacity=".85"/><text x="160" y="76" font-size="8" fill="#333" text-anchor="middle" font-family="Arial Black">RODIX</text><g fill="#fff" opacity=".6"><circle cx="90" cy="60" r="3"/><circle cx="240" cy="90" r="4"/><circle cx="70" cy="110" r="2"/></g>`
+  ][s];
+  return `<svg class="d2img" viewBox="0 0 320 180" role="img" aria-label="${esc(D2_SCN[s])}">${sky}${B}</svg>`;
+}
+/* ---------------- cenas (assinar, chegar, autógrafo) ---------------- */
+let D2_SCENE_ON = false;
+function d2Queue(o) { const D = d2(); D.q.push(o); }
+function d2ShowPending() {
+  if (!G || !G.user || G.mgr || D2_SCENE_ON) return; const D = G.user.d2; if (!D || !D.q || !D.q.length) return; const o = D.q.shift(); D2_SCENE_ON = true; saveGame(true); setTimeout(() => d2Scene(o), 400);
+}
+function d2SigPad(host) {
+  const cv = document.createElement('canvas'); cv.width = 560; cv.height = 150; cv.className = 'd2sig'; host.appendChild(cv); const g = cv.getContext('2d'); g.lineWidth = 4; g.lineCap = 'round'; g.strokeStyle = '#142a6b'; let on = false, n = 0;
+  const pt = e => { const r = cv.getBoundingClientRect(); const t = e.touches ? e.touches[0] : e; return [(t.clientX - r.left) * cv.width / r.width, (t.clientY - r.top) * cv.height / r.height]; };
+  const dn = e => { e.preventDefault(); on = true; const [x, y] = pt(e); g.beginPath(); g.moveTo(x, y); }; const mv = e => { if (!on) return; e.preventDefault(); const [x, y] = pt(e); g.lineTo(x, y); g.stroke(); n++; }; const up2 = () => { on = false; };
+  cv.addEventListener('mousedown', dn); cv.addEventListener('mousemove', mv); window.addEventListener('mouseup', up2); cv.addEventListener('touchstart', dn, { passive: false }); cv.addEventListener('touchmove', mv, { passive: false }); cv.addEventListener('touchend', up2);
+  cv.auto = () => { g.beginPath(); g.moveTo(40, 100); for (let x = 40; x < 500; x += 6) g.lineTo(x, 80 + Math.sin(x / 18) * 26 + (x % 40 ? 0 : 8)); g.stroke(); n = 99; }; cv.drawn = () => n > 6; return cv;
+}
+function d2Scene(o) {
+  const old = document.getElementById('d2scene'); if (old) old.remove(); const el = document.createElement('div'); el.id = 'd2scene'; el.className = 'd2scene'; document.body.appendChild(el); const c = o.club ? club(o.club) : userClub(); const close = () => { el.remove(); D2_SCENE_ON = false; renderHub(); setTimeout(d2ShowPending, 300); };
+  const D = d2(), p = up();
+  if (o.k === 'sign') {
+    el.innerHTML = `<div class="d2in"><div class="d2flash"></div><small class="d2k">ASSINATURA DE CONTRATO</small><h2>${o.renew ? 'Renovação com o ' : 'Bem-vindo ao '}${esc(c.name)}</h2>${d2Img(17 + (20 * ri(0, 4)) % 100)}<div class="d2paper"><b>CONTRATO DE ATLETA PROFISSIONAL</b><p>${esc(fullName(p))} · ${o.years || 3} temporada(s) · salário ${money(o.wage || 0)}/semana${o.fee ? ' · taxa ' + money(o.fee) : ''}</p><p class="mut">Assine com o dedo ou o mouse no quadro abaixo.</p><div id="d2sg"></div></div><div class="row"><button class="btn ghost" id="d2auto">Assinar automático</button><button class="btn pri" id="d2ok">Assinar contrato</button></div></div>`;
+    const cv = d2SigPad(el.querySelector('#d2sg')); el.querySelector('#d2auto').onclick = () => cv.auto();
+    el.querySelector('#d2ok').onclick = () => { if (!cv.drawn()) { toast('Assine no quadro primeiro.'); return; } el.querySelector('.d2flash').classList.add('go'); el.querySelector('.d2paper').insertAdjacentHTML('beforeend', '<div class="d2stamp">ASSINADO</div>'); d2Pay(Math.round((o.wage || 0) * 2), 'Luvas de assinatura'); D.fame += o.renew ? 1 : 3; d2Feed('cro', `${shortName(p)} assina com o ${c.name}: ${o.years || 3} temporada(s).`, 3, { img: 17 }); saveGame(true); setTimeout(() => { if (o.renew) close(); else { el.remove(); D2_SCENE_ON = false; d2Scene({ k: 'arrive', club: o.club, fee: o.fee }); } }, 1400); };
+  } else if (o.k === 'arrive') {
+    const veh = D.car >= 6 ? 'plane' : D.car >= 1 ? 'car' : 'bus'; const lbl = { plane: 'Seu jatinho pousa na cidade do clube', car: 'Seu carro chega ao centro de treinamento', bus: 'Você chega no ônibus do clube' }[veh];
+    const vsvg = { plane: '<svg viewBox="0 0 220 70" class="d2veh"><path d="M10 40 q100 -34 200 -6 l0 8 q-100 14 -200 -2z" fill="#f4f6fb"/><path d="M90 34 l40 -22 h14 l-18 26z" fill="#cfd8e3"/><path d="M80 44 l30 20 h12 l-14 -22z" fill="#cfd8e3"/><rect x="40" y="34" width="90" height="4" fill="#4aa3ff"/></svg>', car: `<svg viewBox="0 0 220 70" class="d2veh"><path d="M14 46 q6 -18 40 -22 l36 -14 q30 -2 52 14 l40 6 q14 6 12 18z" fill="${c.c1}"/><rect x="82" y="22" width="52" height="16" fill="#bfe3ff" opacity=".9"/><circle cx="60" cy="52" r="12" fill="#111"/><circle cx="168" cy="52" r="12" fill="#111"/></svg>`, bus: `<svg viewBox="0 0 220 70" class="d2veh"><rect x="10" y="14" width="200" height="40" rx="8" fill="${c.c1}"/>${[0, 1, 2, 3, 4].map(k => `<rect x="${24 + k * 34}" y="22" width="24" height="14" fill="#bfe3ff"/>`).join('')}<text x="110" y="49" font-size="10" fill="${c.c2}" text-anchor="middle" font-family="Arial Black">${esc((c.name || '').toUpperCase().slice(0, 16))}</text><circle cx="50" cy="56" r="10" fill="#111"/><circle cx="170" cy="56" r="10" fill="#111"/></svg>` }[veh];
+    el.innerHTML = `<div class="d2in arr"><small class="d2k">CHEGADA</small><h2>${esc(c.name)}</h2><div class="d2road">${d2Img(ri(0, 1) + 20 * ri(0, 4))}<div class="d2crowd">${Array.from({ length: 12 }, (_, k) => `<i style="background:${k % 2 ? c.c1 : c.c2}"></i>`).join('')}</div>${vsvg}</div><p>${lbl}. Torcedores esperam no portão com faixas e camisas ${esc(up().num ? '#' + up().num : '')}.</p><button class="btn pri" id="d2ok">Entrar no clube</button></div>`;
+    D.fame += veh === 'plane' ? 4 : veh === 'car' ? 2 : 1; d2Feed('fan', `Centenas de torcedores recebem ${shortName(p)} no ${c.name}!`, 3, { img: veh === 'plane' ? 6 : veh === 'car' ? 8 : 7 }); el.querySelector('#d2ok').onclick = close;
+  } else if (o.k === 'auto') {
+    const items = shuffle([['Camisa oficial', `<svg viewBox="0 0 120 110" class="d2it"><path d="M34 14 L48 8 Q60 22 72 8 L86 14 L112 38 L96 54 L88 46 L88 100 L32 100 L32 46 L24 54 L8 38Z" fill="${(userClub() || { c1: '#2a9d8f' }).c1}" stroke="#fff" stroke-width="2"/></svg>`], ['Bola oficial', '<svg viewBox="0 0 120 110" class="d2it"><circle cx="60" cy="55" r="44" fill="#fff" stroke="#222" stroke-width="3"/><path d="M60 30 l20 14 -8 24 h-24 l-8 -24z" fill="#222"/></svg>'], ['Pôster', `<svg viewBox="0 0 120 110" class="d2it"><rect x="16" y="6" width="88" height="98" fill="#fff" stroke="#222" stroke-width="3"/><circle cx="60" cy="40" r="16" fill="#e0ac84"/><rect x="38" y="58" width="44" height="38" fill="${(userClub() || { c1: '#2a9d8f' }).c1}"/></svg>`], ['Chuteira', '<svg viewBox="0 0 120 110" class="d2it"><path d="M10 70 q40 -50 70 -20 l30 10 v22 H10z" fill="#222" stroke="#ffd23f" stroke-width="3"/></svg>']]).slice(0, 3);
+    let left = items.length; el.innerHTML = `<div class="d2in"><small class="d2k">AUTÓGRAFOS</small><h2>Torcedores pedem o seu autógrafo</h2><p class="mut">Assine cada item no quadro e toque em "Entregar".</p><div class="d2items">${items.map((it, k) => `<div class="d2item" data-k="${k}">${it[1]}<b>${it[0]}</b><div class="d2sgi"></div><button class="btn pri" data-k="${k}">Entregar</button></div>`).join('')}</div></div>`;
+    el.querySelectorAll('.d2item').forEach(box => { const cv = d2SigPad(box.querySelector('.d2sgi')); cv.width = 200; cv.height = 70; cv.getContext('2d').lineWidth = 3; cv.getContext('2d').strokeStyle = '#142a6b'; cv.getContext('2d').lineCap = 'round'; box.querySelector('button').onclick = () => { if (!cv.drawn()) { toast('Assine o item primeiro.'); return; } box.classList.add('done'); box.querySelector('button').remove(); D.fame += 1.2; left--; if (!left) { d2Feed('fan', 'Torcedores postam fotos com autógrafos de ' + shortName(p) + '.', 3, { img: 12 }); saveGame(true); setTimeout(close, 700); } }; });
+  } else close();
+}
+/* ---------------- jornal de TV ---------------- */
+function d2TvItems() {
+  const D = d2(), p = up(), c = userClub(), u = G.user; const nw = allNews().slice(0, 12).map(x => x.t); const seg = [];
+  seg.push({ k: 'MANCHETE', t: nw[0] || `${shortName(p)} segue em evolução no ${c ? c.name : 'mercado'}.`, sub: nw[1] || 'A semana promete no futebol.' });
+  seg.push({ k: 'SEU DESTAQUE', t: `${shortName(p)}: ${u.career.g} gol(s) e ${u.career.a} assistência(s) em ${u.career.ap} jogo(s).`, sub: D.fame >= 40 ? 'O camisa já é rosto conhecido da torcida.' : 'A fama ainda é pequena, mas cresce a cada rodada.' });
+  const sp = D.spons.length ? `Patrocínios ativos: ${D.spons.map(s => s.brand).join(', ')}.` : 'Nenhum patrocinador fechado no momento.'; seg.push({ k: 'MERCADO & MARCAS', t: sp, sub: `Patrimônio: ${d2Fmt(D.bank)}.` });
+  seg.push({ k: 'BOLETIM MÉDICO', t: D.inj ? `${shortName(p)}: ${D.inj.n.toLowerCase()} (${D.inj.part.toLowerCase()}), ${p.inj} semana(s).` : 'Elenco sem lesões graves reportadas.', sub: D.rtp > 0 ? 'Retorno gradual em andamento.' : 'Cuidar do corpo é parte do jogo.' });
+  seg.push({ k: 'ESTILO', t: D.frag.on ? `O perfume da vez: ${d2FragInfo(D.frag.on).n}.` : 'O perfume é o novo assunto no vestiário.', sub: 'A fragrância certa conquista técnico e torcida.' });
+  nw.slice(2, 6).forEach(t => seg.push({ k: 'PLANTÃO', t, sub: 'Mais detalhes no próximo bloco.' })); return { seg, tick: nw.slice(0, 10) };
+}
+function vTV() {
+  const D = d2(), T = d2TvItems(); const i = D.tvI % T.seg.length, s = T.seg[i];
+  return `<div class="d2tv"><div class="d2tvhd"><span class="live">● AO VIVO</span><b>RODIX NEWS 24h</b><span class="mut">${esc(genSeasonLabel())} · Sem. ${G.week + 1}</span></div>
+  <div class="d2stage"><svg viewBox="0 0 320 150" class="d2anc"><rect width="320" height="150" fill="#10204a"/><rect y="104" width="320" height="46" fill="#0a1330"/><circle cx="90" cy="52" r="20" fill="#e0ac84"/><path d="M58 112 q4 -44 32 -44 q28 0 32 44z" fill="#2a3b7a"/><rect x="62" y="104" width="56" height="8" fill="#ffd23f"/><circle cx="230" cy="50" r="18" fill="#c68f6a"/><path d="M202 112 q4 -40 28 -40 q24 0 28 40z" fill="#7a2a4a"/><rect x="176" y="14" width="120" height="30" rx="4" fill="#0b0b12" stroke="#ffd23f"/><text x="236" y="34" font-size="12" fill="#ffd23f" text-anchor="middle" font-family="Arial Black">${esc(s.k)}</text></svg></div>
+  <div class="d2lower"><b>${esc(s.k)}</b><h3>${esc(s.t)}</h3><p>${esc(s.sub)}</p></div>
+  <div class="row" style="justify-content:space-between;margin:8px 0"><button class="btn ghost" data-act="d2-tv" data-d="-1">‹ Anterior</button><span class="mut">Matéria ${i + 1}/${T.seg.length}</span><button class="btn pri" data-act="d2-tv" data-d="1">Próxima ›</button></div>
+  <div class="d2tick"><div>${T.tick.concat(T.tick).map(t => '<span>' + esc(t) + '</span>').join('')}</div></div></div>`;
+}
+
+/* ---------------- semana, partida, ações e telas ---------------- */
+function d2Weekly() {
+  if (!G || G.mgr || !G.user) return; const D = d2(), u = G.user, p = up(); const b0 = D.bank;
+  const gross = (p.club && u.contract) ? (u.contract.wage || 0) : 0;
+  if (gross) { d2Pay(gross); d2Pay(-Math.round(gross * .275)); if (D.staff.ag) d2Pay(-Math.round(gross * .05)); d2Pay(-Math.round(gross * .08)); }
+  d2Pay(-D2_HOUSE[D.house][2]); if (D.car) d2Pay(-D2_CAR[D.car][2]); Object.keys(D.staff).forEach(k => { if (D.staff[k] && k !== 'ag') d2Pay(-D2_STAFF[k][1]); });
+  d2SponWeek(); d2FragEffect(); d2InjWeek();
+  if (D.staff.ch) u.form = Math.min(.6, u.form + .02); let f = D.fame - .15 + D2_HOUSE[D.house][4] + D2_CAR[D.car][3] + (D.staff.im ? .25 : 0); const r = (u.ratings || []).slice(-4); if (r.length) { const av = r.reduce((a, b) => a + b, 0) / r.length; f += (av - 6.4) * .25; } D.fame = clamp(f, 0, 100);
+  if (D.bank < 0) { const ij = Math.round(-D.bank * .01); D.bank -= ij; u.trust = clamp(u.trust - .2, 0, 100); if (!D.debtWarn) { D.debtWarn = 1; addNews('Você está no vermelho: dívidas rendem juros de 1% por semana.', 'bad'); d2Inbox('family', 'Filho, vi que a conta está no negativo. Vamos conversar antes que vire bola de neve.'); } } else D.debtWarn = 0;
+  d2Log('Resultado da semana', D.bank - b0); d2WeekFeed();
+}
+function d2AfterMatch(MC, rating, st, gf, ga) {
+  if (!G || G.mgr || !st) return; const D = d2(), p = up(), opp = MC.teams[1 - MC.uSide].name, r1 = (Math.round(rating * 10) / 10).toFixed(1).replace('.', ','); const ctx = { adv: opp, nota: r1 };
+  if (st.g >= 1) d2Feed('fan', `${st.g > 1 ? st.g + ' gols' : 'Gol'} de ${shortName(p)} contra o ${opp}! Nota ${r1}.`, 2 + st.g, { img: [0, 12, 13, 1][ri(0, 3)] });
+  if (rating >= 7.8) d2Inbox('press', `${shortName(p)} brilha contra o ${opp}: nota ${r1} e manchete garantida na imprensa.`, ctx);
+  if (rating <= 5.6) d2Feed('cro', `${shortName(p)} decepciona contra o ${opp}: nota ${r1}. A pressão aumenta.`, 1);
+  if (gf > ga && rnd() < .4) d2Inbox('mate', null, ctx); else if (rnd() < .3) d2Inbox('fan', null, ctx);
+  if (rnd() < .22) d2Inbox('doc', null, ctx); if (rnd() < .2) d2Inbox('coach', null, ctx);
+  D.fame = clamp(D.fame + st.g * .8 + st.a * .4 + (rating >= 7.5 ? .8 : 0), 0, 100);
+  if ((st.g >= 1 || rating >= 8) && rnd() < .6) d2Queue({ k: 'auto' });
+}
+function d2Seen(i) { if (i != null) d2().seen[i] = 1; }
+function d2Tabs() { return [['sum', 'Finanças'], ['spo', 'Patrocínios'], ['sty', 'Estilo de vida'], ['per', 'Perfumes'], ['hp', 'Saúde'], ['fd', 'Feed'], ['ms', 'Mensagens'], ['tv', 'Jornal TV'], ['gal', 'Galeria']]; }
+function vVida() {
+  const D = d2(), p = up(); if (!D.tab) D.tab = 'sum';
+  const un = D.inbox.filter(m => !m.r).length; const bar = `<div class="seg d2seg">${d2Tabs().map(t => `<button type="button" data-act="d2-tab" data-t="${t[0]}" aria-pressed="${D.tab === t[0]}">${t[1]}${t[0] === 'ms' && un ? ' (' + un + ')' : ''}</button>`).join('')}</div>`;
+  const hd = head('Rodix Vida', `<span class="chip acc">${d2Fmt(D.bank)}</span>`);
+  const fn = { sum: d2Sum, spo: d2Spo, sty: d2Sty, per: d2Per, hp: d2Hp, fd: d2FeedV, ms: d2Ms, tv: vTV, gal: d2Gal }[D.tab] || d2Sum;
+  return hd + bar + fn();
+}
+function d2Sum() {
+  const D = d2(), u = G.user, p = up(); const gross = (p.club && u.contract) ? u.contract.wage : 0; const sp = D.spons.reduce((a, s) => a + Math.round(s.pw * .6), 0);
+  const ex = D2_HOUSE[D.house][2] + (D.car ? D2_CAR[D.car][2] : 0) + Object.keys(D.staff).reduce((a, k) => a + (D.staff[k] && k !== 'ag' ? D2_STAFF[k][1] : 0), 0);
+  const net = Math.round(gross * (1 - .275 - .08 - (D.staff.ag ? .05 : 0))) + sp - ex;
+  return `<div class="grid2"><div class="card stack"><span class="lbl">Saldo</span><b class="d2big ${D.bank < 0 ? 'bad' : ''}">${d2Fmt(D.bank)}</b><span class="mut">Fama: <b style="color:var(--fg)">${Math.round(D.fame)}</b>/100</span><div class="bar"><i style="width:${D.fame}%"></i></div></div>
+  <div class="card"><span class="lbl">Fluxo semanal estimado</span><dl class="kv"><dt>Salário bruto</dt><dd>${money(gross)}</dd><dt>Impostos (27,5%)</dt><dd>−${money(Math.round(gross * .275))}</dd><dt>Família (8%)</dt><dd>−${money(Math.round(gross * .08))}</dd>${D.staff.ag ? `<dt>Agente (5%)</dt><dd>−${money(Math.round(gross * .05))}</dd>` : ''}<dt>Patrocínios (base)</dt><dd>+${money(sp)}</dd><dt>Casa, carro e equipe</dt><dd>−${money(ex)}</dd><dt><b>Líquido</b></dt><dd><b class="${net < 0 ? 'bad' : ''}">${d2Fmt(net)}</b></dd></dl></div></div>
+  <p class="fine">Dinheiro tem função: casa melhor acelera recuperação, carro e perfume aumentam a fama, equipe cuida do corpo e da imagem. No vermelho, juros de 1% por semana e a confiança do técnico cai.</p>
+  <div class="card"><span class="lbl">Últimos movimentos</span>${D.log.slice(0, 10).map(l => `<div class="row" style="justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.06)"><span class="mut">Sem. ${l.w + 1} · ${esc(l.t)}</span><b class="${l.v < 0 ? 'bad' : ''}">${d2Fmt(l.v)}</b></div>`).join('') || '<span class="mut">Sem movimentos ainda.</span>'}</div>`;
+}
+function d2Spo() {
+  const D = d2(); const act = D.spons.map(A => { const d = sponProgress(A), c = A.cond; const parts = []; if (c.g) parts.push(`Gols ${d.g}/${c.g}`); if (c.ga) parts.push(`G+A ${d.ga}/${c.ga}`); if (c.ap) parts.push(`Jogos ${d.ap}/${c.ap}`); if (c.r) parts.push(`Nota ${d.r ? d.r.toFixed(1).replace('.', ',') : '—'}/${String(c.r).replace('.', ',')}`); const wl = Math.max(0, A.endAbs - absWk()); return `<div class="card stack"><div class="row" style="justify-content:space-between"><b>${esc(A.brand)}</b><span class="chip">${D2_CATN[A.cat]}</span></div><span>${money(Math.round(A.pw * .6))}/sem. + bônus de ${money(Math.round(A.pw * D2_SPON_WK * .4))} se cumprir</span><span class="mut">${parts.join(' · ')} · faltam ${wl} sem.</span><div class="bar"><i style="width:${sponOk(A) ? 100 : 40}%"></i></div></div>`; }).join('');
+  const slots = `<div class="row" style="gap:8px;margin-bottom:10px">${Array.from({ length: D2_SLOTS }, (_, i) => `<span class="chip ${D.spons[i] ? 'acc' : ''}">${D.spons[i] ? esc(D.spons[i].brand) : 'Vaga livre'}</span>`).join('')}</div>`;
+  const offs = (D.offers || []).map((o, i) => `<div class="card stack"><div class="row" style="justify-content:space-between"><b>${esc(o.brand)}</b><span class="chip acc">${esc(o.tier)}</span></div><span class="chip">${D2_CATN[o.cat]}</span><b class="d2big">${money(o.pw)}/sem.</b><span class="mut">Meta: ${esc(sponText(o.cond).replace('em 19 semanas', ''))}em ${D2_SPON_WK} semanas · bônus final de ${money(Math.round(o.pw * D2_SPON_WK * .4))}</span><button class="btn pri" data-act="d2-spon" data-i="${i}" ${D.spons.length >= D2_SLOTS || D.spons.some(s => s.cat === o.cat) ? 'disabled' : ''}>Assinar</button></div>`).join('');
+  return `<p class="mut" style="margin:0 0 8px">Até <b>${D2_SLOTS} patrocínios ao mesmo tempo</b>, um por categoria. 20 marcas disputam o seu rosto; quanto maior a fama e o overall, maior o contrato.</p>${slots}${act}<div class="lbl" style="margin:12px 0 6px">Propostas</div><div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(250px,1fr))">${offs || '<div class="card"><span class="mut">Sem propostas agora. Novas chegam a cada poucas semanas.</span></div>'}</div>`;
+}
+function d2Sty() {
+  const D = d2(); const hs = D2_HOUSE.map((h, i) => `<div class="card stack ${D.house === i ? 'cur' : ''}"><b>${h[0]}</b><span class="mut">Custo/sem. ${money(h[2])}${h[3] ? ` · recuperação −${h[3]}%` : ''}${h[4] ? ` · fama +${h[4]}/sem.` : ''}</span>${D.house === i ? '<span class="chip acc">Atual</span>' : i > D.house ? `<button class="btn pri" data-act="d2-house" data-i="${i}" ${D.bank < h[1] ? 'disabled' : ''}>Comprar ${money(h[1])}</button>` : ''}</div>`).join('');
+  const cs = D2_CAR.map((h, i) => i ? `<div class="card stack ${D.car === i ? 'cur' : ''}"><b>${h[0]}</b><span class="mut">Custo/sem. ${money(h[2])} · fama +${h[3]}/sem.${i === 6 ? ' · chegadas de jatinho' : ''}</span>${D.car === i ? '<span class="chip acc">Atual</span>' : i > D.car ? `<button class="btn pri" data-act="d2-car" data-i="${i}" ${D.bank < h[1] ? 'disabled' : ''}>Comprar ${money(h[1])}</button>` : ''}</div>` : '').join('');
+  const st = Object.keys(D2_STAFF).map(k => `<div class="card stack"><b>${D2_STAFF[k][0]}</b><span class="mut">${D2_STAFF[k][2]}</span><span class="mut">${k === 'ag' ? '5% do salário' : money(D2_STAFF[k][1]) + '/sem.'}</span><button class="btn ${D.staff[k] ? 'ghost' : 'pri'}" data-act="d2-staff" data-k="${k}">${D.staff[k] ? 'Dispensar' : 'Contratar'}</button></div>`).join('');
+  return `<div class="lbl">Moradia</div><div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">${hs}</div><div class="lbl" style="margin-top:12px">Garagem</div><div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">${cs}</div><div class="lbl" style="margin-top:12px">Equipe pessoal</div><div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">${st}</div>`;
+}
+function d2Per() {
+  const D = d2(), c = userClub(), cst = D2_COACH[d2CoachStyle(c ? c.id : 'x')];
+  const row = (id) => { const fi = d2FragInfo(id); if (!fi) return ''; const own = D.frag.own[id] || 0; const cs = d2Score(fi, cst[1]), fs = (d2Score(fi, D2_FANS.jov) + d2Score(fi, D2_FANS.tra)) / 2; const bars = (v) => '●'.repeat(Math.round(Math.min(2, v) * 2.5)) + '○'.repeat(5 - Math.round(Math.min(2, v) * 2.5));
+    return `<div class="card stack ${D.frag.on === id ? 'cur' : ''}"><div class="row" style="justify-content:space-between"><b>${esc(fi.n)}</b><span class="chip">${fi.fam.map(f => D2_FAM[f]).filter((v, i, a) => a.indexOf(v) === i).join(' / ')}</span></div><span class="mut">${esc(fi.d)}</span><span>Técnico <b>${bars(cs)}</b> · Torcida <b>${bars(fs)}</b></span><span class="mut">${own ? 'Frasco: ' + own + ' semana(s)' : 'Sem frasco'} · ${money(fi.price)}</span><div class="row"><button class="btn pri" data-act="d2-fbuy" data-id="${id}">${own ? 'Reabastecer' : 'Comprar'}</button>${own ? `<button class="btn ${D.frag.on === id ? 'ghost' : ''}" data-act="d2-fon" data-id="${id}">${D.frag.on === id ? 'Em uso' : 'Usar'}</button>` : ''}</div></div>`; };
+  const lab = D.frag.lab ? row('lab') : '';
+  return `<div class="card stack"><span class="lbl">O técnico do ${esc(c ? c.name : 'clube')}</span><b>${cst[0]}</b><span class="mut">${cst[2]} Combinar o perfume com o gosto dele aumenta a confiança semana a semana. A torcida também reage ao cheiro: jovens e tradicionais têm gostos diferentes.</span></div>
+  <div class="row" style="margin:10px 0"><button class="btn pri" data-act="d2-lab">${ico('flask', 18)} Criar o seu perfume · ${money(20000)}</button></div>${lab}<div class="lbl" style="margin:8px 0">Coleção</div><div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">${D2_FR.map(x => row(x[0])).join('')}</div>`;
+}
+function d2LabModal(sel) {
+  sel = sel || window.D2LAB || { top: 0, mid: 0, base: 0 }; window.D2LAB = sel; const seg = (k, lab) => `<div class="lbl">${lab}</div><div class="seg">${D2_NOTES[k].map((n, i) => `<button type="button" data-act="d2-labp" data-k="${k}" data-i="${i}" aria-pressed="${sel[k] === i}">${n[0]}</button>`).join('')}</div>`;
+  const fam = ['top', 'mid', 'base'].map(k => D2_NOTES[k][sel[k]][1]); const c = userClub(), cst = D2_COACH[d2CoachStyle(c ? c.id : 'x')][1]; const fi = { fam }; const cs = d2Score(fi, cst), fs = (d2Score(fi, D2_FANS.jov) + d2Score(fi, D2_FANS.tra)) / 2;
+  modal(`<h2>Laboratório de perfume</h2><p class="mut">Escolha uma nota de topo, de coração e de fundo. O resultado agrada diferente ao técnico e à torcida.</p>${seg('top', 'Topo')}${seg('mid', 'Coração')}${seg('base', 'Fundo')}<label class="stack" style="gap:4px;margin-top:10px"><span class="lbl">Nome do perfume</span><input id="d2name" class="inp" maxlength="22" value="${esc((window.D2NAME || 'Rodix Signature'))}"></label><p>Técnico: <b>${'●'.repeat(Math.round(Math.min(2, cs) * 2.5))}${'○'.repeat(5 - Math.round(Math.min(2, cs) * 2.5))}</b> · Torcida: <b>${'●'.repeat(Math.round(Math.min(2, fs) * 2.5))}${'○'.repeat(5 - Math.round(Math.min(2, fs) * 2.5))}</b></p><div class="row"><button class="btn pri" data-act="d2-labmk">Criar por ${money(20000)}</button><button class="btn ghost" data-act="close-modal">Cancelar</button></div>`);
+}
+function d2Hp() {
+  const D = d2(), p = up(), I = D.inj; let h = '';
+  if (I && p.inj > 0) { h += `<div class="card stack" style="border-color:#ff6b6b"><span class="lbl">Lesão atual</span><b style="font-size:20px">${esc(I.n)}</b><span>Região: <b>${esc(I.part)}</b> · faltam <b>${p.inj}</b> semana(s) · gravidade ${I.sev === 'sev' ? 'grave' : I.sev === 'mid' ? 'moderada' : 'leve'}</span><div class="bar"><i style="width:${Math.max(4, 100 - p.inj / Math.max(I.tot, 1) * 100)}%"></i></div></div><div class="lbl" style="margin:10px 0 6px">Tratamento ${I.plan !== 'rest' ? '· ' + D2_PLAN[I.plan][0] : ''}</div><div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr))">${Object.keys(D2_PLAN).map(k => `<div class="card stack"><b>${D2_PLAN[k][0]}</b><span class="mut">${D2_PLAN[k][3]}</span><button class="btn pri" data-act="d2-plan" data-k="${k}" ${I.plan !== 'rest' || k === 'rest' || D.bank < D2_PLAN[k][1] || (k === 'sur' && I.sev !== 'sev') ? 'disabled' : ''}>${k === 'rest' ? 'Padrão' : money(D2_PLAN[k][1])}</button></div>`).join('')}</div>`; }
+  else h += `<div class="card"><b>Sem lesão</b><p class="mut" style="margin:6px 0 0">${D.rtp > 0 ? 'Retorno gradual: por ' + D.rtp + ' semana(s) o risco de recaída é maior. Fisioterapeuta e casa melhor ajudam.' : 'Corpo liberado. Treino intenso e muitos jogos seguidos aumentam o risco.'}</p></div>`;
+  h += `<div class="card" style="margin-top:10px"><span class="lbl">Histórico clínico</span>${D.hist.map(x => `<div class="row" style="justify-content:space-between;padding:4px 0"><span>${esc(x.n)} (${esc(x.part)})</span><b>${x.tot} sem.</b></div>`).join('') || '<span class="mut">Nenhuma lesão registrada.</span>'}</div>`;
+  return h;
+}
+function d2FeedV() { const D = d2(); D.feed.forEach(x => d2Seen(x.img)); return D.feed.map(x => { const a = D2_ACC[x.k] || D2_ACC.rod; return `<div class="sc-post"><div class="sc-who"><div class="sc-av" style="background:${a[1]}">${esc(a[0][0])}</div><div><b>${esc(a[0])}</b><small>Sem. ${x.w + 1}</small></div></div><p>${esc(x.t)}</p>${x.img != null ? d2Img(x.img) : ''}<div class="sc-act"><span class="chip">♥ ${x.lk.toLocaleString('pt-BR')}</span></div></div>`; }).join('') || '<span class="mut">Sem posts.</span>'; }
+function d2Ms() {
+  const D = d2(); D.inbox.forEach(x => d2Seen(x.img)); return `<p class="fine">${d2Combos().toLocaleString('pt-BR')} mensagens possíveis (torcida, imprensa, família, elenco, técnico e médicos), todas geradas conforme a sua fase.</p>` + (D.inbox.map(m => `<div class="sc-post"><div class="sc-who"><div class="sc-av" style="background:#3fc27a">${esc(m.who[0].toUpperCase())}</div><div><b>${esc(m.who)}</b><small>${{ fan: 'Torcida', press: 'Imprensa', family: 'Família', mate: 'Elenco', coach: 'Comissão técnica', doc: 'Médico' }[m.ch]} · sem. ${m.w + 1}</small></div></div><p>${esc(m.t)}</p>${m.img != null ? d2Img(m.img) : ''}${m.r ? `<div class="sc-cm"><b>Você</b>${esc(m.r)}</div>` : `<div class="sc-act"><button class="btn" data-act="d2-reply" data-id="${m.id}">Responder</button></div>`}</div>`).join('') || '<span class="mut">Sem mensagens.</span>');
+}
+function d2Gal() { const D = d2(); const n = Object.keys(D.seen).length; return `<p class="mut">Você já viu <b>${n}/100</b> ilustrações. Elas aparecem no feed e nas mensagens ao longo da carreira.</p><div class="d2gal">${Array.from({ length: 100 }, (_, i) => D.seen[i] ? `<button class="d2th" data-act="d2-gal" data-i="${i}">${d2Img(i)}</button>` : `<div class="d2th lock">?</div>`).join('')}</div>`; }
+const D2_RPL = { fan: [['c', 'Obrigado pelo carinho, vocês são demais!'], ['p', 'Valeu! Vou seguir trabalhando.'], ['h', 'Só falta vocês pagarem o churrasco! 😄']], press: [['c', 'Agradeço o reconhecimento da imprensa.'], ['p', 'Foco no próximo jogo, sem comentar o resto.'], ['h', 'Manda a manchete pra minha mãe! 😂']], family: [['c', 'Amo vocês, vou aí assim que der!'], ['p', 'Tá tudo sob controle, fiquem tranquilos.'], ['h', 'Guarda um prato de comida pra mim!']], mate: [['c', 'Vocês são minha família aqui.'], ['p', 'Bora trabalhar, grupo!'], ['h', 'Churrasco é por conta do {camisa}!']], coach: [['c', 'Obrigado, professor, vou me dedicar.'], ['p', 'Entendido, comissão. Vamos evoluir.'], ['h', 'Pode deixar, treino é comigo!']], doc: [['c', 'Obrigado pelo cuidado, doutor.'], ['p', 'Vou seguir o protocolo à risca.'], ['h', 'Prometo não bancar o herói... dessa vez.']] };
+function d2ReplyModal(id) { const m = d2().inbox.find(x => x.id === id); if (!m) return; modal(`<h2>Responder ${esc(m.who)}</h2><p class="mut">${esc(m.t)}</p><div class="stack">${D2_RPL[m.ch].map((r, i) => `<button class="btn ${r[0] === 'p' ? '' : 'pri'}" data-act="d2-rpl" data-id="${id}" data-i="${i}">${esc(r[1].replace('{camisa}', 'camisa ' + (up().num || '10')))}</button>`).join('')}<button class="btn ghost" data-act="close-modal">Ignorar</button></div>`); }
+function d2Rpl(id, i) {
+  const D = d2(), u = G.user, m = D.inbox.find(x => x.id === id); if (!m) return; const r = D2_RPL[m.ch][i]; m.r = r[1].replace('{camisa}', 'camisa ' + (up().num || '10')); closeModal();
+  if (m.ch === 'fan' || m.ch === 'press') D.fame = clamp(D.fame + ({ c: .6, p: .3, h: D.staff.im ? .7 : (u.form > 0 ? .8 : -.2) }[r[0]]), 0, 100);
+  if (m.ch === 'coach') u.trust = clamp(u.trust + ({ c: .6, p: 1.2, h: -.2 }[r[0]]), 0, 100);
+  if (m.ch === 'family') D.fame = clamp(D.fame + .1, 0, 100); if (m.ch === 'mate') u.trust = clamp(u.trust + .3, 0, 100);
+  saveGame(true); renderHub(); toast('Resposta enviada');
+}
+function d2Act(a, el) {
+  const D = d2(), ds = (el && el.dataset) || {};
+  switch (a) {
+    case 'd2-tab': D.tab = ds.t; renderHub(); break;
+    case 'd2-go': closeModal(); hubTab = 'vida'; D.tab = ds.t || 'sum'; renderHub(); break;
+    case 'd2-spon': d2SponSign(+ds.i); break;
+    case 'd2-house': { const h = D2_HOUSE[+ds.i]; if (D.bank < h[1]) return toast('Saldo insuficiente.'); d2Pay(-h[1], h[0]); D.house = +ds.i; d2Feed('me', 'Nova casa: ' + h[0] + '.', 3, { img: 18 }); saveGame(true); renderHub(); break; }
+    case 'd2-car': { const h = D2_CAR[+ds.i]; if (D.bank < h[1]) return toast('Saldo insuficiente.'); d2Pay(-h[1], h[0]); D.car = +ds.i; d2Feed('me', 'Na garagem: ' + h[0] + '.', 3, { img: 8 }); saveGame(true); renderHub(); break; }
+    case 'd2-staff': { const k = ds.k; D.staff[k] = !D.staff[k]; if (D.staff[k] && k === 'ag') D.offAt = -9; saveGame(true); renderHub(); break; }
+    case 'd2-fbuy': d2BuyFrag(ds.id); break;
+    case 'd2-fon': D.frag.on = ds.id; saveGame(true); renderHub(); break;
+    case 'd2-lab': d2LabModal(); break;
+    case 'd2-labp': { const e = document.getElementById('d2name'); if (e) window.D2NAME = e.value; window.D2LAB[ds.k] = +ds.i; d2LabModal(window.D2LAB); break; }
+    case 'd2-labmk': { const e = document.getElementById('d2name'); const L = window.D2LAB || { top: 0, mid: 0, base: 0 }; if (D.bank < 20000) return toast('Saldo insuficiente.'); d2Pay(-20000, 'Laboratório de perfume'); D.frag.lab = { top: L.top, mid: L.mid, base: L.base, name: ((e && e.value) || 'Rodix Signature').slice(0, 22) }; D.frag.own.lab = (D.frag.own.lab || 0) + 12; D.frag.on = 'lab'; closeModal(); d2Feed('me', 'Lançamento: o perfume "' + D.frag.lab.name + '" criado por ' + shortName(up()) + '.', 3, { img: 19 }); saveGame(true); renderHub(); break; }
+    case 'd2-plan': d2SetPlan(ds.k); break;
+    case 'd2-tv': D.tvI = (D.tvI + (+ds.d) + 40) % 40; renderHub(); break;
+    case 'd2-reply': d2ReplyModal(+ds.id); break;
+    case 'd2-rpl': d2Rpl(+ds.id, +ds.i); break;
+    case 'd2-gal': modal(`<div class="d2big">${d2Img(+ds.i)}</div><p class="mut" style="text-align:center">${esc(D2_SCN[(+ds.i) % 20])} · variação ${Math.floor(+ds.i / 20) + 1}</p><div class="row"><button class="btn ghost" data-act="close-modal">Fechar</button></div>`); break;
+  }
+}
+
 const SOC_ENABLED = CREATOR;  /* Rodix Social desativado por enquanto: mude para true para voltar */
 function socOn() { return SOC_ENABLED && !(G && G.user && G.user.socOn === false); }
 function head(t, right) { return `<div class="pagehead"><div class="row" style="gap:14px"><button class="back" data-act="home" aria-label="Voltar ao início">${ico('back', 22)}</button><h2>${t}</h2></div>${right ? `<div class="row">${right}</div>` : ''}</div>`; }
@@ -4538,7 +4891,7 @@ function vShop() { return head('Loja') + shopBody(true); }
 function menuShop() { const sc = $('#modal-box').scrollTop; modal(`<h2>Loja</h2>${shopBody(false)}<div class="row" style="margin-top:14px"><button class="btn ghost" data-act="close-modal">Fechar</button></div>`); $('#modal-box').classList.add('wide'); $('#modal-box').scrollTop = sc; }
 function vHome() {
   const p = up(), u = G.user, c = userClub();
-  const sub = { news: (allNews()[0] || { t: 'Sem notícias' }).t.slice(0, 30), me: `Overall ${p.ovr}`, club: c ? c.name : 'Sem clube', comp: c ? LDEF[c.lg].n : '—', cal: `Semana ${Math.min(G.week + 1, totalWeeks())}`, shop: coinsOf() + ' Coins', market: G.offers.length ? G.offers.length + ' proposta(s)' : 'Sem propostas', train: u.trained ? 'Feito nesta semana' : p.inj > 0 ? 'Lesionado' : 'Treino disponível', stats: 'Artilharia e prêmios', nat: G.pendingIntl ? 'Convocado!' : NATIONS[p.nat].n, hist: `${u.history.length} temporada(s)`, social: ((u.soc ? u.soc.fol : 0) || 0).toLocaleString('pt-BR') + ' seguidores' };
+  const sub = { news: (allNews()[0] || { t: 'Sem notícias' }).t.slice(0, 30), me: `Overall ${p.ovr}`, club: c ? c.name : 'Sem clube', comp: c ? LDEF[c.lg].n : '—', cal: `Semana ${Math.min(G.week + 1, totalWeeks())}`, shop: coinsOf() + ' Coins', market: G.offers.length ? G.offers.length + ' proposta(s)' : 'Sem propostas', train: u.trained ? 'Feito nesta semana' : p.inj > 0 ? 'Lesionado' : 'Treino disponível', stats: 'Artilharia e prêmios', nat: G.pendingIntl ? 'Convocado!' : NATIONS[p.nat].n, hist: `${u.history.length} temporada(s)`, social: ((u.soc ? u.soc.fol : 0) || 0).toLocaleString('pt-BR') + ' seguidores', vida: d2Fmt(d2().bank) + ' · fama ' + Math.round(d2().fame) };
   const bd = { market: G.offers.length || '', train: !u.trained && p.inj === 0 && p.club ? '!' : '', nat: G.pendingIntl ? '!' : '', social: (u.soc && socOn()) ? (Math.max(0, u.soc.nid - (u.socSeen || 1)) || '') : '' };
   const tiles = TILES.filter(t => t[0] !== 'social' || socOn()).map(([k, n, ic]) => `<button class="tile" data-tab="${k}"><i>${ico(ic, 30)}</i><span><b>${n}</b><small>${esc(sub[k])}</small></span>${bd[k] ? `<em class="tbadge">${bd[k]}</em>` : ''}</button>`).join('');
   return `<div class="home-top">${nextCard()}${depthCard()}</div><div class="tilegrid">${tiles}</div><div class="card stack" style="margin-top:20px"><span class="lbl">Notícias</span>${newsHtml(10)}</div>`;
@@ -5147,7 +5500,7 @@ function openControls() {
   $('#modal-box').oninput = cfgInput;
 }
 function openAbout() {
-  modal(`<h2>Sobre</h2><p>Rodix Football · Edição Creators · build 59. Escudos, Data Pack e nomes de jogadores por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
+  modal(`<h2>Sobre</h2><p>Rodix Football · Edição Creators · build 62. Escudos, Data Pack e nomes de jogadores por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
 }
 async function openProfiles() {
   const all = await refreshSaves();
@@ -5567,6 +5920,7 @@ function openExport() {
 }
 /* ---------- AÇÕES ---------- */
 async function act(a, el) {
+  if (a.startsWith('d2-')) { d2Act(a, el); return; }
   switch (a) {
     case 'new-career': closeModal(); CR = defaultCreate(); DF = 'semi'; newWorld(); CP = { co: 'BRA', lg: 'BRA3', club: null }; renderCreate(); show('s-create'); break;
     case 'continue': openContinue(); break;

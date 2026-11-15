@@ -4947,7 +4947,7 @@ function d3PressShow() { const M = G.mgr, A = d3M(); const q = D3_PQ[A.pressQ % 
 function d3PressPick(qi, i) { const M = G.mgr, A = d3M(), o = D3_PQ[qi][1][i]; const luck = rnd() < .75 ? 1 : -1; M.conf = clamp(M.conf + o[1] * luck, 0, 100); A.chem = clamp(A.chem + o[2] * .5, 0, 100); closeModal(); const t = o[1] * luck > 0 ? 'A resposta caiu bem: confiança da diretoria em alta.' : 'A frase foi mal interpretada e rendeu crítica.'; A.calls.unshift({ w: absWk(), who: 'Coletiva', r: t }); saveGame(true); renderHub(); toast(t); }
 function d3MgrWeek() {
   if (!CREATOR || !G.mgr) return; const A = d3M(); if (A.ref) { A.ref = 0; if (rnd() < .12) { const fine = d3RefPrice() * 3; G.mgr.cash -= fine; G.mgr.conf = clamp((G.mgr.conf || 50) - 12, 0, 100); addNews('Escândalo de arbitragem atinge o ' + club(G.mgr.club).name + ': multa de ' + money(fine) + ' e pressão sobre o técnico.', 'bad'); A.calls.unshift({ w: absWk(), who: 'Imprensa', r: 'O acordo com o árbitro vazou. Multa de ' + money(fine) + '.' }); } } d3ScoutWeek(); try { d5StdWeek(); } catch (e) { } A.chem = clamp(A.chem + (A.tt ? 3 : .6) - .1, 0, 100);
-  if (!A.callQ && rnd() < .5) d3CallMake(); if (A.pressQ == null && rnd() < .4) A.pressQ = ri(0, D3_PQ.length - 1);
+  if (!A.callQ && absWk() - (A.lastCall == null ? -9 : A.lastCall) >= 5 && rnd() < .22) { d3CallMake(); A.lastCall = absWk(); } if (A.pressQ == null && absWk() - (A.lastPress == null ? -9 : A.lastPress) >= 8 && rnd() < .15) { A.pressQ = ri(0, D3_PQ.length - 1); A.lastPress = absWk(); }
 }
 function d3ShowMgr() { if (!CREATOR || !G || !G.mgr || D2_SCENE_ON) return; const A = d3M(); if (A.callQ && !document.getElementById('d3call') && !A._shown) { A._shown = absWk(); setTimeout(() => { if (G.mgr && d3M().callQ) d3CallOverlay(d3M().callQ.id); }, 700); } else if (A.pressQ != null && !A.callQ) d3PressShow(); if (!A.callQ) A._shown = 0; }
 function d3Act(a, el) {
@@ -6031,6 +6031,141 @@ function d11WeekNews() {
 }
 d2WeekFeed = function () { const D = d2(), p = up(); if (rnd() < .85) d2Inbox(pick(['fan', 'press', 'family', 'mate', 'coach'])); if (p.inj > 0 && rnd() < .6) d2Inbox('doc'); try { d11WeekNews(); } catch (e) { console.error(e); } };
 vVida = d11Vida; d2FeedV = d11News; d2Ms = d11Ms; mgrHome = d11MgrHome; mgrXIView = d11XI;
+/* ======================= DROP 12 · ESCALAÇÃO EM CAMPO (toque/arraste), FUNÇÕES E ELENCO ======================= */
+(function () {
+  const st = document.createElement('style'); st.textContent = `
+.x12{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:860px){.x12{grid-template-columns:1fr}}
+.x12tabs{display:flex;gap:6px;margin:0 0 10px;flex-wrap:wrap}
+.x12p{position:relative;width:100%;aspect-ratio:10/9;max-height:72vh;margin:0 auto;user-select:none;-webkit-user-select:none}
+.x12p svg{position:absolute;inset:0;width:100%;height:100%}
+.tk{position:absolute;transform:translate(-50%,-50%);width:74px;background:none;border:0;padding:0;color:#fff;cursor:pointer;text-align:center;touch-action:none;-webkit-tap-highlight-color:transparent}
+.tk b{display:grid;place-items:center;width:46px;height:46px;margin:0 auto;border-radius:50%;background:#f4f7f2;color:#10160f;font-family:var(--display);font-size:25px;font-weight:800;box-shadow:0 3px 0 rgba(0,0,0,.35);border:3px solid var(--tc,#3fc27a)}
+.tk i{position:absolute;left:50%;top:-11px;transform:translateX(-50%);z-index:1;font-style:normal;font-size:10px;font-weight:800;letter-spacing:.03em;padding:1px 6px;border-radius:999px;background:var(--tc,#3fc27a);color:#10160f}
+.tk u{display:block;width:44px;height:5px;margin:3px auto 0;border-radius:3px;background:#3fdc5a;text-decoration:none}
+.tk.out u{background:#ff5a5a}
+.tk span{display:block;font-size:13px;font-weight:800;line-height:1.1;margin-top:2px;text-shadow:0 1px 3px #000,0 0 2px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tk em{position:absolute;left:4px;top:26px;font-style:normal;font-size:11px;font-weight:900;background:#ffd23f;color:#111;border-radius:3px;padding:0 4px}
+.tk.off i{background:#ff6b6b;color:#fff}.tk.off b{border-color:#ff6b6b}
+.tk.on b{box-shadow:0 0 0 4px var(--acc),0 0 18px var(--acc)}.tk.on span{background:var(--acc);color:var(--acc-ink);border-radius:4px;text-shadow:none;padding:1px 3px}
+.tk.drop b{box-shadow:0 0 0 4px #fff}
+.tk.out{opacity:.6}
+.s-g{--tc:#f6a44a}.s-d{--tc:#f0d36a}.s-m{--tc:#62d47a}.s-a{--tc:#8fb3ff}
+.x12bar{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:8px;margin-top:10px;align-items:stretch}
+.x12bar>button{background:var(--panel2);border:1px solid var(--line2);border-radius:10px;padding:8px 10px;color:var(--fg);cursor:pointer;text-align:center;min-width:0}
+.x12bar>button small{display:block;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}
+.x12bar>button b{display:block;font-family:var(--display);font-size:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.x12fm{display:flex;align-items:stretch;border-radius:10px;overflow:hidden;border:1px solid var(--line2)}
+.x12fm button{background:var(--acc);color:var(--acc-ink);border:0;width:44px;font-size:18px;font-weight:900;cursor:pointer}
+.x12fm b{display:grid;place-items:center;padding:0 12px;font-family:var(--display);font-size:24px;background:var(--panel);min-width:92px}
+.x12card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}
+.x12card h3{margin:0;font-size:22px;line-height:1.1}
+.x12at{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:8px}
+.x12at div{background:var(--bg2);border-radius:8px;padding:5px 8px;display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+.x12at small{font-size:11px;font-weight:800;letter-spacing:.06em;color:var(--mut)}.x12at b{font-family:var(--display);font-size:22px}
+.x12ovr{display:grid;place-items:center;width:50px;height:50px;border-radius:12px;background:var(--acc);color:var(--acc-ink);font-family:var(--display);font-size:28px;font-weight:800;flex:none}
+.x12bn{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 6px 4px;margin-bottom:10px}
+.x12bn h4{margin:0 6px 4px;font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--acc)}
+.x12bg{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:16px 2px;padding:14px 0 6px}
+.x12bg .tk{position:relative;transform:none;left:auto;top:auto;width:auto;margin:0 auto}
+.x12bg .tk span{text-shadow:none;color:var(--fg)}
+.x12gh{position:fixed;z-index:99999;pointer-events:none;transform:translate(-50%,-50%) scale(1.12);opacity:.92}
+@media (max-height:560px){.x12p{aspect-ratio:auto;height:max(310px,calc(100vh - 128px))}.x12 .x12card{padding:8px 10px}}
+@media (max-height:560px),(max-width:560px){.x12p{max-height:none}.tk{width:66px}.tk b{width:38px;height:38px;font-size:21px;border-width:2px}.tk u{width:36px;height:4px}.tk span{font-size:12px}.tk i{top:-10px;font-size:9px}.tk em{top:20px}.x12bg{grid-template-columns:repeat(auto-fill,minmax(68px,1fr))}}
+.r12{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:12px}
+.r12 .card{padding:0;overflow:hidden}.r12 h3{margin:0;padding:10px;text-align:center;background:color-mix(in srgb,var(--acc) 22%,var(--panel2));font-family:var(--display);font-size:24px;text-transform:uppercase}
+.r12 .in{padding:12px;display:flex;flex-direction:column;gap:8px}
+.c12 td,.c12 th{white-space:nowrap}
+`; document.head.appendChild(st);
+})();
+let D12SEL = null, D12CARD = null;
+const D12_AB = { GOL: 'GL', ZAG: 'ZG', LAT: 'LA', VOL: 'VL', MEI: 'MC', PON: 'PT', ATA: 'AT' };
+const D12_SC = { GOL: 'g', ZAG: 'd', LAT: 'd', VOL: 'm', MEI: 'm', PON: 'a', ATA: 'a' };
+function d12Px(x, y) { return 50 + (x - 50) * (.8 + .2 * y / 100); }
+function d12Pos(slots) {
+  const cnt = {}, seen = {}; slots.forEach(s => cnt[s] = (cnt[s] || 0) + 1);
+  const X = { 1: [50], 2: [37, 63], 3: [24, 50, 76], 4: [16, 39, 61, 84] }, Y = { GOL: 90, ZAG: 76, LAT: 65, VOL: 54, MEI: 37, PON: 30, ATA: 12 };
+  return slots.map(s => { const k = seen[s] = (seen[s] || 0) + 1, n = cnt[s]; let x;
+    if (s === 'LAT' || s === 'PON') x = n === 1 ? 50 : [11, 89][k - 1] != null ? [11, 89][k - 1] : 50; else if (s === 'MEI' && n === 2 && cnt.PON) x = [36, 64][k - 1]; else if (s === 'ZAG' && n === 3) x = [27, 50, 73][k - 1]; else x = (X[n] || X[4])[k - 1] || 50;
+    let y = Y[s]; if (s === 'MEI' && n === 1 && cnt.PON) y = 40; return [d12Px(x, y), y]; });
+}
+function d12Tok(p, o) {
+  if (!p) return ''; const ps = o.slot || p.pos, off = o.slot && p.pos !== o.slot, out = !mgAvail(p);
+  return `<button type="button" class="tk s-${D12_SC[ps]} ${off ? 'off' : ''} ${out ? 'out' : ''} ${D12SEL === p.id ? 'on' : ''}" data-act="d12-tok" data-id="${p.id}" ${o.xy ? `style="left:${o.xy[0]}%;top:${o.xy[1]}%"` : ''} aria-label="${esc(fullName(p))}, ${POSN[p.pos]}, ${p.ovr}"><i>${D12_AB[ps]}${off ? '!' : ''}</i><b>${p.ovr}</b><u></u><span>${esc(p.ln || fullName(p))}</span>${o.cap ? '<em>C</em>' : ''}</button>`;
+}
+function d12Pitch(xi, M) {
+  const slots = xi.__slots, P = d12Pos(slots), cap = mgRoleP('cap'); const f = (x, y) => d12Px(x, y).toFixed(2) + ',' + (y * .9).toFixed(2);
+  const stripes = Array.from({ length: 6 }, (_, i) => { const a = i * 100 / 6, b = (i + 1) * 100 / 6; return `<polygon points="${f(0, a)} ${f(100, a)} ${f(100, b)} ${f(0, b)}" fill="${i % 2 ? '#1f7a36' : '#1a6b2f'}"/>`; }).join('');
+  const ln = 'fill="none" stroke="rgba(255,255,255,.5)" stroke-width=".5"';
+  const svg = `<svg viewBox="0 0 100 90" preserveAspectRatio="none" aria-hidden="true">${stripes}<polygon points="${f(2, 2)} ${f(98, 2)} ${f(98, 98)} ${f(2, 98)}" ${ln}/><polygon points="${f(22, 98)} ${f(22, 72)} ${f(78, 72)} ${f(78, 98)}" ${ln}/><polygon points="${f(37, 98)} ${f(37, 87)} ${f(63, 87)} ${f(63, 98)}" ${ln}/><path d="M ${f(34, 2)} Q ${f(50, 24)} ${f(66, 2)}" ${ln}/><path d="M ${f(38, 72)} Q ${f(50, 60)} ${f(62, 72)}" ${ln}/></svg>`;
+  return `<div class="x12p" id="x12p">${svg}${M.sel.map((id, i) => d12Tok(pl(id), { slot: slots[i], xy: P[i], cap: cap && cap.id === id })).join('')}</div>`;
+}
+function d12Card(p) {
+  if (!p) return `<div class="x12card"><span class="mut">Toque em um jogador para ver os atributos. Toque em outro (ou arraste) para trocar os dois de lugar.</span></div>`;
+  const a = attrsOf(p), gk = p.pos === 'GOL'; const at = gk ? [['DEF', a.gol], ['PAS', a.pas], ['FOR', a.for], ['VEL', a.vel], ['RES', a.res], ['VIS', a.vis]] : [['VEL', a.vel], ['FIN', a.fin], ['PAS', a.pas], ['DRI', a.dri], ['DES', a.des], ['RES', a.res]];
+  const nat = (typeof NATIONS !== 'undefined' && NATIONS[p.nat]) ? NATIONS[p.nat].n : (p.nat || '');
+  return `<div class="x12card"><div class="row" style="gap:10px;align-items:center"><span class="x12ovr">${p.ovr}</span><div style="min-width:0;flex:1"><h3>${esc(fullName(p))}</h3><div class="row" style="gap:6px;margin-top:4px;flex-wrap:wrap"><span class="chip">${POSN[p.pos]}</span><span class="chip">${p.age} anos</span><span class="chip">${esc(nat)}</span>${p.inj > 0 ? `<span class="chip bad">Lesionado · ${p.inj} sem.</span>` : p.sus > 0 ? '<span class="chip bad">Suspenso</span>' : ''}</div></div></div>
+  <div class="x12at">${at.map(x => `<div><small>${x[0]}</small><b>${x[1] == null ? '—' : x[1]}</b></div>`).join('')}</div><div class="fine" style="margin-top:6px">Temporada: ${p.s ? p.s.ap : 0} jogo(s) · ${p.s ? p.s.g : 0} gol(s) · ${p.s ? p.s.a : 0} assist.</div></div>`;
+}
+function d12XI() {
+  const M = mgEnsure(), c = club(M.club), xi = mgrXI(c.id), A = d3M(); const bench = c.sq.map(pl).filter(p => p && !p.u && !M.sel.includes(p.id)).sort((a, b) => mgAvail(b) - mgAvail(a) || b.ovr - a.ovr);
+  const sub = bench.slice(0, 9), res = bench.slice(9); const cp = pl(D12SEL) || pl(D12CARD); const pr = D3_INS.pr[1].find(o => o[0] === A.ins.pr) || D3_INS.pr[1][1];
+  const tabs = `<div class="x12tabs seg"><button type="button" aria-pressed="true">Meu time</button><button type="button" data-tab="fn" aria-pressed="false">Funções</button><button type="button" data-tab="club" aria-pressed="false">Elenco</button><button type="button" data-tab="ta" aria-pressed="false">Tática avançada</button></div>`;
+  const bar = `<div class="x12bar"><button type="button" data-act="d12-tac"><small>Mentalidade</small><b>${esc(MG_TAC[M.tac].n)}</b></button><div class="x12fm"><button type="button" data-act="d12-form" data-d="-1" aria-label="Formação anterior">◀</button><b>${M.form}</b><button type="button" data-act="d12-form" data-d="1" aria-label="Próxima formação">▶</button></div><button type="button" data-act="d12-pr"><small>Pressão</small><b>${esc(pr[1])}</b></button></div>`;
+  const grid = (t, L) => L.length ? `<div class="x12bn"><h4>${t} (${L.length})</h4><div class="x12bg">${L.map(p => d12Tok(p, {})).join('')}</div></div>` : '';
+  return head('Gestão do time', `<span class="chip acc">Força ${Math.round(xiStr(xi))}</span>`) + tabs + `<div class="x12"><div>${d12Pitch(xi, M)}${bar}<div class="row" style="margin-top:8px;justify-content:space-between"><span class="fine">Toque em dois jogadores para trocar, ou arraste um sobre o outro. Etiqueta vermelha = fora de posição.</span><button class="btn sm" data-m="auto">Escalar automaticamente</button></div></div><div>${d12Card(cp)}${grid('Suplentes', sub)}${grid('Reservas', res)}</div></div>`;
+}
+function d12Swap(a, b) {
+  const M = G.mgr; if (a === b) return false; const ia = M.sel.indexOf(a), ib = M.sel.indexOf(b); if (ia < 0 && ib < 0) return false;
+  if (ia >= 0 && ib >= 0) { M.sel[ia] = b; M.sel[ib] = a; } else if (ia >= 0) { if (!mgAvail(pl(b))) return false; M.sel[ia] = b; } else { if (!mgAvail(pl(a))) return false; M.sel[ib] = a; }
+  strCache.key = ''; saveGame(true); return true;
+}
+function d12Pick(id) {
+  if (D12SEL != null && D12SEL !== id) { if (d12Swap(D12SEL, id)) { D12CARD = D12SEL; D12SEL = null; } else D12SEL = id; }
+  else D12SEL = D12SEL === id ? null : id; if (D12SEL != null) D12CARD = D12SEL; renderHub();
+}
+function d12Act(a, el) {
+  const M = G.mgr; if (!M) return;
+  if (a === 'd12-tok') { if (window.D12DRAGGED) { window.D12DRAGGED = 0; return; } d12Pick(+el.dataset.id || el.dataset.id); return; }
+  if (a === 'd12-tac') { const K = Object.keys(MG_TAC); M.tac = K[(K.indexOf(M.tac) + 1) % K.length]; }
+  else if (a === 'd12-form') { const K = Object.keys(MG_FORMS); M.form = K[(K.indexOf(M.form) + (+el.dataset.d) + K.length) % K.length]; M.sel = []; strCache.key = ''; D12SEL = null; }
+  else if (a === 'd12-pr') { const A = d3M(), K = D3_INS.pr[1].map(o => o[0]); A.ins.pr = K[(K.indexOf(A.ins.pr) + 1) % K.length]; }
+  saveGame(true); renderHub();
+}
+(function () {
+  let dg = null; const tk = e => e.target && e.target.closest ? e.target.closest('.tk[data-id]') : null;
+  document.addEventListener('pointerdown', e => { const t = tk(e); if (!t || !G || !G.mgr) return; dg = { id: +t.dataset.id || t.dataset.id, x: e.clientX, y: e.clientY, el: t, gh: null }; });
+  document.addEventListener('pointermove', e => {
+    if (!dg) return; if (!dg.gh) { if (Math.hypot(e.clientX - dg.x, e.clientY - dg.y) < 12) return; dg.gh = dg.el.cloneNode(true); dg.gh.className += ' x12gh'; dg.gh.removeAttribute('style'); document.body.appendChild(dg.gh); dg.el.style.opacity = '.35'; }
+    dg.gh.style.left = e.clientX + 'px'; dg.gh.style.top = e.clientY + 'px'; document.querySelectorAll('.tk.drop').forEach(x => x.classList.remove('drop'));
+    const u = document.elementFromPoint(e.clientX, e.clientY), t = u && u.closest ? u.closest('.tk[data-id]') : null; if (t && t !== dg.el) t.classList.add('drop'); e.preventDefault();
+  }, { passive: false });
+  const end = e => {
+    if (!dg) return; const d = dg; dg = null; if (!d.gh) return; d.gh.remove(); window.D12DRAGGED = 1; setTimeout(() => { window.D12DRAGGED = 0; }, 80);
+    const u = document.elementFromPoint(e.clientX, e.clientY), t = u && u.closest ? u.closest('.tk[data-id]') : null;
+    if (t && e.type !== 'pointercancel') { const id = +t.dataset.id || t.dataset.id; if (d12Swap(d.id, id)) { D12CARD = d.id; D12SEL = null; } }
+    renderHub();
+  };
+  document.addEventListener('pointerup', end); document.addEventListener('pointercancel', end);
+})();
+function d12Roles() {
+  const M = mgEnsure(); const cards = MG_ROLES.map(([k, n]) => { const p = mgRoleP(k); if (!p) return ''; const a = attrsOf(p);
+    return `<div class="card"><h3>${n}</h3><div class="in"><div class="row" style="gap:10px;align-items:center"><span class="x12ovr">${p.ovr}</span><div style="min-width:0"><b style="font-size:19px">${esc(fullName(p))}</b><div class="row" style="gap:6px;margin-top:4px"><span class="chip">${POSN[p.pos]}</span><span class="chip">${p.age} anos</span></div></div></div>
+    <div class="x12at">${[['VEL', a.vel], ['FIN', a.fin], ['PAS', a.pas], ['PÊN', a.pen], ['FAL', a.fal], ['VIS', a.vis]].map(x => `<div><small>${x[0]}</small><b>${x[1]}</b></div>`).join('')}</div><button class="btn pri" data-m="role" data-v="${k}">Trocar</button></div></div>`; }).join('');
+  const pk = mgRoleP('pk'); const others = mgOwn().filter(p => !pk || p.id !== pk.id).sort((a, b) => (attrsOf(b).pen || 0) - (attrsOf(a).pen || 0)).slice(0, 4);
+  return head('Funções do time') + `<div class="x12tabs seg"><button type="button" data-tab="xi" aria-pressed="false">Meu time</button><button type="button" aria-pressed="true">Funções</button><button type="button" data-tab="club" aria-pressed="false">Elenco</button></div><div class="r12">${cards}</div><div class="card stack" style="margin-top:12px"><span class="lbl">Outros cobradores de pênalti</span><div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px">${others.map((p, i) => `<div class="row" style="justify-content:space-between;background:var(--bg2);border-radius:8px;padding:8px 10px"><span><span class="chip">#${i + 2}</span> ${esc(fullName(p))}</span><b>${attrsOf(p).pen}</b></div>`).join('')}</div><span class="fine">O capitão dá um pequeno bônus de força quando está em campo.</span></div>`;
+}
+function d12Club() {
+  const M = G.mgr, c = club(M.club), t = table(c.lg), pos = t.findIndex(r => r.c === c.id) + 1, own = mgOwn(), xi = mgrXI(c.id), cap = mgRoleP('cap');
+  const avg = F => { const L = xi.filter(F); return L.length ? Math.round(L.reduce((s, p) => s + p.ovr, 0) / L.length) : '—'; };
+  const tt = Object.entries(c.tt).map(([l, n]) => `${n}× ${compName(l)}`).join(' · ') || 'Nenhum título registrado desde 2026';
+  const age = own.length ? (own.reduce((s, p) => s + p.age, 0) / own.length).toFixed(1).replace('.', ',') : '—'; let val = 0; try { val = own.reduce((s, p) => s + valueOf(p), 0); } catch (e) { }
+  const forn = own.filter(p => c.co && p.nat && p.nat !== c.co).length;
+  const rows = POS.map(ps => own.filter(p => p.pos === ps).sort((a, b) => b.ovr - a.ovr).map(p => { const a = attrsOf(p), gk = ps === 'GOL'; return `<tr><td><span class="chip s-${D12_SC[ps]}" style="padding:1px 6px;border-color:var(--tc);color:var(--tc)">${D12_AB[ps]}</span></td><td>${esc(fullName(p))}${rareMark(p)}${cap && cap.id === p.id ? ' <span class="chip acc" style="padding:0 5px">C</span>' : ''}${p.inj > 0 ? ' <span class="bad">+</span>' : ''}${p.sus > 0 ? ' <span class="bad">S</span>' : ''}${M.sel.includes(p.id) ? ' <span class="chip good" style="padding:0 5px">T</span>' : ''}</td><td class="r">${p.age}</td><td class="r">${a.vel}</td><td class="r">${a.pas}</td><td class="r">${gk ? '' : a.fin}</td><td class="r">${gk ? '' : a.des}</td><td class="r">${a.res}</td><td class="r">${gk ? a.gol : ''}</td><td class="r">${ovrB(p.ovr, false)}</td><td class="r">${p.s.ap}</td><td class="r">${p.s.g}</td></tr>`; }).join('')).join('');
+  return head(esc(c.name), `<span class="chip acc">DEF ${avg(p => ['GOL', 'ZAG', 'LAT'].includes(p.pos))} · MEI ${avg(p => ['VOL', 'MEI'].includes(p.pos))} · ATA ${avg(p => ['PON', 'ATA'].includes(p.pos))}</span>`) + `<div class="grid2"><div class="card row" style="gap:14px">${badge(c, 64)}<dl class="kv" style="flex:1"><dt>Liga</dt><dd>${esc(LDEF[c.lg].n)} · ${pos}º</dd><dt>Reputação</dt><dd>${c.rep}/100</dd><dt>Formação</dt><dd>${esc(M.form)} · ${esc(MG_TAC[M.tac].n)}</dd><dt>Títulos</dt><dd>${esc(tt)}</dd></dl></div><div class="card"><dl class="kv"><dt>Média de idade</dt><dd>${age}</dd><dt>Estrangeiros</dt><dd>${forn}</dd><dt>Valor do elenco</dt><dd>${money(val)}</dd><dt>Orçamento de transferências</dt><dd>${mgMoney(M.cash)}</dd></dl></div></div>
+  <div class="card" style="margin-top:14px"><span class="lbl">Elenco (${own.length})</span><div class="tblw"><table class="c12"><thead><tr><th>Pos</th><th>Jogador</th><th class="r">Id.</th><th class="r">VEL</th><th class="r">PAS</th><th class="r">FIN</th><th class="r">DES</th><th class="r">RES</th><th class="r">DEF</th><th class="r">Geral</th><th class="r">J</th><th class="r">G</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+}
+mgrXIView = d12XI; mgRolesView = d12Roles; mgrClubView = d12Club;
 const SOC_ENABLED = true; const SOC_F = 0.35;  /* Rodix Social desativado por enquanto: mude para true para voltar */
 function socOn() { return SOC_ENABLED && !(G && G.user && G.user.socOn === false); }
 function head(t, right) { return `<div class="pagehead"><div class="row" style="gap:14px"><button class="back" data-act="home" aria-label="Voltar ao início">${ico('back', 22)}</button><h2>${t}</h2></div>${right ? `<div class="row">${right}</div>` : ''}</div>`; }
@@ -6720,7 +6855,7 @@ function openControls() {
   $('#modal-box').oninput = cfgInput;
 }
 function openAbout() {
-  modal(`<h2>Sobre</h2><p>Rodix Football · Edição Creators · build 73 · co-op. Escudos, Data Pack e nomes de jogadores por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
+  modal(`<h2>Sobre</h2><p>Rodix Football · Edição Creators · build 74 · co-op. Escudos, Data Pack e nomes de jogadores por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
 }
 async function openProfiles() {
   const all = await refreshSaves();
@@ -7153,6 +7288,7 @@ async function act(a, el) {
   if (a.startsWith('d8-')) { d8Act(a, el); return; }
   if (a.startsWith('d9-')) { d9Act(a, el); return; }
   if (a.startsWith('d10-')) { d10Act(a, el); return; }
+  if (a.startsWith('d12-')) { d12Act(a, el); return; }
   if (a.startsWith('d11-')) { d11Act(a, el); return; }
   switch (a) {
     case 'new-career': closeModal(); CR = defaultCreate(); DF = 'semi'; newWorld(); CP = { co: 'BRA', lg: 'BRA3', club: null }; renderCreate(); show('s-create'); break;

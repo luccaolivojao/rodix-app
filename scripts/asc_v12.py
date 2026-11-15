@@ -39,7 +39,7 @@ def do_upload(created,fpath,patch_path,rtype):
 import traceback
 sys.excepthook=lambda t,v,tb:L('EXC',''.join(traceback.format_exception(t,v,tb))[-1500:])
 MODE=os.environ.get('MODE','inspect')
-VS='1.2'; MINB=21
+VS='1.2'; MINB=23
 WN='Rodix Social: a torcida, a imprensa e os haters reagem à sua carreira. Novas cenas animadas: contratação, apresentação no estádio, lesões, jogo na TV e gala de prêmios. Autógrafos com pedidos dos fãs, fotos com a torcida e 12 comemorações de gol.'
 vs=api('GET',f'/v1/apps/{APP}/appStoreVersions?limit=10')['data']
 for v in vs: L('V',v['id'],v['attributes']['versionString'],v['attributes']['appStoreState'],v['attributes'].get('releaseType'))

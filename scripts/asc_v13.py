@@ -39,7 +39,7 @@ def do_upload(created,fpath,patch_path,rtype):
 import traceback
 sys.excepthook=lambda t,v,tb:L('EXC',''.join(traceback.format_exception(t,v,tb))[-1500:])
 MODE=os.environ.get('MODE','inspect')
-VS='1.3'; MINB=24
+VS='1.3'; MINB=25
 WN='Árbitros novos em campo, com três uniformes (amarelo, verde e rosa) e um visual diferente a cada partida. Torcida nas arquibancadas e atrás dos gols. Modo Técnico: comande um clube, escale o time direto no campo, cuide das transferências e da diretoria. Pedidos de autógrafo bem menos frequentes. Rodix Social com imagens novas e mais textos traduzidos.'
 vs=api('GET',f'/v1/apps/{APP}/appStoreVersions?limit=10')['data']
 for v in vs: L('V',v['id'],v['attributes']['versionString'],v['attributes']['appStoreState'],v['attributes'].get('releaseType'))
@@ -52,6 +52,14 @@ if MODE=='go':
     good=[b for b in bs if b['attributes']['processingState']=='VALID' and not b['attributes'].get('expired') and int(b['attributes']['version'])>=MINB]
     if not good: L('NOT_READY'); sys.exit()
     nb=good[0]; L('USING_BUILD',nb['attributes']['version'])
+    for sb in subs:
+        if sb['attributes']['state'] in ('WAITING_FOR_REVIEW','UNRESOLVED_ISSUES'):
+            api('PATCH',f"/v1/reviewSubmissions/{sb['id']}",{'data':{'type':'reviewSubmissions','id':sb['id'],'attributes':{'canceled':True}}}); L('CANCELED',sb['id'])
+            for _ in range(20):
+                time.sleep(6); st=api('GET',f"/v1/reviewSubmissions/{sb['id']}")['data']['attributes']['state']
+                if st not in ('WAITING_FOR_REVIEW','CANCELING'): break
+            L('SUB_STATE',st)
+    subs=api('GET',f'/v1/apps/{APP}/reviewSubmissions?limit=10')['data']
     if not cur:
         cur=api('POST','/v1/appStoreVersions',{'data':{'type':'appStoreVersions','attributes':{'platform':'IOS','versionString':VS,'releaseType':'AFTER_APPROVAL'},'relationships':{'app':{'data':{'type':'apps','id':APP}}}}})['data']
     vid=cur['id']; L('USING_VERSION',vid)

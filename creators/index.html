@@ -3847,13 +3847,13 @@ function socAfterMatch(MC, rating, mins, st, gf, ga) {
     const S = soc(); const p = up(); const opp = MC.teams[1 - MC.uSide].name; const r1 = Math.round(rating * 10) / 10;
     let d = 0; const meN = MC.teams[MC.uSide].name; const derby = !isNat(MC.kind) && isDerby(meN, opp);
     if (derby) socDerby(S, meN, opp, gf, ga, r1, st);
-    if (st.g >= 2) { socPost('fan', `${st.g} gols contra o ${opp}! Esse é o nosso camisa ${p.num || ''}! 🔥⚽`); d += 40 * st.g; }
-    else if (st.g === 1) { socPost('fan', `Golaço contra o ${opp}! Já pode renovar. 🔥`); d += 35; }
-    if (st.a >= 1) { socPost('res', `Assistência de ${shortName(p)} contra o ${opp}. Nota ${r1}.`); d += 15; }
-    if (rating >= 8) { socPost('res', `Time da semana saiu e ${shortName(p)} está nele, com nota ${r1}. 👀`); d += 60; }
-    if (gf > ga && rnd() < 0.5) socPost('cro', `Vitória do ${MC.teams[MC.uSide].name} por ${gf}x${ga} sobre o ${opp}.`);
-    if (!derby && (rating <= 5.6 || (gf < ga && rnd() < 0.35))) { socPost({ n: pick(SOC_HATERS), c: '#ff5a5a', i: 'H' }, pick(['Esse aí só joga no modo fácil kkkk. Overrated demais. 😂', `Nota ${r1}? Devia pendurar as chuteiras.`, 'Contrataram errado, o time joga melhor sem ele.', `Perdeu para o ${opp} e ainda tem coragem de postar.`]), { hate: true }); d -= 10; }
-    if (rnd() < 0.12 && p.ovr >= 60) socPost('mkt', `${shortName(p)} está na mira de outros clubes. Até onde vai a sondagem?`);
+    if (st.g >= 2) { if (rnd() < SOC_F * 2) socPost('fan', `${st.g} gols contra o ${opp}! Esse é o nosso camisa ${p.num || ''}! 🔥⚽`); d += 40 * st.g; }
+    else if (st.g === 1) { if (rnd() < SOC_F) socPost('fan', `Golaço contra o ${opp}! Já pode renovar. 🔥`); d += 35; }
+    if (st.a >= 1) { if (rnd() < SOC_F) socPost('res', `Assistência de ${shortName(p)} contra o ${opp}. Nota ${r1}.`); d += 15; }
+    if (rating >= 8) { if (rnd() < SOC_F * 2) socPost('res', `Time da semana saiu e ${shortName(p)} está nele, com nota ${r1}. 👀`); d += 60; }
+    if (gf > ga && rnd() < 0.5 * SOC_F) socPost('cro', `Vitória do ${MC.teams[MC.uSide].name} por ${gf}x${ga} sobre o ${opp}.`);
+    if (!derby && rnd() < SOC_F && (rating <= 5.6 || (gf < ga && rnd() < 0.35))) { socPost({ n: pick(SOC_HATERS), c: '#ff5a5a', i: 'H' }, pick(['Esse aí só joga no modo fácil kkkk. Overrated demais. 😂', `Nota ${r1}? Devia pendurar as chuteiras.`, 'Contrataram errado, o time joga melhor sem ele.', `Perdeu para o ${opp} e ainda tem coragem de postar.`]), { hate: true }); d -= 10; }
+    if (rnd() < 0.12 * SOC_F && p.ovr >= 60) socPost('mkt', `${shortName(p)} está na mira de outros clubes. Até onde vai a sondagem?`);
     S.fol = Math.max(50, S.fol + Math.round(d * (1 + (p.ovr - 55) / 100))); socMilestone(S);
   } catch (e) { }
 }
@@ -4005,7 +4005,7 @@ function creatorAfterMatch(MC, rating, mins, st, gf, ga) {
     if (!S.req && rnd() < 0.7) S.req = newFollowerReq(p);
     /* mensagens diretas */
     const good = rating >= 7, r0 = rnd();
-    for (let i = 0; i < 2; i++) { const r = rnd(); const cat = good ? (r < 0.5 ? 'love' : r < 0.7 ? 'ask' : r < 0.88 ? 'press' : 'hate') : (r < 0.5 ? 'hate' : r < 0.68 ? 'love' : r < 0.85 ? 'ask' : 'press'); socDM(cat); }
+    for (let i = 0; i < (rnd() < SOC_F ? 1 : 0); i++) { const r = rnd(); const cat = good ? (r < 0.5 ? 'love' : r < 0.7 ? 'ask' : r < 0.88 ? 'press' : 'hate') : (r < 0.5 ? 'hate' : r < 0.68 ? 'love' : r < 0.85 ? 'ask' : 'press'); socDM(cat); }
   } catch (e) { }
 }
 const REQ_DEF = [
@@ -4087,7 +4087,7 @@ function creatorHub() {
   const S = soc(), A = S.spon && S.spon.active;
   if (A && absWk() >= A.endAbs) { const ok = sponOk(A); if (ok) { u.sponEarned = (u.sponEarned || 0) + A.pay; addNews(A.brand + ' pagou ' + money(A.pay) + ': metas do patrocínio cumpridas.', 'good'); socPost('mkt', `${A.brand} renova elogios ao camisa ${up().num || ''}: metas batidas e bônus pago.`, { mul: 2 }); S.fol += Math.round(S.fol * 0.01); } else { addNews(A.brand + ' encerrou o patrocínio: metas não cumpridas, sem pagamento.', 'bad'); S.fol = Math.max(50, S.fol - Math.round(S.fol * 0.01)); } S.spon.active = null; S.spon.offers = null; S.spon.at = absWk(); saveGame(true); }
   if (!(S.spon && S.spon.active) && (!S.spon || !S.spon.offers) && (S.spon == null || S.spon.at == null || absWk() - S.spon.at >= 4)) sponGen();
-  if (S.dmWk !== absWk()) { S.dmWk = absWk(); if (rnd() < 0.8) socDM(pick(['love', 'love', 'ask', 'press', 'hate'])); }
+  if (S.dmWk !== absWk()) { S.dmWk = absWk(); if (rnd() < 0.8 * SOC_F * .5) socDM(pick(['love', 'love', 'ask', 'press', 'hate'])); }
 }
 function sponHtml() {
   const S = soc(), u = G.user; const sp = S.spon || {}; const A = sp.active; let h = `<div class="card row" style="justify-content:space-between"><span class="lbl">Ganhos com patrocínios</span><b>${money(u.sponEarned || 0)}</b></div>`;
@@ -4747,11 +4747,11 @@ function d2AfterMatch(MC, rating, st, gf, ga) {
   if (gf > ga && rnd() < .4) d2Inbox('mate', null, ctx); else if (rnd() < .3) d2Inbox('fan', null, ctx);
   if (rnd() < .22) d2Inbox('doc', null, ctx); if (rnd() < .2) d2Inbox('coach', null, ctx);
   D.fame = clamp(D.fame + st.g * .8 + st.a * .4 + (rating >= 7.5 ? .8 : 0), 0, 100);
-  if (st.g >= 3) d2Queue({ k: 'auto', only: ['Bola oficial'], title: 'A bola do hat-trick: assine para guardar' }); else if ((st.g >= 1 || rating >= 8) && rnd() < .6) d2Queue({ k: 'auto' });
-  if ((st.g >= 1 && rnd() < .55) || rating >= 8.4) d2Queue({ k: 'tv', home: MC.teams[0].name, away: MC.teams[1].name, uSide: MC.uSide, gf, ga, ug: st.g || 0 });
+  if (st.g >= 3) d2Queue({ k: 'auto', only: ['Bola oficial'], title: 'A bola do hat-trick: assine para guardar' }); else if ((st.g >= 1 || rating >= 8) && rnd() < .06) d2Queue({ k: 'auto' });
+  if ((st.g >= 1 && rnd() < .12) || (rating >= 9 && rnd() < .5)) d2Queue({ k: 'tv', home: MC.teams[0].name, away: MC.teams[1].name, uSide: MC.uSide, gf, ga, ug: st.g || 0 });
 }
 function d2Seen(i) { if (i != null) d2().seen[i] = 1; }
-function d2Tabs() { return (CREATOR ? [['crt', '★ Creators']] : []).concat([['sum', 'Finanças'], ['spo', 'Patrocínios'], ['sty', 'Estilo de vida'], ['per', 'Perfumes'], ['hp', 'Saúde'], ['fd', 'Feed'], ['ms', 'Mensagens'], ['tv', 'Jornal TV'], ['gal', 'Galeria'], ['fan', 'Torcida e anúncios'], ['cty', 'Cidade'], ['rep', 'Replays']]); }
+function d2Tabs() { return (CREATOR ? [['crt', '★ Creators']] : []).concat([['sum', 'Finanças'], ['spo', 'Patrocínios'], ['sty', 'Estilo de vida'], ['per', 'Perfumes'], ['hp', 'Saúde'], ['fd', 'Feed'], ['ms', 'Mensagens'], ['tv', 'Jornal TV'], ['gal', 'Galeria'], ].concat(CREATOR ? [['fan', 'Torcida e anúncios'], ['cty', 'Cidade'], ['rep', 'Replays']] : [])); }
 function vVida() {
   const D = d2(), p = up(); if (!D.tab) D.tab = 'sum';
   const un = D.inbox.filter(m => !m.r).length; const bar = `<div class="seg d2seg">${d2Tabs().map(t => `<button type="button" data-act="d2-tab" data-t="${t[0]}" aria-pressed="${D.tab === t[0]}">${t[1]}${t[0] === 'ms' && un ? ' (' + un + ')' : ''}</button>`).join('')}</div>`;
@@ -4987,6 +4987,7 @@ function cnFig(ctx, x, y, S, o) {
   };
   leg(-1, o.ll || 0, o.lu); leg(1, o.rl || 0, o.ru);
   ctx.fillStyle = o.shorts; ctx.beginPath(); ctx.roundRect(-0.3 * S, -0.82 * S, 0.6 * S, 0.3 * S, 0.06 * S); ctx.fill();
+  { const bt = performance.now() / 1000, br = Math.sin(bt * 2.1 + x * .013) * .014 * S; ctx.translate(Math.sin(bt * 1.3 + x * .02) * .008 * S, br); if (o.lean) { ctx.translate(0, -0.8 * S); ctx.rotate(o.lean); ctx.translate(0, 0.8 * S); } }
   ctx.fillStyle = o.shirt; ctx.beginPath(); ctx.roundRect(-0.34 * S, -1.3 * S, 0.68 * S, 0.6 * S, 0.13 * S); ctx.fill();
   if (!o.suit) { ctx.fillStyle = o.trim; ctx.fillRect(-0.34 * S, -0.82 * S, 0.68 * S, 0.05 * S); }
   ctx.fillStyle = 'rgba(0,0,0,.17)'; ctx.beginPath(); ctx.roundRect(0.1 * S, -1.3 * S, 0.24 * S, 0.6 * S, 0.1 * S); ctx.fill();
@@ -4995,8 +4996,8 @@ function cnFig(ctx, x, y, S, o) {
   if (o.cross) { ctx.fillStyle = '#d5222e'; ctx.fillRect(-0.05 * S, -1.16 * S, 0.1 * S, 0.3 * S); ctx.fillRect(-0.15 * S, -1.06 * S, 0.3 * S, 0.1 * S); }
   if (o.num != null && !o.suit && S >= 13) cnTxt(ctx, String(o.num), 0, -1.02 * S, Math.round(0.36 * S), o.trim);
   const arm = (sx, a) => {
-    const x0 = sx * 0.31 * S, y0 = -1.18 * S, L = 0.46 * S, hx = x0 + sx * Math.sin(a) * L, hy = y0 + Math.cos(a) * L, mx = (x0 + hx) / 2, my = (y0 + hy) / 2;
-    ctx.lineWidth = 0.15 * S; ctx.strokeStyle = o.suit || o.long ? o.shirt : o.skin; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(hx, hy); ctx.stroke();
+    const x0 = sx * 0.31 * S, y0 = -1.18 * S, L = 0.46 * S, hx = x0 + sx * Math.sin(a) * L, hy = y0 + Math.cos(a) * L, bd = (a > 1.2 ? -1 : 1) * 0.07 * S, mx = (x0 + hx) / 2 + sx * Math.cos(a) * bd, my = (y0 + hy) / 2 - Math.sin(a) * bd;
+    ctx.lineWidth = 0.15 * S; ctx.strokeStyle = o.suit || o.long ? o.shirt : o.skin; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(mx, my); ctx.lineTo(hx, hy); ctx.stroke();
     if (!o.suit && !o.long) { ctx.strokeStyle = o.shirt; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(mx, my); ctx.stroke(); }
     ctx.fillStyle = o.glove || o.skin; ctx.beginPath(); ctx.arc(hx, hy, 0.08 * S, 0, 7); ctx.fill(); return [hx, hy];
   };
@@ -5005,7 +5006,7 @@ function cnFig(ctx, x, y, S, o) {
   try { drawFig(ctx, 0, 0, S, Object.assign({}, o, { phase: 0, moving: false, num: null, jump: 0, slide: 0, down: 0, dive: 0, kick: 0, sp: 0, gk: 0 })); } catch (e) { }
   ctx.restore(); ctx.restore();
 }
-function cnWalk(o, t, sp) { const s = Math.sin(t * (sp || 9)); return Object.assign({}, o, { ll: s * 0.2, rl: -s * 0.2, la: 0.22 + s * 0.35, ra: 0.22 - s * 0.35, lift: Math.abs(Math.cos(t * (sp || 9))) * 0.04 }); }
+function cnWalk(o, t, sp) { const s = Math.sin(t * (sp || 9)); const up2 = Math.max(0, s) * .1, up3 = Math.max(0, -s) * .1; return Object.assign({}, o, { ll: s * 0.24, rl: -s * 0.24, lu: up3, ru: up2, la: 0.22 - s * 0.45, ra: 0.22 + s * 0.45, lean: (o.flip ? -1 : 1) * .05 + Math.sin(t * (sp || 9) * 2) * .02, lift: Math.abs(Math.cos(t * (sp || 9))) * 0.06 }); }
 function cnSuit(seed, col) { return { shirt: col || '#1b2233', shorts: col || '#1b2233', sock: '#111', trim: '#111', suit: true, skin: SKINS[Math.floor(cnR(seed) * 6)], hair: Math.floor(cnR(seed + 1) * 6), hairC: HAIRC[cnR(seed + 2) < .35 ? 5 : Math.floor(cnR(seed + 3) * 3)] }; }
 function cnFan(i, c) { const a = cnR(i * 3.1) < .5; return { shirt: a ? c.c1 : (c.c2 === '#ffffff' ? '#e9e9e9' : c.c2), shorts: '#23314d', sock: '#23314d', trim: a ? c.c2 : c.c1, suit: false, long: cnR(i + 7) < .3, skin: SKINS[Math.floor(cnR(i + .3) * 6)], hair: Math.floor(cnR(i + 1.7) * 12), hairC: HAIRC[Math.floor(cnR(i + 2.9) * 5)] }; }
 function cnMedic(i) { return { shirt: '#f3f6f9', shorts: '#c62430', sock: '#c62430', trim: '#c62430', suit: true, cross: true, skin: SKINS[1 + i * 2], hair: 1 + i * 2, hairC: HAIRC[i] }; }
@@ -5015,7 +5016,7 @@ function cnMe(c) { const p = up(); return figOpts(lookOf(p), c, { num: p.num });
 function cnSky(ctx, a, b, stars, t) { ctx.fillStyle = cnGrad(ctx, 0, 0, 0, CNH, [[0, a], [1, b]]); ctx.fillRect(0, 0, CNW, CNH); if (stars) for (let i = 0; i < 90; i++) { ctx.globalAlpha = .35 + .5 * Math.abs(Math.sin((t || 0) * 1.4 + i)); ctx.fillStyle = '#fff'; ctx.fillRect(cnR(i) * CNW, cnR(i + 50) * 330, 2, 2); } ctx.globalAlpha = 1; }
 function cnCrowd(ctx, t, c, x0, x1, y0, rows, hype, seed) {
   const cols = [c.c1, c.c2 === '#ffffff' ? '#e8e8e8' : c.c2, c.c1, '#c9ccd4', '#e0ac7e', '#8a5a3a', '#2b3550'];
-  for (let r = 0; r < rows; r++) { const y = y0 + r * 21, n = Math.floor((x1 - x0) / 19); for (let i = 0; i < n; i++) { const k = (seed || 0) + r * 131 + i, h = cnR(k); const bob = Math.sin(t * (5 + h * 4) + h * 30) * (2 + (hype || 0) * 7 * h); const x = x0 + i * 19 + (r % 2) * 9, yy = y + bob; ctx.fillStyle = cols[Math.floor(h * cols.length)]; ctx.beginPath(); ctx.roundRect(x - 7, yy, 14, 16, 4); ctx.fill(); ctx.fillStyle = SKINS[Math.floor(cnR(k + .5) * 6)]; ctx.beginPath(); ctx.arc(x, yy - 4, 5.2, 0, 7); ctx.fill(); if (hype && h > .82) { ctx.strokeStyle = SKINS[2]; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x - 6, yy + 3); ctx.lineTo(x - 10, yy - 12 + bob); ctx.moveTo(x + 6, yy + 3); ctx.lineTo(x + 10, yy - 12 - bob); ctx.stroke(); } } }
+  for (let r = 0; r < rows; r++) { const y = y0 + r * 21, n = Math.floor((x1 - x0) / 19); for (let i = 0; i < n; i++) { const k = (seed || 0) + r * 131 + i, h = cnR(k); const x = x0 + i * 19 + (r % 2) * 9, wv = (hype || 0) >= .8 ? Math.pow(Math.max(0, Math.sin(t * 1.6 - x * .006)), 10) * 16 : 0, bob = Math.sin(t * (5 + h * 4) + h * 30) * (2 + (hype || 0) * 7 * h) - wv, yy = y + bob; ctx.fillStyle = cols[Math.floor(h * cols.length)]; ctx.beginPath(); ctx.roundRect(x - 7, yy, 14, 16, 4); ctx.fill(); ctx.fillStyle = SKINS[Math.floor(cnR(k + .5) * 6)]; ctx.beginPath(); ctx.arc(x, yy - 4, 5.2, 0, 7); ctx.fill(); if (hype && h > .82) { ctx.strokeStyle = SKINS[2]; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x - 6, yy + 3); ctx.lineTo(x - 10, yy - 12 + bob); ctx.moveTo(x + 6, yy + 3); ctx.lineTo(x + 10, yy - 12 - bob); ctx.stroke(); } } }
 }
 function cnFlood(ctx, x, y, t) { ctx.fillStyle = '#20242e'; ctx.fillRect(x - 5, y, 10, 150); ctx.fillStyle = '#2c3140'; ctx.fillRect(x - 46, y - 34, 92, 40); for (let i = 0; i < 12; i++) { ctx.fillStyle = '#fffbe0'; ctx.fillRect(x - 40 + (i % 6) * 14, y - 29 + Math.floor(i / 6) * 16, 10, 11); } cnGlow(ctx, x, y - 14, 190, 'rgba(255,248,210,.5)', .8 + .08 * Math.sin(t * 3 + x)); }
 function cnStad(ctx, t, c, o) {
@@ -5310,6 +5311,7 @@ function d5Fans() { return Math.round(600 + Math.pow(d2().fame, 2.6) * 30); }
 function d5Num(n) { return n >= 1e6 ? (n / 1e6).toFixed(1).replace('.', ',') + ' mi' : n >= 1e3 ? Math.round(n / 1e3) + ' mil' : String(n); }
 function d5Tux(c) { return Object.assign({}, cnMe(c), { shirt: '#0c0d12', shorts: '#0c0d12', sock: '#0c0d12', trim: '#0c0d12', suit: true, tie: '#0c0d12', num: null }); }
 function d5Weekly() {
+  if (!CREATOR) return;
   const D = d2(), X = d5(), u = G.user, p = up(); const r = (u.ratings || []).slice(-1)[0];
   if (r != null) X.mood = clamp(X.mood + (r >= 7.5 ? 4 : r >= 6.8 ? 1.5 : r < 6 ? -4 : -1), 0, 100); X.mood += (50 - X.mood) * .03;
   if (D.spons.length && !X.ad && rnd() < .3) { const s = pick(D.spons); X.ad = { brand: s.brand, pay: Math.round((((u.contract && u.contract.wage) || 2000) * ri(2, 4) + D.fame * 900) * (.8 + X.mood / 250)), w: absWk() }; d2Inbox('press', `A ${s.brand} quer gravar um comercial com você. Cachê base de ${d2Fmt(X.ad.pay)}. Abra Rodix Vida › Torcida e anúncios.`); }
@@ -5599,7 +5601,7 @@ function d8Avg(B) { return B.sap ? B.srs / B.sap : 0; }
 function d8CanUp() { const B = G.user.base, p = up(); return p.age >= 20 || (B.sap >= 4 && d8Avg(B) >= 6.9 && p.age >= 16) || p.ovr >= clubAvg(p.club) - 9; }
 function d8Up(auto) { const u = G.user, B = u.base, p = up(), c = userClub(); B.on = false; u.trust = Math.max(u.trust, 42); addNews((auto ? 'Idade estourada na base: ' : 'Promovido! ') + shortName(p) + ' sobe para o elenco profissional do ' + (c ? c.name : 'clube') + '.', 'good'); try { d2().fame = clamp(d2().fame + 3, 0, 100); d2Feed('cro', 'Cria da base: ' + shortName(p) + ' é integrado ao elenco principal.', 4, { img: 17 }); d2Inbox('coach', 'Você agora treina com o profissional. Mostre no treino que merece minutos.'); } catch (e) { } }
 function d8Card() {
-  const u = G.user, p = up(); if (u.base === undefined && p.age <= 20 && p.club && G.season === G.startSeason && G.week === 0 && !u.career.ap) { d8New(); addNews('Você começa a carreira nas categorias de base: ' + u.base.cat + '.'); }
+  const u = G.user, p = up(); if (!CREATOR) return ''; if (u.base === undefined && p.age <= 20 && p.club && G.season === G.startSeason && G.week === 0 && !u.career.ap) { d8New(); addNews('Você começa a carreira nas categorias de base: ' + u.base.cat + '.'); }
   if (u.base && u.base.on && p.club && u.base.season !== G.season) { if (p.age > 20) d8Up(true); else { d8New(); addNews('Nova temporada na base: você joga pelo ' + u.base.cat + '.'); } }
   const B = u.base; if (!B || !B.on || !p.club) return ''; const c = userClub();
   if (B.pend && !B.done && !(p.inj > 0)) { const pr = B.sched[B.rnd].find(q => q.includes(0)), home = pr[0] === 0, o = club(B.teams[home ? pr[1] : pr[0]].id), t = d8Table(B), pos = t.findIndex(x => x.i === 0) + 1; const tm = (cl, me) => `<div class="tm">${badge(cl, 56)}<b>${esc(cl.name)} ${B.cat}</b>${me ? `<span class="mut num">${pos}º lugar</span>` : ''}</div>`;
@@ -5630,7 +5632,7 @@ function d8Act(a, el) {
     case 'd8-promo': { const L = d8MB(), k = L[+el.dataset.i], M = G.mgr, c = club(M.club); if (!k) return; if (c.sq.length >= 36) return toast('Elenco cheio (36). Venda ou dispense alguém antes.'); const q = newPlayer({ fn: k.fn, ln: k.ln, nat: k.nat, age: k.age, pos: k.pos, ovr: k.ovr, pot: k.pot, club: null }); moveClub(q, M.club); L.splice(+el.dataset.i, 1); L.push(d8Kid(c, 15)); strCache.key = ''; addNews(fullName(q) + ' (' + k.age + ' anos) sobe da base para o elenco do ' + c.name + '.', 'good'); saveGame(true); renderHub(); toast(fullName(q) + ' promovido ao profissional.'); break; }
   }
 }
-const SOC_ENABLED = CREATOR;  /* Rodix Social desativado por enquanto: mude para true para voltar */
+const SOC_ENABLED = true; const SOC_F = 0.35;  /* Rodix Social desativado por enquanto: mude para true para voltar */
 function socOn() { return SOC_ENABLED && !(G && G.user && G.user.socOn === false); }
 function head(t, right) { return `<div class="pagehead"><div class="row" style="gap:14px"><button class="back" data-act="home" aria-label="Voltar ao início">${ico('back', 22)}</button><h2>${t}</h2></div>${right ? `<div class="row">${right}</div>` : ''}</div>`; }
 function allNews() { const me = (G.news || []).map(x => Object.assign({ tag: 'me' }, x)); return me.concat(G.wnews || []).sort((a, b) => (b.s > a.s ? 1 : b.s < a.s ? -1 : 0) || b.w - a.w); }
@@ -5712,7 +5714,7 @@ function vHome() {
   const p = up(), u = G.user, c = userClub();
   const sub = { news: (allNews()[0] || { t: 'Sem notícias' }).t.slice(0, 30), me: `Overall ${p.ovr}`, club: c ? c.name : 'Sem clube', comp: c ? LDEF[c.lg].n : '—', cal: `Semana ${Math.min(G.week + 1, totalWeeks())}`, shop: coinsOf() + ' Coins', market: G.offers.length ? G.offers.length + ' proposta(s)' : 'Sem propostas', train: u.trained ? 'Feito nesta semana' : p.inj > 0 ? 'Lesionado' : 'Treino disponível', stats: 'Artilharia e prêmios', nat: G.pendingIntl ? 'Convocado!' : NATIONS[p.nat].n, hist: `${u.history.length} temporada(s)`, social: ((u.soc ? u.soc.fol : 0) || 0).toLocaleString('pt-BR') + ' seguidores', vida: d2Fmt(d2().bank) + ' · fama ' + Math.round(d2().fame) };
   const bd = { market: G.offers.length || '', train: !u.trained && p.inj === 0 && p.club ? '!' : '', nat: G.pendingIntl ? '!' : '', social: (u.soc && socOn()) ? (Math.max(0, u.soc.nid - (u.socSeen || 1)) || '') : '' };
-  sub.base = u.base && u.base.on ? u.base.cat + ' · rodada ' + Math.min(u.base.rnd + 1, 14) + '/14' : 'Sub-15, Sub-17 e Sub-20'; const tiles = TILES.filter(t => (t[0] !== 'social' || socOn()) && (t[0] !== 'base' || u.base || p.age <= 20)).map(([k, n, ic]) => `<button class="tile" data-tab="${k}"><i>${ico(ic, 30)}</i><span><b>${n}</b><small>${esc(sub[k])}</small></span>${bd[k] ? `<em class="tbadge">${bd[k]}</em>` : ''}</button>`).join('');
+  sub.base = u.base && u.base.on ? u.base.cat + ' · rodada ' + Math.min(u.base.rnd + 1, 14) + '/14' : 'Sub-15, Sub-17 e Sub-20'; const tiles = TILES.filter(t => (t[0] !== 'social' || socOn()) && (t[0] !== 'base' || (CREATOR && (u.base || p.age <= 20)))).map(([k, n, ic]) => `<button class="tile" data-tab="${k}"><i>${ico(ic, 30)}</i><span><b>${n}</b><small>${esc(sub[k])}</small></span>${bd[k] ? `<em class="tbadge">${bd[k]}</em>` : ''}</button>`).join('');
   return `<div class="home-top">${nextCard()}${depthCard()}</div><div class="tilegrid">${tiles}</div><div class="card stack" style="margin-top:20px"><span class="lbl">Notícias</span>${newsHtml(10)}</div>`;
 }
 function vMe() {
@@ -6319,7 +6321,7 @@ function openControls() {
   $('#modal-box').oninput = cfgInput;
 }
 function openAbout() {
-  modal(`<h2>Sobre</h2><p>Rodix Football · Edição Creators · build 68 · co-op. Escudos, Data Pack e nomes de jogadores por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
+  modal(`<h2>Sobre</h2><p>Rodix Football · Edição Creators · build 69 · co-op. Escudos, Data Pack e nomes de jogadores por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
 }
 async function openProfiles() {
   const all = await refreshSaves();

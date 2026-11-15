@@ -1510,7 +1510,8 @@ function buildMatch(kind) {
   const MC = { reds: [0, 0], cards: [], kind, fx, lid, comp: cmp ? cmp.id : null, neutral, teams, kits, uSide, title, score: [0, 0], min: 0, stop: ri(1, 4), on, off, starter, events: [], st: newSeasonStats(), feed: [], goals: [[], []], userIn: starter, done: false, moments: 0, red: false, final: !!(fx && fx.st === 'F') };
   if (cmp && fx && fx.tie && fx.leg === 2) { const t = cmp.ties.find(x => x.id === fx.tie); const m1 = t && cmp.matches.find(x => x.id === t.m[0]); if (m1 && m1.hg != null) { const g1 = id => (m1.h === id ? m1.hg : m1.ag); MC.leg1 = [g1(fx.h), g1(fx.a)]; } }
   if (!isNat(kind) || kind === 'wc') teams[1 - uSide].str += dfx().opp;
-  MC.tl = makeTimeline(MC); MC.cards = genCards(MC);
+  try { d6RefPre(MC, teams); } catch (e) { }
+  MC.tl = makeTimeline(MC); MC.cards = genCards(MC); try { d6RefCards(MC); } catch (e) { }
   return MC;
 }
 function userPenTaker(p) { const a = attrsOf(p); return a.pen >= 70 || (['ATA', 'PON', 'MEI'].includes(p.pos) && a.pen >= 58); }
@@ -2936,7 +2937,8 @@ function tryTackles() {
   }
 }
 function foul(p, car, cp, rp) {
-  const card = Math.random() < (cp == null ? 0.2 : cp) * (E.derby ? 1.6 : 1) * dfx().cards; const redC = rp && p.user && Math.random() < rp * dfx().cards;
+  if (E.bought && p.team === 0 && Math.random() < .7) { E.banner = 'Segue o jogo!'; E.bannerT = 1; return; }
+  const card = !(E.bought && p.team === 0) && Math.random() < (cp == null ? 0.2 : cp) * (E.derby ? 1.6 : 1) * dfx().cards * (E.bought ? 2 : 1); const redC = !E.bought && rp && p.user && Math.random() < rp * dfx().cards;
   if (redC) E.red = true; else if (card && p.user) { E.st.yc++; if (E.st.yc + (E.prevYc || 0) >= 2) { E.red = true; } }
   E.banner = 'Falta' + (redC ? ' · cartão vermelho' : card ? ' · cartão amarelo' : ''); E.bannerT = 1.2;
   const inPen = NX(car.team, car.x) > FL - 16.5 && Math.abs(car.y - GC) < 20.16;
@@ -3408,6 +3410,7 @@ function fxDraw(ctx, X, Y, S) {
 }
 const CROWD_COLS = ['#e63946', '#f4a261', '#ffd23f', '#2a9d8f', '#264de4', '#8338ec', '#ffffff', '#ff6b9d', '#111111', '#06d6a0'];
 function drawStands(ctx, X, Y, S, w, h) {
+  if (CREATOR) { try { return d6Stands(ctx, X, Y, S, w, h); } catch (e) { } }
   const top = Y(-1.6), bot = Y(FW + 1.6);
   ctx.fillStyle = '#10241a'; if (top > 0) ctx.fillRect(0, 0, w, top); if (bot < h) ctx.fillRect(0, bot, w, h - bot);
   const lvl = (typeof CROWD !== 'undefined' && CROWD && CROWD.lvl) ? CROWD.lvl : 0; const tms = performance.now() / 1000;
@@ -4732,6 +4735,7 @@ function d2Weekly() {
   d2Log('Resultado da semana', D.bank - b0); d2WeekFeed(); try { d5Weekly(); } catch (e) { console.error(e); }
 }
 function d2AfterMatch(MC, rating, st, gf, ga) {
+  try { d6RefAfter(); } catch (e) { }
   if (!G || G.mgr || !st) return; const D = d2(), p = up(), opp = MC.teams[1 - MC.uSide].name, r1 = (Math.round(rating * 10) / 10).toFixed(1).replace('.', ','); const ctx = { adv: opp, nota: r1 };
   if (st.g >= 1) d2Feed('fan', `${st.g > 1 ? st.g + ' gols' : 'Gol'} de ${shortName(p)} contra o ${opp}! Nota ${r1}.`, 2 + st.g, { img: [0, 12, 13, 1][ri(0, 3)] });
   if (rating >= 7.8) d2Inbox('press', `${shortName(p)} brilha contra o ${opp}: nota ${r1} e manchete garantida na imprensa.`, ctx);
@@ -4743,12 +4747,12 @@ function d2AfterMatch(MC, rating, st, gf, ga) {
   if ((st.g >= 1 && rnd() < .55) || rating >= 8.4) d2Queue({ k: 'tv', home: MC.teams[0].name, away: MC.teams[1].name, uSide: MC.uSide, gf, ga, ug: st.g || 0 });
 }
 function d2Seen(i) { if (i != null) d2().seen[i] = 1; }
-function d2Tabs() { return [['sum', 'Finanças'], ['spo', 'Patrocínios'], ['sty', 'Estilo de vida'], ['per', 'Perfumes'], ['hp', 'Saúde'], ['fd', 'Feed'], ['ms', 'Mensagens'], ['tv', 'Jornal TV'], ['gal', 'Galeria'], ['fan', 'Torcida e anúncios'], ['cty', 'Cidade']]; }
+function d2Tabs() { return (CREATOR ? [['crt', '★ Creators']] : []).concat([['sum', 'Finanças'], ['spo', 'Patrocínios'], ['sty', 'Estilo de vida'], ['per', 'Perfumes'], ['hp', 'Saúde'], ['fd', 'Feed'], ['ms', 'Mensagens'], ['tv', 'Jornal TV'], ['gal', 'Galeria'], ['fan', 'Torcida e anúncios'], ['cty', 'Cidade'], ['rep', 'Replays']]); }
 function vVida() {
   const D = d2(), p = up(); if (!D.tab) D.tab = 'sum';
   const un = D.inbox.filter(m => !m.r).length; const bar = `<div class="seg d2seg">${d2Tabs().map(t => `<button type="button" data-act="d2-tab" data-t="${t[0]}" aria-pressed="${D.tab === t[0]}">${t[1]}${t[0] === 'ms' && un ? ' (' + un + ')' : ''}</button>`).join('')}</div>`;
   const hd = head('Rodix Vida', `<span class="chip acc">${d2Fmt(D.bank)}</span>`);
-  const fn = { sum: d2Sum, spo: d2Spo, sty: d2Sty, per: d2Per, hp: d2Hp, fd: d2FeedV, ms: d2Ms, tv: vTV, gal: d2Gal, fan: d5FanV, cty: d5CityV }[D.tab] || d2Sum;
+  const fn = { sum: d2Sum, spo: d2Spo, sty: d2Sty, per: d2Per, hp: d2Hp, fd: d2FeedV, ms: d2Ms, tv: vTV, gal: d2Gal, fan: d5FanV, cty: d5CityV, crt: d6V, rep: d6RepV }[D.tab] || d2Sum;
   return hd + bar + fn();
 }
 function d2Sum() {
@@ -4870,7 +4874,7 @@ function d3Scene(el, o, D, p, close) {
 const D3_INS = { pr: ['Pressão', [['low', 'Baixa', 1, 1.03], ['med', 'Média', 1, 1], ['high', 'Alta', 1.05, .97]]], ln: ['Linha defensiva', [['low', 'Recuada', .98, 1.04], ['mid', 'Média', 1, 1], ['high', 'Adiantada', 1.03, .96]]], wd: ['Largura', [['nar', 'Fechada', .99, 1.02], ['mid', 'Normal', 1, 1], ['wide', 'Aberta', 1.03, .98]]], tp: ['Ritmo', [['slow', 'Cadenciado', .98, 1.02], ['mid', 'Normal', 1, 1], ['fast', 'Rápido', 1.04, .97]]] };
 function d3M() { const M = G.mgr; if (!M.ad) M.ad = { ins: { pr: 'med', ln: 'mid', wd: 'mid', tp: 'mid' }, chem: 45, tt: false, sc: [null, null, null], found: [], acad: [], calls: [], hist: [], callQ: null, pressQ: null, rep: 50 }; return M.ad; }
 function d3Mul(T) {
-  if (!G.mgr) return T; const A = d3M(); let a = T.a, d = T.d; for (const k in D3_INS) { const o = D3_INS[k][1].find(x => x[0] === A.ins[k]); if (o) { a *= o[2]; d *= o[3]; } } const ch = (1 + (A.chem - 50) / 50 * .03) * (1 + ((G.mgr.std && G.mgr.std.pit) || 0) * .01); return { a: a * ch, d: d / ch };
+  if (!G.mgr) return T; const A = d3M(); let a = T.a, d = T.d; for (const k in D3_INS) { const o = D3_INS[k][1].find(x => x[0] === A.ins[k]); if (o) { a *= o[2]; d *= o[3]; } } const ch = (1 + (A.chem - 50) / 50 * .03) * (1 + ((G.mgr.std && G.mgr.std.pit) || 0) * .01) * (A.ref ? 1.1 : 1); return { a: a * ch, d: d / ch };
 }
 function d3InsHtml() {
   const A = d3M(); const seg = Object.keys(D3_INS).map(k => `<div class="stack" style="gap:4px"><span class="lbl">${D3_INS[k][0]}</span><div class="seg">${D3_INS[k][1].map(o => `<button type="button" data-act="d3-ins" data-k="${k}" data-v="${o[0]}" aria-pressed="${A.ins[k] === o[0]}">${o[1]}</button>`).join('')}</div></div>`).join('');
@@ -4907,8 +4911,10 @@ const D3_CALLS = [
   { id: 'press', who: 'Repórter', role: 'Imprensa', w: 1.2, t: M => 'Uma pergunta rápida: o time está pronto para a sequência? O que o torcedor pode esperar?', o: [['Falar com confiança', M => { M.conf = clamp(M.conf + (rnd() < .6 ? 3 : -2), 0, 100); return 'A declaração rendeu manchete.'; }], ['Ser cauteloso', M => { M.conf = clamp(M.conf + 1, 0, 100); return 'Resposta segura, sem polêmica.'; }], ['Não atender', M => 'Você deixou a ligação cair.']] },
   { id: 'doc', who: 'Dr. Almeida', role: 'Depto. médico', w: .9, t: M => 'O elenco está acumulando fadiga. Recomendo reduzir a carga nos treinos.', o: [['Reduzir a carga', M => { const A = d3M(); A.tt = false; return 'Carga reduzida. O treino tático foi desligado.'; }], ['Manter o ritmo', M => { d3M().chem = Math.min(100, d3M().chem + 1); return 'Você manteve o ritmo, e os médicos ficaram de olho.'; }]] },
   { id: 'fans', who: 'Líder da torcida', role: 'Torcida organizada', w: 1, t: M => 'A torcida vai lotar o estádio, mas quer ver o time ofensivo. Podemos contar com isso?', o: [['Prometer ataque', M => { M.conf = clamp(M.conf + 2, 0, 100); return 'A torcida adorou a promessa.'; }], ['Pedir apoio, sem promessas', M => { M.conf = clamp(M.conf + 1, 0, 100); return 'A torcida respeitou a sinceridade.'; }]] },
+  { id: 'ref', who: 'Árbitro', role: 'Juiz da próxima partida', w: 0, t: M => 'Professor... essa ligação nunca aconteceu. Por ' + money(d3RefPrice()) + ' eu vejo o jogo com outros olhos. Fechado?', o: [['Pagar e fechar o acordo', M => { const pr = d3RefPrice(); if ((M.cash || 0) < pr) return 'Você não tem orçamento para isso.'; if (d3M().ref) return 'O acordo desta rodada já está fechado.'; M.cash -= pr; d3M().ref = 1; return 'Combinado. Seu time ganha 10% no ataque e na defesa no próximo jogo. Há 12% de risco de vazar.'; }], ['Desligar', M => 'Você desligou. Jogo limpo.']] },
   { id: 'scout', who: 'Olheiro', role: 'Departamento de scout', w: 1.2, t: M => 'Vi um garoto fora de série no interior. Quer que eu investigue a fundo?', o: [['Investigar', M => { const f = d3ScoutFind(pick(Object.keys(D3_REG))); d3M().found.unshift(f); return 'Relatório pronto: ' + fullName(G.players[f.pid]) + '.'; }], ['Deixar pra lá', M => 'Você descartou a dica.']] }
 ];
+function d3RefPrice() { return Math.max(200000, Math.round(mgClubValue(club(G.mgr.club)) * .004 / 1e4) * 1e4); }
 function d3CallMake() { const M = G.mgr, A = d3M(); const tot = D3_CALLS.reduce((a, c) => a + c.w, 0); let r = rnd() * tot; let c = D3_CALLS[0]; for (const x of D3_CALLS) { r -= x.w; if (r <= 0) { c = x; break; } } A.callQ = { id: c.id, w: absWk() }; }
 function d3CallOverlay(id, out) {
   const M = G.mgr, c = D3_CALLS.find(x => x.id === id); if (!c) return; const ex = document.getElementById('d3call'); if (ex) ex.remove(); const el = document.createElement('div'); el.id = 'd3call'; el.className = 'd2scene'; document.body.appendChild(el); const A = d3M();
@@ -4919,7 +4925,7 @@ function d3CallOverlay(id, out) {
   el.querySelector('#d3no').onclick = () => { A.calls.unshift({ w: absWk(), who: c.who, r: 'Chamada recusada.' }); M.conf = clamp(M.conf - (c.id === 'pres' ? 2 : 0), 0, 100); done(); }; el.querySelector('#d3yes').onclick = talk;
 }
 function d3Calls() {
-  const M = G.mgr, A = d3M(); const outs = [['pres', 'Ligar para o presidente'], ['agent', 'Ligar para um empresário'], ['scout', 'Ligar para o olheiro'], ['press', 'Ligar para um repórter'], ['doc', 'Ligar para o médico'], ['spon', 'Ligar para o patrocinador']];
+  const M = G.mgr, A = d3M(); const outs = [['pres', 'Ligar para o presidente'], ['agent', 'Ligar para um empresário'], ['scout', 'Ligar para o olheiro'], ['press', 'Ligar para um repórter'], ['doc', 'Ligar para o médico'], ['spon', 'Ligar para o patrocinador'], ['ref', '💰 Ligar para o árbitro']];
   return head('Ligações') + `<p class="mut" style="margin:0 0 8px">Presidente, empresários, rivais, imprensa e jogadores ligam durante a temporada. Você também pode ligar.</p>${A.callQ ? `<div class="card stack" style="border-color:#3fc27a"><b>📞 Ligação pendente</b><span class="mut">${esc(D3_CALLS.find(x => x.id === A.callQ.id).who)} está tentando falar com você.</span><button class="btn pri" data-act="d3-answer">Atender agora</button></div>` : ''}<div class="lbl" style="margin:10px 0 6px">Fazer uma ligação</div><div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr))">${outs.map(o => `<button class="btn" data-act="d3-out" data-id="${o[0]}">${o[1]}</button>`).join('')}</div><div class="card" style="margin-top:12px"><span class="lbl">Histórico</span>${A.calls.map(c => `<div style="padding:4px 0;border-bottom:1px solid rgba(255,255,255,.06)"><b>${esc(c.who)}</b> <span class="mut">· sem. ${c.w + 1}</span><div class="mut">${esc(c.r)}</div></div>`).join('') || '<span class="mut">Nenhuma ligação ainda.</span>'}</div>`;
 }
 /* ---- coletiva ---- */
@@ -4933,7 +4939,7 @@ const D3_PQ = [
 function d3PressShow() { const M = G.mgr, A = d3M(); const q = D3_PQ[A.pressQ % D3_PQ.length]; A.pressQ = null; saveGame(true); setTimeout(() => modal(`<h2>${ico('news', 22)} Coletiva de imprensa</h2><div class="d3press"><div class="d3mic">🎤</div><p>“${esc(q[0])}”</p></div><div class="stack">${q[1].map((o, i) => `<button class="btn ${i ? '' : 'pri'}" data-act="d3-press" data-i="${i}" data-q="${D3_PQ.indexOf(q)}">${esc(o[0])}</button>`).join('')}</div>`), 500); }
 function d3PressPick(qi, i) { const M = G.mgr, A = d3M(), o = D3_PQ[qi][1][i]; const luck = rnd() < .75 ? 1 : -1; M.conf = clamp(M.conf + o[1] * luck, 0, 100); A.chem = clamp(A.chem + o[2] * .5, 0, 100); closeModal(); const t = o[1] * luck > 0 ? 'A resposta caiu bem: confiança da diretoria em alta.' : 'A frase foi mal interpretada e rendeu crítica.'; A.calls.unshift({ w: absWk(), who: 'Coletiva', r: t }); saveGame(true); renderHub(); toast(t); }
 function d3MgrWeek() {
-  if (!CREATOR || !G.mgr) return; const A = d3M(); d3ScoutWeek(); try { d5StdWeek(); } catch (e) { } A.chem = clamp(A.chem + (A.tt ? 3 : .6) - .1, 0, 100);
+  if (!CREATOR || !G.mgr) return; const A = d3M(); if (A.ref) { A.ref = 0; if (rnd() < .12) { const fine = d3RefPrice() * 3; G.mgr.cash -= fine; G.mgr.conf = clamp((G.mgr.conf || 50) - 12, 0, 100); addNews('Escândalo de arbitragem atinge o ' + club(G.mgr.club).name + ': multa de ' + money(fine) + ' e pressão sobre o técnico.', 'bad'); A.calls.unshift({ w: absWk(), who: 'Imprensa', r: 'O acordo com o árbitro vazou. Multa de ' + money(fine) + '.' }); } } d3ScoutWeek(); try { d5StdWeek(); } catch (e) { } A.chem = clamp(A.chem + (A.tt ? 3 : .6) - .1, 0, 100);
   if (!A.callQ && rnd() < .5) d3CallMake(); if (A.pressQ == null && rnd() < .4) A.pressQ = ri(0, D3_PQ.length - 1);
 }
 function d3ShowMgr() { if (!CREATOR || !G || !G.mgr || D2_SCENE_ON) return; const A = d3M(); if (A.callQ && !document.getElementById('d3call') && !A._shown) { A._shown = absWk(); setTimeout(() => { if (G.mgr && d3M().callQ) d3CallOverlay(d3M().callQ.id); }, 700); } else if (A.pressQ != null && !A.callQ) d3PressShow(); if (!A.callQ) A._shown = 0; }
@@ -5304,9 +5310,9 @@ function d5Weekly() {
   if (r != null) X.mood = clamp(X.mood + (r >= 7.5 ? 4 : r >= 6.8 ? 1.5 : r < 6 ? -4 : -1), 0, 100); X.mood += (50 - X.mood) * .03;
   if (D.spons.length && !X.ad && rnd() < .3) { const s = pick(D.spons); X.ad = { brand: s.brand, pay: Math.round((((u.contract && u.contract.wage) || 2000) * ri(2, 4) + D.fame * 900) * (.8 + X.mood / 250)), w: absWk() }; d2Inbox('press', `A ${s.brand} quer gravar um comercial com você. Cachê base de ${d2Fmt(X.ad.pay)}. Abra Rodix Vida › Torcida e anúncios.`); }
   if (X.ad && absWk() - X.ad.w > 5) X.ad = null;
-  if (D.car >= 1 && !(p.inj > 0) && !X.dead && rnd() < (D.car >= 6 ? .004 : D.car === 3 ? .003 : .006)) d5Crash(D.car >= 6 ? 'plane' : 'car');
+  if (D.car >= 1 && !(p.inj > 0) && !X.dead && rnd() < (D.car >= 6 ? .004 : D.car === 3 ? .003 : .006) * (typeof d6AccMul === 'function' ? d6AccMul() : 1)) d5Crash(D.car >= 6 ? 'plane' : 'car');
 }
-function d5Crash(veh) { const D = d2(), X = d5(), p = up(); const dead = rnd() < (D.car === 3 ? .04 : .1); if (dead) X.dead = veh; else { p.inj = ri(3, 9); D.inj = { n: 'Politraumatismo leve (acidente)', part: 'Corpo todo', tot: p.inj, sev: 'mid', plan: 'rest', src: 'acc', w: absWk() }; } addNews(veh === 'plane' ? 'Susto: o avião do jogador fez um pouso de emergência.' : 'Susto: o jogador sofreu um acidente de carro.', 'bad'); d2Feed('cro', `${shortName(p)} sofre acidente ${veh === 'plane' ? 'aéreo' : 'de carro'}. Clube divulga boletim em instantes.`, 4, { img: 15 }); d2Queue({ k: 'crash', veh, dead: dead ? 1 : 0, weeks: p.inj || 0 }); }
+function d5Crash(veh, sim) { const D = d2(), X = d5(), p = up(); const dead = rnd() < (D.car === 3 && !sim ? .04 : .1); if (dead) X.dead = veh; else { p.inj = ri(3, 9); D.inj = { n: 'Politraumatismo leve (acidente)', part: 'Corpo todo', tot: p.inj, sev: 'mid', plan: 'rest', src: 'acc', w: absWk() }; } addNews(veh === 'plane' ? 'Susto: o avião do jogador fez um pouso de emergência.' : 'Susto: o jogador sofreu um acidente de carro.', 'bad'); d2Feed('cro', `${shortName(p)} sofre acidente ${veh === 'plane' ? 'aéreo' : 'de carro'}. Clube divulga boletim em instantes.`, 4, { img: 15 }); d2Queue({ k: 'crash', veh, dead: dead ? 1 : 0, weeks: p.inj || 0 }); }
 
 /* ---- troféu ---- */
 function d5Trophy(ctx, x, y, s, kind) { ctx.save(); ctx.translate(x, y); ctx.scale(s, s); const g = cnGrad(ctx, -40, 0, 40, 0, [[0, '#a8780f'], [.4, '#ffe58a'], [.6, '#ffd23f'], [1, '#9a6c0a']]); ctx.fillStyle = '#1a1a1f'; ctx.fillRect(-34, 60, 68, 22); ctx.fillStyle = g; ctx.fillRect(-26, 48, 52, 14); ctx.fillRect(-7, 10, 14, 40); if (kind === 'ball') { ctx.beginPath(); ctx.arc(0, -30, 44, 0, 7); ctx.fill(); ctx.strokeStyle = 'rgba(120,80,0,.6)'; ctx.lineWidth = 3; for (let i = 0; i < 5; i++) { const a = i * 1.2566 - 1.57; ctx.beginPath(); ctx.moveTo(Math.cos(a) * 16, -30 + Math.sin(a) * 16); ctx.lineTo(Math.cos(a) * 44, -30 + Math.sin(a) * 44); ctx.stroke(); } ctx.beginPath(); ctx.arc(0, -30, 16, 0, 7); ctx.stroke(); } else if (kind === 'boot') { ctx.beginPath(); ctx.moveTo(-50, 10); ctx.lineTo(-46, -62); ctx.quadraticCurveTo(-20, -70, -14, -30); ctx.quadraticCurveTo(30, -22, 54, -2); ctx.quadraticCurveTo(60, 8, 50, 10); ctx.closePath(); ctx.fill(); } else { ctx.beginPath(); ctx.moveTo(-40, -70); ctx.lineTo(40, -70); ctx.quadraticCurveTo(38, -6, 0, 12); ctx.quadraticCurveTo(-38, -6, -40, -70); ctx.fill(); ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 8; ctx.beginPath(); ctx.arc(-44, -44, 18, 1.2, 4.9); ctx.stroke(); ctx.beginPath(); ctx.arc(44, -44, 18, -1.8, 1.9); ctx.stroke(); } ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fillRect(-18, -62, 8, 40); ctx.restore(); }
@@ -5438,6 +5444,76 @@ function d5Act(a, el) {
     case 'd5-std': { const M = G.mgr, S = d5S(), k = ds.k, d = D5_STD[k]; if (!d || S[k] >= d[2]) return; const cost = d5StdCost(k); if (M.cash < cost) return toast('Orçamento insuficiente.'); M.cash -= cost; S[k]++; M.conf = clamp((M.conf || 50) + 2, 0, 100); addNews(club(M.club).name + ' conclui obra: ' + d[0] + ' nível ' + S[k] + '.', 'good'); saveGame(true); cnPlay(cnFilmStd({ what: d[0] + ' nível ' + S[k] }), () => { try { crowdStop(); } catch (e) { } renderHub(); }); break; }
   }
 }
+/* ======================= DROP 6 · opções Creators: acidentes, invasão, juiz, placas, árbitro em campo ======================= */
+function d6() { const D = d2(); if (!D.x6) D.x6 = { acc: 1, inv: 0, ref: 0, refN: 0 }; return D.x6; }
+function d6On() { return CREATOR && G && G.user && !G.mgr && G.user.d2; }
+function d6AccMul() { return d6On() ? d6().acc : 1; }
+function d6InvP(MC, dby) { const v = d6On() ? d6().inv : 0; return v === 2 ? 1 : v === 1 ? .3 : (MC.final ? 0.35 : dby ? 0.30 : 0); }
+function d6RefPrice() { const u = G.user; return Math.max(20000, Math.round(((u.contract && u.contract.wage) || 2000) * 6 / 1000) * 1000); }
+function d6RefPre(MC, teams) { if (!d6On() || !d6().ref) return; MC.bought = 1; teams[MC.uSide].str += 4; }
+function d6RefCards(MC) { if (!MC.bought) return; MC.cards = (MC.cards || []).filter(c => c.side !== MC.uSide); if (rnd() < .45) { const xi = MC.teams[1 - MC.uSide].xi.filter(q => !q.u); const q = xi[Math.floor(rnd() * xi.length)]; if (q) { MC.cards.push({ m: ri(25, 80), side: 1 - MC.uSide, name: shortName(q), t: 'r', q, var: false }); MC.cards.sort((a, b) => a.m - b.m); } } }
+function d6RefAfter() { if (!d6On()) return; const X = d6(), D = d2(), p = up(); if (!X.ref) return; X.ref = 0; X.refN++; if (rnd() < .12) { const fine = d6RefPrice() * 3; d2Pay(-fine, 'Multa: escândalo de arbitragem'); D.fame = clamp(D.fame - 6, 0, 100); d5().mood = clamp(d5().mood - 15, 0, 100); p.sus = Math.max(p.sus || 0, 2); addNews('Escândalo: gravação liga ' + shortName(p) + ' ao árbitro da partida. Multa de ' + money(fine) + ' e 2 jogos de suspensão.', 'bad'); d2Feed('cro', 'BOMBA: áudio vazado coloca ' + shortName(p) + ' no centro de um escândalo de arbitragem.', 6, { img: 17 }); d2Inbox('press', 'Temos o áudio. Você quer comentar antes de publicarmos?'); } }
+function d6V() {
+  const X = d6(), D = d2(); const seg = (act, cur, opts) => `<div class="seg">${opts.map(o => `<button type="button" data-act="${act}" data-v="${o[0]}" aria-pressed="${cur === o[0]}">${o[1]}</button>`).join('')}</div>`; const pr = d6RefPrice();
+  return `<p class="mut" style="margin:0 0 10px">Opções exclusivas da Edição Creators. Valem para esta carreira.</p>
+  <div class="card stack"><span class="lbl">Chance de acidente (carro e jatinho)</span>${seg('d6-acc', X.acc, [[0, 'Desligado'], [1, 'Normal'], [10, '10×'], [50, '50×'], [999, 'Toda semana']])}<span class="mut">Normal: 0,3% a 0,6% por semana para quem tem veículo. Em 1 a cada 10 acidentes o jogador morre e pode reviver de graça.</span><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" data-act="d6-sim" data-v="car">Simular acidente de carro agora</button><button class="btn" data-act="d6-sim" data-v="plane">Simular acidente de avião agora</button></div></div>
+  <div class="card stack" style="margin-top:10px"><span class="lbl">Invasão de torcida</span>${seg('d6-inv', X.inv, [[0, 'Normal (finais e clássicos)'], [1, 'Alta (30% dos jogos)'], [2, 'Todo jogo']])}<span class="mut">A torcida invade o campo no meio da partida e o jogo é paralisado. Precisa estar ligada em Opções › Partidas.</span></div>
+  <div class="card stack" style="margin-top:10px;${X.ref ? 'border-color:#ffd23f' : ''}"><span class="lbl">Juiz do próximo jogo (${X.refN} comprado(s))</span>${X.ref ? '<b>💰 O juiz do próximo jogo está no seu bolso.</b>' : `<button class="btn pri" data-act="d6-ref">Comprar o juiz · ${d2Fmt(pr)}</button>`}<span class="mut">Com o juiz comprado: seu time não leva cartão, 70% das suas faltas não são marcadas, o adversário leva o dobro de cartões (45% de chance de expulsão) e seu time ganha +4 de força. Risco: 12% de o esquema vazar depois do jogo (multa de ${d2Fmt(pr * 3)}, 2 jogos de suspensão, queda de fama e de humor da torcida).</span></div>`;
+}
+function d6Act(a, el) {
+  const X = d6(), D = d2(), ds = (el && el.dataset) || {};
+  switch (a) {
+    case 'd6-acc': X.acc = +ds.v; saveGame(true); renderHub(); break;
+    case 'd6-inv': X.inv = +ds.v; if (X.inv) { CFG.inv = true; try { saveCfg(); } catch (e) { } } saveGame(true); renderHub(); break;
+    case 'd6-sim': if (d5().dead || up().inj > 0) return toast('Recupere-se primeiro da lesão atual.'); d5Crash(ds.v, true); saveGame(true); D2_SCENE_ON = false; d2ShowPending(); break;
+    case 'd6-rep': { const r = (G.user.reps || [])[+ds.i]; if (r) repStart(r.clip, { tag: 'REPLAY', sub: r.who + ' · ' + r.m + "' · " + r.opp, skippable: true }); break; }
+    case 'd6-ref': { const pr = d6RefPrice(); if (D.bank < pr) return toast('Saldo insuficiente.'); d2Pay(-pr, 'Acerto com o juiz'); X.ref = 1; saveGame(true); renderHub(); toast('Combinado. O juiz do próximo jogo é seu.'); break; }
+  }
+}
+/* ---- árbitro e bandeirinhas dentro da partida ---- */
+const D6_REFK = { shirt: '#ffd23f', shorts: '#16181d', sock: '#16181d', trim: '#16181d', skin: '#e0ac7e', hair: 2, hairC: '#1b1b1b' }, D6_ASSK = { shirt: '#ff5a1f', shorts: '#16181d', sock: '#16181d', trim: '#16181d', skin: '#9c6a43', hair: 1, hairC: '#1b1b1b' };
+function d6RefItems(items, b) {
+  if (!CREATOR || !E) return; const dt = E.rdt || .016; if (!E.ref) E.ref = { x: b.x - 7, y: b.y + 6, ph: 0, a1: b.x, a2: b.x };
+  const R = E.ref, tx = clamp(b.x - 7 * (b.x > FL / 2 ? 1 : -1), 6, FL - 6), ty = clamp(b.y + (b.y > FW / 2 ? -7 : 7), 5, FW - 5), dx = tx - R.x, dy = ty - R.y, d = Math.hypot(dx, dy); R.mv = d > 1.2; if (R.mv) { const s = Math.min(d, 6.2 * dt); R.x += dx / d * s; R.y += dy / d * s; R.ph += dt * 11; R.fx = dx >= 0 ? 1 : -1; }
+  const k = 1 - Math.pow(.02, dt); R.a1 += (clamp(b.x, 2, FL / 2) - R.a1) * k; R.a2 += (clamp(b.x, FL / 2, FL - 2) - R.a2) * k;
+  items.push({ y: R.y, d6: 'ref' }); items.push({ y: -0.9, d6: 'a1' }); items.push({ y: FW + 0.9, d6: 'a2' });
+}
+function d6RefDraw(ctx, X, Y, S, it) {
+  const R = E.ref; if (!R) return;
+  if (it.d6 === 'ref') { drawFig(ctx, X(R.x), Y(R.y), S, Object.assign({ num: null, phase: R.ph, moving: R.mv, fx: R.fx || 1 }, D6_REFK)); if (E.bought) { ctx.font = `${Math.round(S * .9)}px sans-serif`; ctx.textAlign = 'center'; ctx.fillText('💰', X(R.x), Y(R.y) - S * 2.5); } if (E.bannerT > 0 && /Falta|cartão/.test(E.banner || '')) { ctx.fillStyle = /vermelho/.test(E.banner) ? '#e11d2e' : /amarelo/.test(E.banner) ? '#ffd23f' : 'rgba(0,0,0,0)'; ctx.fillRect(X(R.x) + S * .45, Y(R.y) - S * 2.3, S * .32, S * .46); } return; }
+  const ax = it.d6 === 'a1' ? R.a1 : R.a2, ay = it.d6 === 'a1' ? -0.9 : FW + 0.9; drawFig(ctx, X(ax), Y(ay), S, Object.assign({ num: null, phase: performance.now() / 90, moving: false, fx: 1 }, D6_ASSK)); ctx.strokeStyle = '#ddd'; ctx.lineWidth = Math.max(1, S * .06); ctx.beginPath(); ctx.moveTo(X(ax) + S * .47, Y(ay) - S * .8); ctx.lineTo(X(ax) + S * .47, Y(ay) - S * 1.5); ctx.stroke(); ctx.fillStyle = '#ffd23f'; ctx.fillRect(X(ax) + S * .47, Y(ay) - S * 1.5, S * .42, S * .3); ctx.fillStyle = '#e11d2e'; ctx.fillRect(X(ax) + S * .47, Y(ay) - S * 1.5, S * .21, S * .15); ctx.fillRect(X(ax) + S * .68, Y(ay) - S * 1.35, S * .21, S * .15);
+}
+/* ---- arquibancada com torcida de verdade e placas de anúncio (Creators) ---- */
+let D6_ADS = null, D6_ADK = '';
+function d6AdList() { const k = (G && G.user && G.user.d2 ? G.user.d2.spons.map(s => s.brand).join('|') : '') + (G && G.mgr && G.mgr.sp && G.mgr.sp.active ? G.mgr.sp.active.brand : ''); if (D6_ADS && k === D6_ADK) return D6_ADS; D6_ADK = k; const l = ['RODIX TV', 'RODIX FOOTBALL', 'RODIX VIDA', 'EDIÇÃO CREATORS']; k.split('|').filter(Boolean).forEach(b => { l.push(b.toUpperCase()); l.push(b.toUpperCase()); }); D6_ADS = l; return l; }
+const D6_ADC = [['#0b1b3a', '#ffd23f'], ['#c1121f', '#ffffff'], ['#ffffff', '#111111'], ['#0f5132', '#ffffff'], ['#111111', '#3fc27a'], ['#ffd23f', '#111111']];
+function d6Stands(ctx, X, Y, S, w, h) {
+  const top = Y(-1.6), bot = Y(FW + 1.6), tms = performance.now() / 1000, lvl = (typeof CROWD !== 'undefined' && CROWD && CROWD.lvl) ? CROWD.lvl : 0, kits = (typeof RK !== 'undefined' && RK) ? RK.kits : MU ? MU.kits : [{ c1: '#c1121f', c2: '#fff' }, { c1: '#fff', c2: '#111' }], ads = d6AdList(), rot = Math.floor(tms / 7);
+  ctx.fillStyle = '#141a26'; if (top > 0) ctx.fillRect(0, 0, w, top); if (bot < h) ctx.fillRect(0, bot, w, h - bot);
+  const x0 = Math.floor((E.cx - w / 2 / S) / 1.4) - 7, x1 = Math.ceil((E.cx + w / 2 / S) / 1.4) + 1; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  for (const side of [-1, 1]) {
+    const edge = side < 0 ? top : bot; if (side < 0 ? edge <= 0 : edge >= h) continue;
+    for (let r = 6; r >= 0; r--) { const rr = side < 0 ? r : 6 - r, yy = side < 0 ? -3.4 - rr * 1.5 : FW + 3.4 + rr * 1.5, py = Y(yy); if (py < -S * 2 || py > h + S * 2) continue; ctx.fillStyle = rr % 2 ? '#1b2231' : '#202838'; ctx.fillRect(0, py - S * .2, w, S * 1.5);
+      for (let xi = x0; xi <= x1; xi++) { const hs = ((xi * 73856093) ^ (rr * 19349663 + (side + 2) * 83492791)) >>> 0, away = ((xi % 40) + 40) % 40 > 33, K = kits[away ? 1 : 0], cx = X(xi * 1.4 + (rr % 2) * 0.7), bob = Math.abs(Math.sin(tms * (3 + (hs % 5)) + hs)) * S * (0.05 + lvl * 0.55) * (hs % 3 ? 1 : 0.5), m = hs % 7, col = m < 3 ? K.c1 : m < 4 ? (K.c2 === '#ffffff' ? '#e6e6e6' : K.c2) : m < 5 ? '#cfd3da' : m < 6 ? '#2b3550' : K.c1;
+        ctx.fillStyle = col; ctx.fillRect(cx - S * .36, py - bob + S * .25, S * .72, S * .8); ctx.fillStyle = SKINS[(hs >> 3) % 6]; ctx.beginPath(); ctx.arc(cx, py - bob, S * .36, 0, 7); ctx.fill(); ctx.fillStyle = HAIRC[(hs >> 5) % 5]; ctx.beginPath(); ctx.arc(cx, py - bob - S * .08, S * .36, Math.PI, 0); ctx.fill();
+        if (lvl > .25 && hs % 5 === 0) { ctx.strokeStyle = SKINS[(hs >> 3) % 6]; ctx.lineWidth = Math.max(1, S * .14); ctx.beginPath(); ctx.moveTo(cx - S * .3, py - bob + S * .1); ctx.lineTo(cx - S * .5, py - bob - S * .7); ctx.moveTo(cx + S * .3, py - bob + S * .1); ctx.lineTo(cx + S * .5, py - bob - S * .7); ctx.stroke(); }
+        if (hs % 23 === 0 && !away) { const fy = py - bob - S * 1.5; ctx.strokeStyle = '#ddd'; ctx.lineWidth = Math.max(1, S * .07); ctx.beginPath(); ctx.moveTo(cx, py - bob); ctx.lineTo(cx, fy); ctx.stroke(); ctx.fillStyle = K.c1; ctx.beginPath(); ctx.moveTo(cx, fy); for (let i = 1; i <= 4; i++) ctx.lineTo(cx + i * S * .4, fy + Math.sin(tms * 6 + i + hs) * S * .12); for (let i = 4; i >= 0; i--) ctx.lineTo(cx + i * S * .4, fy + S * .7 + Math.sin(tms * 6 + i + hs) * S * .12); ctx.fill(); ctx.fillStyle = K.c2; ctx.fillRect(cx, fy + S * .28, S * 1.5, S * .14); } } }
+    const ad0 = side < 0 ? Y(-2.9) : Y(FW + 1.5), ad1 = side < 0 ? Y(-1.5) : Y(FW + 2.9), ay = Math.min(ad0, ad1), ah = Math.abs(ad1 - ad0); ctx.fillStyle = '#05070c'; ctx.fillRect(0, ay, w, ah);
+    for (let xi = Math.floor(x0 / 6) * 6; xi <= x1; xi += 6) { const bx = X(xi * 1.4), bw = X(xi * 1.4 + 8.4) - bx, n = (((xi / 6) + rot + (side > 0 ? 3 : 0)) % ads.length + ads.length) % ads.length, cc = D6_ADC[(((xi / 6) + rot) % 6 + 6) % 6]; ctx.fillStyle = cc[0]; ctx.fillRect(bx + 1, ay + 1, bw - 2, ah - 2); ctx.fillStyle = cc[1]; let fs = Math.max(7, Math.round(ah * .62)); ctx.font = `800 ${fs}px "Big Shoulders Display",sans-serif`; const t = ads[n], tw = ctx.measureText(t).width; if (tw > bw - 8) { fs = Math.max(6, Math.floor(fs * (bw - 8) / tw)); ctx.font = `800 ${fs}px "Big Shoulders Display",sans-serif`; } ctx.fillText(t, bx + bw / 2, ay + ah / 2 + 1); }
+  }
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+}
+/* ---- gol com cara de transmissão (faixa + confete) ---- */
+function d6Overlay(ctx, w, h) {
+  if (!CREATOR || !E || !E.goals) return; const n = E.goals.length; if (E.g6n == null) E.g6n = n; if (n > E.g6n) { E.g6n = n; E.g6 = { t: performance.now(), team: E.goals[n - 1].team }; } if (n < E.g6n) E.g6n = n;
+  const G6 = E.g6; if (!G6) return; const gt = (performance.now() - G6.t) / 1000; if (gt > 2.6) { E.g6 = null; return; }
+  const kits = (typeof RK !== 'undefined' && RK) ? RK.kits : MU ? MU.kits : null, K = (kits && kits[G6.team]) || { c1: '#c1121f', c2: '#fff' }, k = cnS(gt / .3) * (1 - cnS((gt - 2.2) / .4)), bh = Math.min(h * .2, 120);
+  for (let i = 0; i < 70; i++) { const x = cnR(i) * w + Math.sin(gt * 3 + i) * 20, y = ((cnR(i + 9) * h + gt * (160 + cnR(i + 3) * 220)) % (h + 30)) - 15; ctx.save(); ctx.globalAlpha = Math.min(1, 2.6 - gt); ctx.translate(x, y); ctx.rotate(gt * 5 + i); ctx.fillStyle = [K.c1, K.c2, '#ffd23f', '#fff'][i % 4]; ctx.fillRect(-4, -7, 8, 14); ctx.restore(); }
+  ctx.save(); ctx.globalAlpha = k; ctx.translate(w / 2, h * .3); ctx.transform(1, 0, -.2, 1, 0, 0); ctx.fillStyle = K.c1; ctx.fillRect(-w * .6 * k, -bh / 2, w * 1.2 * k, bh); ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fillRect(-w * .6, bh / 2 - 10, w * 1.2, 10); ctx.font = `800 ${Math.round(bh * .8 + Math.sin(gt * 20) * 3)}px "Big Shoulders Display",sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = contrast(K.c1) === '#111' ? '#111' : '#fff'; ctx.fillText('GOOOOL!', 0, 2); ctx.restore(); ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+}
+/* ---- biblioteca de replays da carreira ---- */
+function d6ClipSave(clip, MC) { try { const u = G.user; if (!u || !clip) return; u.reps = u.reps || []; const sc = G.players[clip.scorer]; u.reps.unshift({ id: 'r' + Date.now().toString(36), s: genSeasonLabel(), m: (MU && MU.ev ? MU.ev.m : MC.min), opp: MC.teams[1 - MC.uSide].name, who: sc ? shortName(sc) : 'Gol', me: !!(sc && sc.u), title: MC.title || '', clip }); if (u.reps.length > 6) u.reps.length = 6; } catch (e) { } }
+function d6RepV() { const u = G.user, L = u.reps || []; return `<p class="mut" style="margin:0 0 10px">Os últimos 6 gols do seu time ficam guardados aqui para rever quando quiser, em câmera lenta no momento do chute.</p>` + (L.length ? `<div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(250px,1fr))">${L.map((r, i) => `<div class="card stack" ${r.me ? 'style="border-color:#ffd23f"' : ''}><div class="row" style="justify-content:space-between"><b>⚽ ${esc(r.who)} · ${r.m}'</b><span class="chip">${esc(r.s)}</span></div><span class="mut">contra ${esc(r.opp)}${r.title ? ' · ' + esc(r.title) : ''}</span><button class="btn pri" data-act="d6-rep" data-i="${i}">▶ Assistir replay</button></div>`).join('')}</div>` : '<div class="card"><span class="mut">Nenhum replay ainda. Jogue uma partida e marque gols com o seu time.</span></div>'); }
 const SOC_ENABLED = CREATOR;  /* Rodix Social desativado por enquanto: mude para true para voltar */
 function socOn() { return SOC_ENABLED && !(G && G.user && G.user.socOn === false); }
 function head(t, right) { return `<div class="pagehead"><div class="row" style="gap:14px"><button class="back" data-act="home" aria-label="Voltar ao início">${ico('back', 22)}</button><h2>${t}</h2></div>${right ? `<div class="row">${right}</div>` : ''}</div>`; }
@@ -5889,7 +5965,7 @@ function hudSub() {
 }
 function kickIntro(MC, after) {
   $('#kickintro').hidden = true; const dby = mcDerby(MC); CROWD_BASE = dby ? 0.08 : 0.045; CROWD_K = dby ? 1.5 : 1; MU.phase = 'ticker'; sfx('whistle'); crowdStart(); crowdPulse(dby ? 0.34 : 0.2, 0.6, 2.5, 1000);
-  if (MC.invMin == null) { const pi = CREATOR ? (MC.final ? 0.35 : dby ? 0.30 : 0) : (MC.final ? (dby ? 0.14 : 0.07) : 0); MC.invMin = CFG.inv !== false && Math.random() < pi ? ri(12, 84) : 0; }
+  if (MC.invMin == null) { const pi = CREATOR ? d6InvP(MC, dby) : (MC.final ? (dby ? 0.14 : 0.07) : 0); MC.invMin = CFG.inv !== false && Math.random() < pi ? ri(12, 84) : 0; }
   if (after) after(); return;
   const el = $('#kickintro'), T = MC.teams; const u = G.user; const p = up();
   const st = MC.on === 0 ? 'Você é titular' : MC.on > 0 ? 'Você começa no banco' : 'Fora da lista';
@@ -5934,7 +6010,7 @@ function startMoment(e, sub) {
   if (!sub) sfx('whistle');
   KB.aimY = 0; KB.ch = null; MU.repChk = false; recStart();
   const MC = MU.MC, us = MC.uSide;
-  engNew([engTeamOf(MC.teams[us], MU.kits[0], 0), engTeamOf(MC.teams[1 - us], MU.kits[1], 1)], e.kind); E.derby = mcDerby(MC); E.mgrCtl = !!(G.mgr && G.mgr.playAs);
+  engNew([engTeamOf(MC.teams[us], MU.kits[0], 0), engTeamOf(MC.teams[1 - us], MU.kits[1], 1)], e.kind); E.derby = mcDerby(MC); E.bought = !!MC.bought; E.mgrCtl = !!(G.mgr && G.mgr.playAs);
   E.prevYc = MC.st.yc;
   setupMoment(e.kind, e.opts || { x: rf(FL - 30, FL - 20), y: rf(16, 52) });
   E.pause = sub ? 0.5 : 0.8;
@@ -6126,7 +6202,7 @@ function openControls() {
   $('#modal-box').oninput = cfgInput;
 }
 function openAbout() {
-  modal(`<h2>Sobre</h2><p>Rodix Football · Edição Creators · build 65 · co-op. Escudos, Data Pack e nomes de jogadores por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
+  modal(`<h2>Sobre</h2><p>Rodix Football · Edição Creators · build 66 · co-op. Escudos, Data Pack e nomes de jogadores por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
 }
 async function openProfiles() {
   const all = await refreshSaves();
@@ -6157,7 +6233,7 @@ function renderMatch() {
   if (E.cele > 0 && E.celeP) { tx = E.celeP.x; ty = E.celeP.y; if (!E.fxOn && MU && MU.MC && !MU.drill) { E.fxOn = true; const MC = MU.MC; goalFx(MC, E.celeTeam === 0 ? MC.uSide : 1 - MC.uSide, E.celeP, MC.min, false); } }
   E.cx += (tx - E.cx) * 0.08; E.cy += (ty - E.cy) * 0.08;
   const hw = w / 2 / S, hh = h / 2 / (S * T);
-  E.cx = hw * 2 > FL + 10 ? FL / 2 : clamp(E.cx, hw - (PADC ? 14 : 6), FL - hw + (PADC ? 18 : 6)); E.cy = hh * 2 > FW + 10 ? FW / 2 : clamp(E.cy, hh - 6, FW - hh + 6);
+  E.cx = hw * 2 > FL + 10 ? FL / 2 : clamp(E.cx, hw - (PADC ? 14 : 6), FL - hw + (PADC ? 18 : 6)); E.cy = hh * 2 > FW + 10 ? FW / 2 : clamp(E.cy, hh - (CREATOR ? 10 : 6), FW - hh + (CREATOR ? 10 : 6));
   const X = x => (x - E.cx) * S + w / 2, Y = (y, z) => (y - E.cy) * S * T + h / 2 - (z || 0) * S * 0.95;
   ctx.fillStyle = '#25763a'; ctx.fillRect(0, 0, w, h);
   for (let i = -3; i < 18; i++) { ctx.fillStyle = i % 2 ? '#2b8a43' : '#2f9549'; const x0 = X(i * 7.5), x1 = X(i * 7.5 + 7.5); ctx.fillRect(x0, Y(-1.5), x1 - x0 + 1, Y(FW + 1.5) - Y(-1.5)); }
@@ -6195,13 +6271,15 @@ function renderMatch() {
     post(GY1); post(GY2); ctx.beginPath(); ctx.moveTo(X(gx), Y(GY1, GH) + (pf && pf.bar ? sh : 0)); ctx.lineTo(X(gx), Y(GY2, GH) + (pf && pf.bar ? sh : 0)); ctx.stroke();
     ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
   }
+  if (CREATOR) { try { drawStands(ctx, X, Y, S, w, h); } catch (e) { } }
   // trajetória
   if (inp.down && E.user && CFG.traj) drawAim(ctx, X, Y, S);
   else if (E.user && CFG.traj) kbAimDraw(ctx, X, Y);
   // jogadores e bola por profundidade
-  fansStep(); const items = E.players.map(p => ({ y: p.y, p })); items.push({ y: b.y, ball: true }); if (FANS) for (const f of FANS.list) items.push({ y: f.y, fan: f }); items.sort((a, c2) => a.y - c2.y);
+  fansStep(); const items = E.players.map(p => ({ y: p.y, p })); items.push({ y: b.y, ball: true }); if (FANS) for (const f of FANS.list) items.push({ y: f.y, fan: f }); try { d6RefItems(items, b); } catch (e) { } items.sort((a, c2) => a.y - c2.y);
   const kits = RK ? RK.kits : MU ? MU.kits : [{ c1: '#ffffff', c2: '#111111' }, { c1: '#c00', c2: '#fff' }]; const gks = RK ? RK.gk : MU && MU.gk ? MU.gk : kits;
   for (const it of items) {
+    if (it.d6) { d6RefDraw(ctx, X, Y, S, it); continue; }
     if (it.fan) { const f = it.fan; drawFig(ctx, X(f.x), Y(f.y), S, figOpts(f.look, f.kit, { num: null, phase: f.ph, moving: true, fx: f.vx >= 0 ? 1 : -1, jump: ((FANS ? FANS.t : 0) * 1.7 + f.off) % 0.4 + 0.001 })); continue; }
     if (it.ball) {
       if (FX2()) { drawBallFx(ctx, X, Y, S, b); continue; }
@@ -6225,6 +6303,7 @@ function renderMatch() {
   if (E.flash) { const a = E.t - E.flash.t; if (a < 0.35) { ctx.save(); ctx.globalAlpha = 0.28 * (1 - a / 0.35); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height); ctx.restore(); } else E.flash = null; }
   ctx.restore();
   if (FX2()) { const g = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.45, w / 2, h / 2, Math.max(w, h) * 0.75); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.2)'); ctx.fillStyle = g; ctx.fillRect(0, 0, w, h); }
+  try { d6Overlay(ctx, w, h); } catch (e) { }
   const bn = $('#banner'); bn.textContent = E.bannerT > 0 && E.banner && txtOk(E.banner) && !(E.cele > 0 && MU && MU.MC && !MU.drill) ? E.banner : '';
 }
 function aimInfo() {
@@ -6323,7 +6402,7 @@ function recClip() {
 }
 function tryReplay() {
   const clip = recClip(); if (!clip) return false;
-  const MC = MU.MC, p = up(), u = G.user;
+  const MC = MU.MC, p = up(), u = G.user; if (G.user && !G.mgr) d6ClipSave(clip, MC);
   if (clip.scorer === p.id && E.type !== 'pen' && E.type !== 'gkpen') {
     const q = clipQuality(clip); (u.clips = u.clips || []);
     u.clips.push({ id: 'g' + Date.now().toString(36) + Math.floor(rnd() * 99), s: genSeasonLabel(), m: MU.ev ? MU.ev.m : MC.min, opp: MC.teams[1 - MC.uSide].name, title: MC.title, q, clip });
@@ -6551,6 +6630,7 @@ async function act(a, el) {
   if (a.startsWith('d2-')) { d2Act(a, el); return; }
   if (a.startsWith('d3-')) { d3Act(a, el); return; }
   if (a.startsWith('d5-')) { d5Act(a, el); return; }
+  if (a.startsWith('d6-')) { d6Act(a, el); return; }
   switch (a) {
     case 'new-career': closeModal(); CR = defaultCreate(); DF = 'semi'; newWorld(); CP = { co: 'BRA', lg: 'BRA3', club: null }; renderCreate(); show('s-create'); break;
     case 'continue': openContinue(); break;

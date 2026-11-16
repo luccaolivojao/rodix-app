@@ -20,10 +20,6 @@ jobs:
         working-directory: desktop
         shell: bash
         run: npm install && npx electron-builder --win portable
-      - uses: actions/upload-artifact@v4
-        with:
-          name: Rodix-Football-exe
-          path: desktop/dist/Rodix-Football.exe
       - name: Publicar na aba Releases
         shell: bash
         env: { GH_TOKEN: "${{ github.token }}" }

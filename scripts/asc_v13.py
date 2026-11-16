@@ -39,7 +39,7 @@ def do_upload(created,fpath,patch_path,rtype):
 import traceback
 sys.excepthook=lambda t,v,tb:L('EXC',''.join(traceback.format_exception(t,v,tb))[-1500:])
 MODE=os.environ.get('MODE','inspect')
-VS='1.3'; MINB=32
+VS='1.3'; MINB=33
 WN='Árbitros novos em campo, com três uniformes (amarelo, verde e rosa) e um visual diferente a cada partida. Torcida nas arquibancadas e atrás dos gols. Modo Técnico: comande um clube, escale o time direto no campo, cuide das transferências e da diretoria. Pedidos de autógrafo bem menos frequentes. Rodix Social com imagens novas e mais textos traduzidos.'
 vs=api('GET',f'/v1/apps/{APP}/appStoreVersions?limit=10')['data']
 for v in vs: L('V',v['id'],v['attributes']['versionString'],v['attributes']['appStoreState'],v['attributes'].get('releaseType'))

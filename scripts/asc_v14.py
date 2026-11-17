@@ -72,17 +72,17 @@ if MODE=='go':
     for l in ls:
         api('PATCH',f'/v1/appStoreVersionLocalizations/{l["id"]}',{'data':{'type':'appStoreVersionLocalizations','id':l['id'],'attributes':{'whatsNew':WN}}})
         L('WHATSNEW',l['attributes']['locale'])
+    op=next((s for s in subs if s['attributes']['state']=='READY_FOR_REVIEW'),None)
+    if op: sid=op['id']; L('REUSE_SUB',sid)
+    else: sid=api('POST','/v1/reviewSubmissions',{'data':{'type':'reviewSubmissions','attributes':{'platform':'IOS'},'relationships':{'app':{'data':{'type':'apps','id':APP}}}}})['data']['id']
+    it=api('POST','/v1/reviewSubmissionItems',{'data':{'type':'reviewSubmissionItems','relationships':{'reviewSubmission':{'data':{'type':'reviewSubmissions','id':sid}},'appStoreVersion':{'data':{'type':'appStoreVersions','id':vid}}}}})
+    L('ITEM','ok' if it else 'fail')
     ps=api('GET',f'/v1/apps/{APP}/inAppPurchasesV2?limit=50')
     for q in (ps or {}).get('data',[]):
         st=q['attributes'].get('state'); L('IAP',q['attributes'].get('productId'),st)
         if st=='READY_TO_SUBMIT':
             r=api('POST','/v1/inAppPurchaseSubmissions',{'data':{'type':'inAppPurchaseSubmissions','relationships':{'inAppPurchaseV2':{'data':{'type':'inAppPurchases','id':q['id']}}}}}); L('IAP_SUBMIT',q['attributes'].get('productId'),'ok' if r is not None else 'fail')
     if os.environ.get('NEEDIAP')=='1' and any('fail' in x for x in log if x.startswith('IAP_SUBMIT')): L('IAP_FAIL_STOP'); sys.exit()
-    op=next((s for s in subs if s['attributes']['state']=='READY_FOR_REVIEW'),None)
-    if op: sid=op['id']; L('REUSE_SUB',sid)
-    else: sid=api('POST','/v1/reviewSubmissions',{'data':{'type':'reviewSubmissions','attributes':{'platform':'IOS'},'relationships':{'app':{'data':{'type':'apps','id':APP}}}}})['data']['id']
-    it=api('POST','/v1/reviewSubmissionItems',{'data':{'type':'reviewSubmissionItems','relationships':{'reviewSubmission':{'data':{'type':'reviewSubmissions','id':sid}},'appStoreVersion':{'data':{'type':'appStoreVersions','id':vid}}}}})
-    L('ITEM','ok' if it else 'fail')
     x=api('PATCH',f'/v1/reviewSubmissions/{sid}',{'data':{'type':'reviewSubmissions','id':sid,'attributes':{'submitted':True}}})
     L('RESULT',json.dumps((x or {}).get('data',{}).get('attributes'))[:300] if x else 'fail')
     v=api('GET',f'/v1/appStoreVersions/{vid}')['data']['attributes']; L('VERSION',v['versionString'],v['appStoreState'],v['releaseType'])

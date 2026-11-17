@@ -123,3 +123,48 @@ if what in('all','iap'):
         L(pid,'state',st and st['data']['attributes']['state'])
     L('IAP done')
 
+# ---------- IAP 2: desbloqueios e advogado ----------
+NEW=[('rodix_budget_editor','NON_CONSUMABLE','Budget Editor','Editor de orçamento','Edit budget','4.99','Libera para sempre o editor de orçamento do modo técnico.','Permanently unlocks the manager-mode budget editor.','Non-consumable unlock. Open Menu > Shop (Loja) > New (Novidades) > Edit budget. Used in Manager mode > Transfers > Edit budget.'),
+     ('rodix_club_editor','NON_CONSUMABLE','Club Editor','Editor de clube','Club editor','6.99','Libera para sempre: mude nome, sigla e cores do clube.','Unlocks forever: change club name, short name and colours.','Non-consumable unlock. Open Menu > Shop (Loja) > New (Novidades) > Club editor. Used in the Club tab > Edit club.'),
+     ('rodix_lawyer','CONSUMABLE','Lawyer','Advogado','Lawyer','1.99','Derruba a sua suspensão na carreira de jogador.','Overturns your suspension in player career.','Consumable item. Open Menu > Shop (Loja) > New (Novidades) > Lawyer. When the player is suspended, tap Use Lawyer now.')]
+if what in('iap2',):
+    ex=api('GET',f'/v1/apps/{APP}/inAppPurchasesV2?limit=200')
+    have={i['attributes']['productId']:i['id'] for i in (ex or {}).get('data',[])}
+    terr=[];url='/v1/territories?limit=200'
+    while url:
+        j=api('GET',url)
+        if not j:break
+        terr+=[t['id'] for t in j['data']];url=j.get('links',{}).get('next')
+    for pid,typ,ref,npt,nen,price,dpt,den,note in NEW:
+        if pid in have: iid=have[pid];L('exists',pid)
+        else:
+            c=api('POST','/v2/inAppPurchases',{'data':{'type':'inAppPurchases','attributes':{'name':ref,'productId':pid,'inAppPurchaseType':typ,'reviewNote':note,'familySharable':False},'relationships':{'app':{'data':{'type':'apps','id':APP}}}}})
+            if not c: continue
+            iid=c['data']['id'];L('created',pid)
+        locs=api('GET',f'/v2/inAppPurchases/{iid}/inAppPurchaseLocalizations',quiet=True) or {'data':[]}
+        lh={l['attributes']['locale'] for l in locs['data']}
+        for loc,n,d in (('pt-BR',npt,dpt),('en-US',nen,den)):
+            if loc in lh: continue
+            api('POST','/v1/inAppPurchaseLocalizations',{'data':{'type':'inAppPurchaseLocalizations','attributes':{'locale':loc,'name':n[:30],'description':d[:45]},'relationships':{'inAppPurchaseV2':{'data':{'type':'inAppPurchases','id':iid}}}}})
+        sch=api('GET',f'/v2/inAppPurchases/{iid}/iapPriceSchedule',quiet=True)
+        if not (sch and sch.get('data')):
+            pts=[];url=f'/v2/inAppPurchases/{iid}/pricePoints?filter[territory]=BRA&limit=200'
+            while url:
+                j=api('GET',url)
+                if not j:break
+                pts+=j['data'];url=j.get('links',{}).get('next')
+            if pts:
+                best=min(pts,key=lambda p:abs(float(p['attributes']['customerPrice'])-float(price)))
+                L(pid,'price point',best['attributes']['customerPrice'])
+                api('POST','/v1/inAppPurchasePriceSchedules',{'data':{'type':'inAppPurchasePriceSchedules','relationships':{'inAppPurchase':{'data':{'type':'inAppPurchases','id':iid}},'baseTerritory':{'data':{'type':'territories','id':'BRA'}},'manualPrices':{'data':[{'type':'inAppPurchasePrices','id':'${p1}'}]}}},'included':[{'type':'inAppPurchasePrices','id':'${p1}','attributes':{'startDate':None},'relationships':{'inAppPurchasePricePoint':{'data':{'type':'inAppPurchasePricePoints','id':best['id']}}}}]})
+        av=api('GET',f'/v2/inAppPurchases/{iid}/inAppPurchaseAvailability',quiet=True)
+        if not (av and av.get('data')):
+            api('POST','/v1/inAppPurchaseAvailabilities',{'data':{'type':'inAppPurchaseAvailabilities','attributes':{'availableInNewTerritories':True},'relationships':{'inAppPurchase':{'data':{'type':'inAppPurchases','id':iid}},'availableTerritories':{'data':[{'type':'territories','id':t} for t in terr]}}}})
+        rs=api('GET',f'/v2/inAppPurchases/{iid}/appStoreReviewScreenshot',quiet=True)
+        if not (rs and rs.get('data')):
+            fp='asc/iap_review_v2.png'
+            cr=api('POST','/v1/inAppPurchaseAppStoreReviewScreenshots',{'data':{'type':'inAppPurchaseAppStoreReviewScreenshots','attributes':{'fileName':'shop2.png','fileSize':os.path.getsize(fp)},'relationships':{'inAppPurchaseV2':{'data':{'type':'inAppPurchases','id':iid}}}}})
+            if cr: do_upload(cr,fp,'/v1/inAppPurchaseAppStoreReviewScreenshots','inAppPurchaseAppStoreReviewScreenshots')
+        st=api('GET',f'/v2/inAppPurchases/{iid}?fields[inAppPurchases]=state',quiet=True)
+        L(pid,'state',st and st['data']['attributes']['state'])
+    L('IAP2 done')

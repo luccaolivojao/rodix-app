@@ -15,11 +15,12 @@ def L(*a):
     s=' '.join(str(x) for x in a);print(s,flush=True);log.append(s)
 def api(m,path,body=None,ok=(200,201,204),quiet=False):
     for i in range(3):
-        r=requests.request(m,B+path if path.startswith('/') else path,headers={'Authorization':'Bearer '+tok(),'Content-Type':'application/json'},data=json.dumps(body) if body is not None else None,timeout=60)
+        try: r=requests.request(m,B+path if path.startswith('/') else path,headers={'Authorization':'Bearer '+tok(),'Content-Type':'application/json'},data=json.dumps(body) if body is not None else None,timeout=90)
+        except requests.exceptions.RequestException as e: L('RETRY',str(e)[:80]); time.sleep(4); continue
         if r.status_code in ok: return r.json() if r.content else {}
         if r.status_code>=500: time.sleep(3);continue
         break
-    if not quiet: L('ERR',m,path,r.status_code,' '.join(r.text.split())[:350])
+    if not quiet: L('ERR',m,path,r.status_code,' '.join(r.text.split())[:1800])
     return None
 def upload(res_path,rtype,fpath,patch_path):
     data=open(fpath,'rb').read()
@@ -76,6 +77,7 @@ if MODE=='go':
         st=q['attributes'].get('state'); L('IAP',q['attributes'].get('productId'),st)
         if st=='READY_TO_SUBMIT':
             r=api('POST','/v1/inAppPurchaseSubmissions',{'data':{'type':'inAppPurchaseSubmissions','relationships':{'inAppPurchaseV2':{'data':{'type':'inAppPurchases','id':q['id']}}}}}); L('IAP_SUBMIT',q['attributes'].get('productId'),'ok' if r is not None else 'fail')
+    if os.environ.get('NEEDIAP')=='1' and any('fail' in x for x in log if x.startswith('IAP_SUBMIT')): L('IAP_FAIL_STOP'); sys.exit()
     op=next((s for s in subs if s['attributes']['state']=='READY_FOR_REVIEW'),None)
     if op: sid=op['id']; L('REUSE_SUB',sid)
     else: sid=api('POST','/v1/reviewSubmissions',{'data':{'type':'reviewSubmissions','attributes':{'platform':'IOS'},'relationships':{'app':{'data':{'type':'apps','id':APP}}}}})['data']['id']

@@ -41,6 +41,6 @@ def do_upload(created,fpath,patch_path,rtype):
 ls=api('GET',f'/v1/apps/{APP}/betaAppLocalizations')['data']
 for l in ls:
     L('BEFORE',l['attributes']['locale'],repr((l['attributes'].get('description') or '')[:120]))
-    r=api('PATCH',f'/v1/betaAppLocalizations/{l["id"]}',{'data':{'type':'betaAppLocalizations','id':l['id'],'attributes':{'description':''}}})
+    r=api('PATCH',f'/v1/betaAppLocalizations/{l["id"]}',{'data':{'type':'betaAppLocalizations','id':l['id'],'attributes':{'description':'Jogo de futebol 2D de carreira.'}}})
     L('PATCH',l['attributes']['locale'],'ok' if r is not None else 'fail')
 for l in api('GET',f'/v1/apps/{APP}/betaAppLocalizations')['data']: L('AFTER',l['attributes']['locale'],repr((l['attributes'].get('description') or '')[:60]))

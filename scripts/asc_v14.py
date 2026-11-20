@@ -40,7 +40,7 @@ def do_upload(created,fpath,patch_path,rtype):
 import traceback
 sys.excepthook=lambda t,v,tb:L('EXC',''.join(traceback.format_exception(t,v,tb))[-1500:])
 MODE=os.environ.get('MODE','inspect')
-VS='1.3.1'; MINB=33
+VS='1.3.2'; MINB=34
 WN='Novidades: Modo Goleiro refeito dentro do campo, com mergulho, saídas e cruzamentos. Goleiro cobrador de pênaltis e faltas. Editar o visual do jogador a qualquer momento. Laterais agora jogam abertos pelas pontas. Novas compras: editor de orçamento, editor de clube e advogado. Restaurar compras na loja.'
 vs=api('GET',f'/v1/apps/{APP}/appStoreVersions?limit=10')['data']
 for v in vs: L('V',v['id'],v['attributes']['versionString'],v['attributes']['appStoreState'],v['attributes'].get('releaseType'))
@@ -72,6 +72,7 @@ if MODE=='go':
     for l in ls:
         api('PATCH',f'/v1/appStoreVersionLocalizations/{l["id"]}',{'data':{'type':'appStoreVersionLocalizations','id':l['id'],'attributes':{'whatsNew':WN}}})
         L('WHATSNEW',l['attributes']['locale'])
+    if os.environ.get('PREPARE_ONLY')=='1': L('PREPARED_STOP'); sys.exit()
     op=next((s for s in subs if s['attributes']['state']=='READY_FOR_REVIEW'),None)
     if op: sid=op['id']; L('REUSE_SUB',sid)
     else: sid=api('POST','/v1/reviewSubmissions',{'data':{'type':'reviewSubmissions','attributes':{'platform':'IOS'},'relationships':{'app':{'data':{'type':'apps','id':APP}}}}})['data']['id']

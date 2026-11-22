@@ -40,7 +40,7 @@ def do_upload(created,fpath,patch_path,rtype):
 import traceback
 sys.excepthook=lambda t,v,tb:L('EXC',''.join(traceback.format_exception(t,v,tb))[-1500:])
 MODE=os.environ.get('MODE','inspect')
-VS='1.3.2'; MINB=34
+VS='1.3.2'; MINB=35
 WN='Novidades: Modo Goleiro refeito dentro do campo, com mergulho, saídas e cruzamentos. Goleiro cobrador de pênaltis e faltas. Editar o visual do jogador a qualquer momento. Laterais agora jogam abertos pelas pontas. Novas compras: editor de orçamento, editor de clube e advogado. Restaurar compras na loja.'
 vs=api('GET',f'/v1/apps/{APP}/appStoreVersions?limit=10')['data']
 for v in vs: L('V',v['id'],v['attributes']['versionString'],v['attributes']['appStoreState'],v['attributes'].get('releaseType'))

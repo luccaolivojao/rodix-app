@@ -2888,7 +2888,7 @@ function userCarry(p, dt) {
 /* ---------- goleiro ---------- */
 function gkThink(p, dt) {
   const t = p.team, gx = t === 0 ? 0 : FL, dirIn = t === 0 ? 1 : -1; const b = E.ball;
-  if (p.dive) { p.dive.t -= dt; p.vx = 0; p.vy = p.dive.vy; p.x += 0; p.y += p.dive.vy * dt; if (p.dive.t <= 0) { p.dive = null; p.down = 0.55; } return; }
+  if (p.dive) { p.dive.t -= dt; p.vx = 0; p.vy = p.dive.vy; p.x += 0; p.y += p.dive.vy * dt; if (p.dive.t <= 0) { p.downS = Math.sign(p.dive.vy) * (p.team === 0 ? 1 : -1); p.dive = null; p.down = 0.55; } return; }
   if (p.down > 0) { p.tgt = [p.x, p.y]; return; }
   if (b.owner === p) { p.hold -= dt; p.tgt = [p.x, p.y]; if (p.hold <= 0 && !E.frozen) gkDistribute(p); return; }
   if (E.frozen) { p.tgt = [p.x, p.y]; return; }
@@ -2913,6 +2913,7 @@ function gkThink(p, dt) {
         if (p.react <= 0) {
           const iy = interceptY(p), spd = 3.9 + 3.5 * gkEff(p) / 99, need = Math.min(0.55, Math.abs(iy - p.y) / spd + 0.1);
           if (tt <= need + 0.07) startDive(p, iy);
+          else if (Math.hypot(b.vx, b.vy) < 17 && b.z < 0.6) { p.tgt = [p.x, clamp(iy, GY1 - 0.5, GY2 + 0.5)]; p.urg = 1.3; } /* bola rasteira e lenta: anda até ela */
           else { p.tgt = [p.x, p.y]; }
         }
         return;
@@ -2939,7 +2940,7 @@ function startDive(p, iy, mult) {
   const g = gkEff(p) / 99; const spd = (3.9 + 3.5 * g) * (mult || 1); const dy = iy - p.y;
   E.diveDone = true; E.awaitDive = 0;
   if (Math.abs(dy) < 0.5) { p.tgt = [p.x, p.y]; return; }
-  const dur = Math.min(0.55, Math.abs(dy) / spd + 0.1); p.dive = { vy: Math.sign(dy) * spd, t: dur };
+  const dur = Math.min(0.55, Math.abs(dy) / spd + 0.1); p.dive = { vy: Math.sign(dy) * spd, t: dur, t0: dur };
 }
 function gkDistribute(p) {
   const t = p.team; let best = null, bs = -1e9;
@@ -3257,7 +3258,7 @@ function fkArc(D, power) {
 }
 function userKick(dir, power, force) { if (typeof MU !== 'undefined' && MU && MU.paused) return; 
   const u = E.user; let kind = force || classifyKick(dir, power); const a = u.a; let conv = false;
-  if (kind === 'pass' && !E.frozen && E.type !== 'pen' && u.x > 56) { const gx = FL - u.x, gy = GC - u.y, gl = Math.hypot(gx, gy) || 1; if ((dir[0] * gx + dir[1] * gy) / gl > 0.86 && gl < 34) { kind = 'shot'; conv = true; } } /* passe na direção do gol vira chute (sempre mais fraco que o botão de chute) */
+   /* passe na direção do gol vira chute (sempre mais fraco que o botão de chute) */
   if (conv) power = Math.min(power, 0.3);
   if (kind === 'shot' || kind === 'pen') {
     const skill = kind === 'pen' ? a.pen : a.fin; const speed = kind === 'pen' ? 13 + power * 20 : conv ? 13 + power * 14 : 17 + power * 20;
@@ -3480,7 +3481,7 @@ function drawBallFx(ctx, X, Y, S, b) {
 function drawFig(ctx, x, y, S, o) {
   const lift = o.jump > 0 ? Math.sin(Math.min(1, o.jump / 0.4) * Math.PI) * 0.45 * S : 0;
   ctx.save();
-  ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.beginPath(); ctx.ellipse(x, y, 0.44 * S, 0.17 * S, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.beginPath(); if (o.dive) ctx.ellipse(x + o.dive * 0.55 * S, y, 0.95 * S, 0.19 * S, 0, 0, 7); else if (o.downS) ctx.ellipse(x + o.downS * 0.8 * S, y, 1.0 * S, 0.18 * S, 0, 0, 7); else ctx.ellipse(x, y, 0.44 * S, 0.17 * S, 0, 0, 7); ctx.fill();
   if (o.slide) {
     const sg = o.fx >= 0 ? 1 : -1, pr = o.slide; ctx.save();
     ctx.strokeStyle = 'rgba(235,245,225,' + (0.5 * (1 - pr * 0.6)) + ')'; ctx.lineWidth = Math.max(2, 0.12 * S); ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(x - sg * 0.2 * S, y - 0.03 * S); ctx.lineTo(x - sg * (0.6 + pr * 2.8) * S, y - 0.03 * S); ctx.stroke();
@@ -3492,7 +3493,9 @@ function drawFig(ctx, x, y, S, o) {
   if (CREATOR && o.kick > 0) { ctx.rotate((o.fx >= 0 ? -1 : 1) * 0.16 * Math.min(1, o.kick / 0.25)); }
   if (o.slide) { const k = Math.sin(Math.min(1, o.slide * 4) * Math.PI / 2), sg = o.fx >= 0 ? 1 : -1; ctx.translate(0, -0.02 * S); ctx.translate(0, -0.55 * S); ctx.rotate(-sg * 1.22 * k); ctx.translate(0, (0.45 + 0.4 * k) * S); }
   if (o.gk && o.ready) ctx.translate(0, 0.07 * S);
-  if (o.dive) { ctx.translate(0, -0.3 * S); ctx.rotate(o.dive * 1.2); ctx.translate(0, 0.3 * S); }
+  if (o.dive) { const pr = o.diveP == null ? 0.5 : o.diveP, e = Math.sin(Math.min(1, pr * 1.7) * Math.PI / 2), hop = Math.sin(Math.min(1, pr) * Math.PI) * 0.5 * S;
+    ctx.translate(o.dive * e * 0.35 * S, -hop - 0.25 * S * e); ctx.translate(0, -0.7 * S); ctx.rotate(o.dive * (0.25 + 1.3 * e)); ctx.translate(0, 0.7 * S); }
+  else if (o.downS) { ctx.translate(o.downS * 0.75 * S, -0.08 * S); ctx.translate(0, -0.4 * S); ctx.rotate(o.downS * 1.5); ctx.translate(0, 0.4 * S); }
   else if (o.down) { ctx.rotate((o.fx >= 0 ? 1 : -1) * 1.35); }
   const sw = Math.sin(o.phase || 0) * (CREATOR ? 0.2 + 0.16 * (o.sp || 0) : 0.2) * S * (o.moving ? 1 : 0);
   ctx.lineCap = 'round';
@@ -3503,7 +3506,7 @@ function drawFig(ctx, x, y, S, o) {
   ctx.strokeStyle = o.shirt; ctx.lineWidth = 0.15 * S;
   if (o.gk && (o.dive || o.ready)) {
     // goleiro: braços abertos na posição de espera e esticados para cima no mergulho
-    const up = o.dive ? 1 : 0, ax = (0.5 + 0.2 * up) * S, ay = (o.dive ? -1.95 : -1.0) * S; const hands = [[-ax, ay], [ax, ay]];
+    const ax = (o.dive ? 0.2 : 0.5) * S, ay = (o.dive ? -2.3 : -1.0) * S; const hands = [[-ax, ay], [ax, ay]];
     ctx.beginPath(); ctx.moveTo(-0.32 * S, -1.18 * S); ctx.lineTo(hands[0][0], hands[0][1]); ctx.moveTo(0.32 * S, -1.18 * S); ctx.lineTo(hands[1][0], hands[1][1]); ctx.stroke();
     ctx.fillStyle = '#ffd23f'; ctx.beginPath(); ctx.arc(hands[0][0], hands[0][1], 0.11 * S, 0, 7); ctx.arc(hands[1][0], hands[1][1], 0.11 * S, 0, 7); ctx.fill();
   } else {
@@ -7706,7 +7709,7 @@ function openControls() {
   $('#modal-box').oninput = cfgInput;
 }
 function openAbout() {
-  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.3 (build 90). Escudos, Data Pack e nomes de jogadores por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
+  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.3 (build 91). Escudos, Data Pack e nomes de jogadores por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
 }
 async function openProfiles() {
   const all = await refreshSaves();
@@ -7797,7 +7800,7 @@ function renderMatch() {
     const sx = X(p.x), sy = Y(p.y);
     if (p.user) { ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.ellipse(sx, sy, S * 0.62, S * 0.26, 0, 0, 7); ctx.stroke(); }
     else if (b.owner === p) { ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(sx, sy, S * 0.55, S * 0.22, 0, 0, 7); ctx.stroke(); }
-    if (E.cele > 0 && p === E.celeP && E.celeK > 0 && d9CeleDraw(ctx, sx, sy, S, p, kit)) { } else drawFig(ctx, sx, sy, S, figOpts(p.look, kit, { sp: clamp(Math.hypot(p.vx, p.vy) / 8, 0, 1), num: p.num, phase: p.phase, moving: Math.hypot(p.vx, p.vy) > 0.4, fx: p.fx, dive: p.dive ? Math.sign(p.dive.vy) * (p.team === 0 ? 1 : -1) : 0, down: p.down > 0 && !p.dive && !p.slide, slide: p.slide ? Math.max(0.03, 1 - p.slide.t / 0.5) : 0, jump: p.jump, kick: p.kickA, back: p.fy < -0.6, gk: p.pos === 'GOL', ready: p.pos === 'GOL' && p.react != null && !p.dive && !p.hold }));
+    if (E.cele > 0 && p === E.celeP && E.celeK > 0 && d9CeleDraw(ctx, sx, sy, S, p, kit)) { } else drawFig(ctx, sx, sy, S, figOpts(p.look, kit, { sp: clamp(Math.hypot(p.vx, p.vy) / 8, 0, 1), num: p.num, phase: p.phase, moving: Math.hypot(p.vx, p.vy) > 0.4, fx: p.fx, dive: p.dive ? Math.sign(p.dive.vy) * (p.team === 0 ? 1 : -1) : 0, diveP: p.dive && p.dive.t0 ? 1 - p.dive.t / p.dive.t0 : 0, downS: p.pos === 'GOL' && p.down > 0 ? p.downS || 0 : 0, down: p.down > 0 && !p.dive && !p.slide, slide: p.slide ? Math.max(0.03, 1 - p.slide.t / 0.5) : 0, jump: p.jump, kick: p.kickA, back: p.fy < -0.6, gk: p.pos === 'GOL', ready: p.pos === 'GOL' && p.react != null && !p.dive && !p.hold }));
     if (p.user) { const ty2 = sy - S * 2.35; ctx.fillStyle = '#ffd23f'; ctx.beginPath(); ctx.moveTo(sx, ty2 + S * 0.3); ctx.lineTo(sx - S * 0.25, ty2); ctx.lineTo(sx + S * 0.25, ty2); ctx.fill(); }
   }
   if (FX2()) fxDraw(ctx, X, Y, S);
@@ -8254,13 +8257,16 @@ function kbDir() { if (KB.joy) return KB.joy; const k = KB.keys; let dx = (k.rig
 function kbActive() { return curScreen === 's-match' && MU && MU.phase === 'moment' && E && !E.over && !MU.paused; }
 function kbPower() { return KB.ch ? clamp((performance.now() - KB.ch.t0) / 900, 0.15, 1) : 0; }
 function setPieceAim() { const b = E.ball; const gx = E.type === 'gkpen' ? 0 : FL; const dx = gx - b.x, dy = GC + KB.aimY - b.y, L = Math.hypot(dx, dy) || 1; return [dx / L, dy / L]; }
-function shotDir() { const u = E.user; const d = kbDir(); const vy = d && Math.abs(d[1]) > 0.3 ? Math.sign(d[1]) : 0; const ty = GC + vy * 2.9; const dx = FL - u.x, dy = ty - u.y, L = Math.hypot(dx, dy) || 1; return [dx / L, dy / L]; }
-function snapMate(dir) {
+function shotDir() { const u = E.user; const d = kbDir(); const gx = FL - u.x;
+  if (!d || d[0] < 0.12 || gx < 1) { const dy = GC - u.y + (d && Math.abs(d[1]) > 0.3 ? Math.sign(d[1]) * 2.9 : 0), L = Math.hypot(gx, dy) || 1; return [gx / L, dy / L]; }
+  const ty = GC + d[1] * 4.4; /* direcional analógico escolhe o ponto no gol: diagonal = perto da trave, lateral total = fora */
+  const dy = ty - u.y, L = Math.hypot(gx, dy) || 1; return [gx / L, dy / L]; }
+function snapMate(dir, wide) {
   // mira assistida: companheiro no cone da direção, preferindo quem está livre e com a linha de passe limpa
   const u = E.user; let best = null, bs = -1e9;
   for (const m of E.players) {
     if (m.team !== u.team || m === u || m.pos === 'GOL') continue; const vx = m.x - u.x, vy = m.y - u.y, d = Math.hypot(vx, vy); if (d < 3 || d > 45) continue;
-    const cos = (vx * dir[0] + vy * dir[1]) / d; if (cos < 0.72) continue;
+    const cos = (vx * dir[0] + vy * dir[1]) / d; if (cos < (wide ? 0.2 : 0.72)) continue;
     const lane = laneSafety(u.x, u.y, m.x, m.y, 1 - u.team); const [open] = nearestOpp(m);
     const sc = cos * 4 - d / 30 + Math.min(lane, 4) * 0.45 + Math.min(open, 6) * 0.15 - (lane < 1.2 ? 2 : 0);
     if (sc > bs) { bs = sc; best = m; }
@@ -8289,7 +8295,7 @@ function kbRelease(kind, held) {
     userKick(dir, Math.max(power, 0.3), E.drill === 'fin' ? 'shot' : E.type === 'pen' ? 'pen' : kind === 'shot' ? 'fk' : kind === 'lob' ? 'lob' : 'pass'); E.slowT = 0.6; return;
   }
   if (kind === 'shot') { userKick(shotDir(), Math.max(power, 0.5), 'shot'); E.slowT = 0.6; return; }
-  const dir = kbDir() || [u.fx || 1, u.fy || 0]; const m = snapMate(dir); const quick = !KB.ch || performance.now() - KB.ch.t0 < 200;
+  const dir = kbDir() || [u.fx || 1, u.fy || 0]; const m = snapMate(dir) || snapMate(dir, 1); const quick = !KB.ch || performance.now() - KB.ch.t0 < 200;
   if (m) {
     // antecipa a corrida do companheiro pelo tempo de viagem da bola (como a IA faz)
     const d0 = Math.hypot(m.x - u.x, m.y - u.y), lead = clamp(0.3 + d0 / 40, 0.35, 0.95) + (quick ? 0 : power * 0.9);
@@ -8306,7 +8312,7 @@ function kbAimDraw(ctx, X, Y) {
   if (!KB.ch || b.owner !== u) return;
   const kind = KB.ch.kind; const p = kbPower();
   if (kind === 'shot') drawAimLine(ctx, X, Y, shotDir(), p, 'shot');
-  else { const dir = kbDir() || [u.fx || 1, u.fy || 0]; const m = snapMate(dir); const d2 = m ? (() => { const vx = m.x - u.x, vy = m.y - u.y, L = Math.hypot(vx, vy); return [vx / L, vy / L]; })() : dir; drawAimLine(ctx, X, Y, d2, p, kind === 'lob' ? 'lob' : 'pass'); }
+  else { const dir = kbDir() || [u.fx || 1, u.fy || 0]; const m = snapMate(dir) || snapMate(dir, 1); const d2 = m ? (() => { const vx = m.x - u.x, vy = m.y - u.y, L = Math.hypot(vx, vy); return [vx / L, vy / L]; })() : dir; drawAimLine(ctx, X, Y, d2, p, kind === 'lob' ? 'lob' : 'pass'); }
 }
 function togglePause() { if (REP || VARS) return; if (!MU || curScreen !== 's-match' || MU.phase === 'post') return; MU.paused = !MU.paused; $('#banner').textContent = MU.paused ? 'Pausado' : ''; }
 document.addEventListener('keydown', e => {

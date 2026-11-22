@@ -2721,7 +2721,7 @@ function engNew(teams, type) {
       const sl = SHAPE[pp.pos]; const sp = sl[Math.min(k, sl.length - 1)];
       const a = pp.a;
       const p = { team: ti, id: pp.id, name: pp.name, pos: pp.pos, a, num: pp.num, user: !!pp.user, look: pp.look, hx: sp[0] + (k >= sl.length ? 6 : 0), hy: sp[1] + (k >= sl.length ? 8 : 0),
-        x: 0, y: 0, vx: 0, vy: 0, fx: ti === 0 ? 1 : -1, fy: 0, tgt: [0, 0], urg: 0.8, maxS: 5.5 + a.vel / 99 * 3.1, acc: 6 + a.ace / 99 * 9,
+        x: 0, y: 0, vx: 0, vy: 0, fx: ti === 0 ? 1 : -1, fy: 0, tgt: [0, 0], urg: 0.8, maxS: 5.5 + a.vel / 99 * 3.1, acc: 10 + a.ace / 99 * 12,
         cd: 0, tkCd: 0, think: 0, runT: 0, phase: Math.random() * 6, dive: null, down: 0, recv: 0, hold: 0, manualT: 0, chase: null, burst: 0, react: null, wall: false, kickA: 0, jump: 0, dT: null };
       E.players.push(p); if (p.user) E.user = p;
     });
@@ -2785,9 +2785,9 @@ function carrierThink(p, dt) {
   if (p.think > 0 && press > 1.6) { dribbleTo(p); return; }
   p.think = 0.28 + Math.random() * 0.3 + (99 - p.a.vis) / 400;
   const dG = D(p.x, p.y, gx, GC); const byn = NY(t, p.y);
-  let shootP = dG < 11 ? 0.75 : dG < 17 ? 0.4 : dG < 24 ? 0.1 : 0;
+  let shootP = dG < 11 ? 0.88 : dG < 17 ? 0.58 : dG < 24 ? 0.24 : dG < 30 ? 0.07 : 0;
   if (Math.abs(byn - 34) > 16) shootP *= 0.3;
-  if (press < 1.6 && dG < 18) shootP += 0.2;
+  if (press < 1.6 && dG < 18) shootP += 0.2; else if (press > 3.5 && dG < 20) shootP += 0.12;
   if (shootP > 0 && Math.random() < shootP) { aiShoot(p, press); return; }
   let best = null, bs = -1e9; const bxn = NX(t, p.x);
   for (const m of E.players) {
@@ -2909,7 +2909,12 @@ function gkThink(p, dt) {
       if (py > GY1 - 1.3 && py < GY2 + 1.3) {
         if (p.user) { if (!E.awaitDive) E.awaitDive = clamp(tt * 0.55, 0.1, 0.42); return; }
         if (p.react == null) p.react = 0.09 + (1 - gkEff(p) / 99) * 0.26 + Math.random() * 0.04;
-        p.react -= dt; if (p.react <= 0) startDive(p, interceptY(p));
+        p.react -= dt;
+        if (p.react <= 0) {
+          const iy = interceptY(p), spd = 3.9 + 3.5 * gkEff(p) / 99, need = Math.min(0.55, Math.abs(iy - p.y) / spd + 0.1);
+          if (tt <= need + 0.07) startDive(p, iy);
+          else { p.tgt = [p.x, p.y]; }
+        }
         return;
       }
     }
@@ -3004,7 +3009,7 @@ function interactions(dt) {
       b.fkDec = true; const dxc = Math.abs(b.y - GC) / 3.66; let pf = clamp(0.8 - dxc * 0.32 + (gkEff(g) - 60) / 300, 0.35, 0.9); if (b.z > 1.9) pf *= 0.65; if (g.team === 1) pf = clamp(pf * dfx().cpu, 0.15, 0.92);
       if (Math.random() < pf) { gkSave(g, Math.hypot(b.vx, b.vy)); return; }
     }
-    if (b.shot && b.lastTeam !== g.team && !b.refDone && b.kind !== 'fk' && b.kind !== 'pen' && b.z < 2.3 && b.vx * (g.team === 0 ? -1 : 1) > 0 && Math.abs(b.x - g.x) < 3.4 && Math.abs(b.y - g.y) < 3.6 && inBox(g.team, b.x, b.y)) {
+    if (b.shot && b.lastTeam !== g.team && !b.refDone && b.kind !== 'fk' && b.kind !== 'pen' && b.z < 2.3 && b.vx * (g.team === 0 ? -1 : 1) > 0 && Math.abs(b.x - g.x) < 3.4 && Math.abs(b.y - g.y) < 1.8 && inBox(g.team, b.x, b.y)) {
       b.refDone = true; const spr = Math.hypot(b.vx, b.vy); /* reflexo: chute de perto também pode ser defendido */
       let pr = clamp(0.6 + (gkEff(g) - 60) / 150 - Math.abs(b.y - g.y) * 0.13 - (spr - 20) / 55, 0.1, 0.72); if (b.z > 1.6) pr *= 0.8; if (g.team === 1) pr = clamp(pr * dfx().cpu, 0.08, 0.8);
       if (Math.random() < pr) { gkSave(g, spr); return; }
@@ -3059,6 +3064,7 @@ function boundsCheck() {
       if (b.y > GY1 && b.y < GY2 && o.pos !== 'GOL') { b.owner = null; goal(o.team); }
       else if (o.pos !== 'GOL') { E.banner = 'Bola fora'; E.bannerT = 1; end('out'); }
     }
+    if (!E.over && o.pos !== 'GOL' && (b.y < -0.4 || b.y > FW + 0.4)) { E.banner = 'Lateral'; E.bannerT = 1; end('out'); }
     return;
   }
   if (b.x < 0 || b.x > FL) {
@@ -3250,10 +3256,11 @@ function fkArc(D, power) {
   return best;
 }
 function userKick(dir, power, force) { if (typeof MU !== 'undefined' && MU && MU.paused) return; 
-  const u = E.user; let kind = force || classifyKick(dir, power); const a = u.a;
-  if (kind === 'pass' && !E.frozen && E.type !== 'pen' && u.x > 56) { const gx = FL - u.x, gy = GC - u.y, gl = Math.hypot(gx, gy) || 1; if ((dir[0] * gx + dir[1] * gy) / gl > 0.86 && gl < 34) kind = 'shot'; } /* passe na direção do gol vira chute */
+  const u = E.user; let kind = force || classifyKick(dir, power); const a = u.a; let conv = false;
+  if (kind === 'pass' && !E.frozen && E.type !== 'pen' && u.x > 56) { const gx = FL - u.x, gy = GC - u.y, gl = Math.hypot(gx, gy) || 1; if ((dir[0] * gx + dir[1] * gy) / gl > 0.86 && gl < 34) { kind = 'shot'; conv = true; } } /* passe na direção do gol vira chute (sempre mais fraco que o botão de chute) */
+  if (conv) power = Math.min(power, 0.3);
   if (kind === 'shot' || kind === 'pen') {
-    const skill = kind === 'pen' ? a.pen : a.fin; const speed = (kind === 'pen' ? 13 : 15) + power * 20;
+    const skill = kind === 'pen' ? a.pen : a.fin; const speed = kind === 'pen' ? 13 + power * 20 : conv ? 13 + power * 14 : 17 + power * 20;
     const vz = 0.3 + power * 1.8 + Math.max(0, power - 0.9) * (kind === 'pen' ? 26 : 16);
     kick(u, dir[0], dir[1], speed, vz, kind === 'pen' ? 'pen' : 'shot', kind === 'pen' ? 0.016 + (1 - skill / 99) * 0.07 + power * 0.02 : 0.007 + (1 - skill / 99) * 0.035 + power * 0.006);
     if (kind === 'pen') penKeeper(dir);
@@ -6188,9 +6195,15 @@ function d12Card(p) {
   return `<div class="x12card"><div class="row" style="gap:10px;align-items:center"><span class="x12ovr">${p.ovr}</span><div style="min-width:0;flex:1"><h3>${esc(fullName(p))}</h3><div class="row" style="gap:6px;margin-top:4px;flex-wrap:wrap"><span class="chip">${POSN[p.pos]}</span>${p.num ? `<span class="chip acc">Camisa ${p.num}</span>` : ''}<span class="chip">${p.age} anos</span><span class="chip">${esc(nat)}</span>${p.inj > 0 ? `<span class="chip bad">Lesionado · ${p.inj} sem.</span>` : p.sus > 0 ? '<span class="chip bad">Suspenso</span>' : ''}</div></div></div>
   <div class="x12at">${at.map(x => `<div><small>${x[0]}</small><b>${x[1] == null ? '—' : x[1]}</b></div>`).join('')}</div><div class="fine" style="margin-top:6px">Temporada: ${p.s ? p.s.ap : 0} jogo(s) · ${p.s ? p.s.g : 0} gol(s) · ${p.s ? p.s.a : 0} assist.</div></div>`;
 }
+function d12Bench(M, c) {
+  const all = c.sq.map(pl).filter(p => p && !p.u && !M.sel.includes(p.id)); const bo = M.bo || [];
+  const known = bo.map(id => all.find(p => p.id === id)).filter(Boolean);
+  const rest = all.filter(p => !bo.includes(p.id)).sort((a, b) => mgAvail(b) - mgAvail(a) || b.ovr - a.ovr);
+  return known.concat(rest);
+}
 function d12XI() {
   const M = mgEnsure(), c = club(M.club); d12Nums(M.club); const
-  _x = 0, xi = mgrXI(c.id), A = d3M(); const bench = c.sq.map(pl).filter(p => p && !p.u && !M.sel.includes(p.id)).sort((a, b) => mgAvail(b) - mgAvail(a) || b.ovr - a.ovr);
+  _x = 0, xi = mgrXI(c.id), A = d3M(); const bench = d12Bench(M, c);
   const sub = bench.slice(0, 9), res = bench.slice(9); const cp = pl(D12SEL) || pl(D12CARD); const pr = D3_INS.pr[1].find(o => o[0] === A.ins.pr) || D3_INS.pr[1][1];
   const tabs = `<div class="x12tabs seg"><button type="button" aria-pressed="true">Meu time</button><button type="button" data-tab="fn" aria-pressed="false">Funções</button><button type="button" data-tab="club" aria-pressed="false">Elenco</button><button type="button" data-tab="ta" aria-pressed="false">Tática avançada</button></div>`;
   const bar = `<div class="x12bar"><button type="button" data-act="d12-tac"><small>Mentalidade</small><b>${esc(MG_TAC[M.tac].n)}</b></button><div class="x12fm"><button type="button" data-act="d12-form" data-d="-1" aria-label="Formação anterior">◀</button><b>${M.form}</b><button type="button" data-act="d12-form" data-d="1" aria-label="Próxima formação">▶</button></div><button type="button" data-act="d12-pr"><small>Pressão</small><b>${esc(pr[1])}</b></button></div>`;
@@ -6198,7 +6211,9 @@ function d12XI() {
   return head('Gestão do time', `<span class="chip acc">Força ${Math.round(xiStr(xi))}</span>`) + tabs + `<div class="x12"><div>${d12Pitch(xi, M)}${bar}<div class="row" style="margin-top:8px;justify-content:space-between"><span class="fine">Toque em dois jogadores para trocar, ou arraste um sobre o outro. Etiqueta vermelha = fora de posição.</span><button class="btn sm" data-m="auto">Escalar automaticamente</button></div></div><div>${d12Card(cp)}${grid('Suplentes', sub)}${grid('Reservas', res)}</div></div>`;
 }
 function d12Swap(a, b) {
-  const M = G.mgr; if (a === b) return false; const ia = M.sel.indexOf(a), ib = M.sel.indexOf(b); if (ia < 0 && ib < 0) return false;
+  const M = G.mgr; if (a === b) return false; const ia = M.sel.indexOf(a), ib = M.sel.indexOf(b);
+  if (ia < 0 && ib < 0) { const ord = d12Bench(M, club(M.club)).map(p => p.id); const x = ord.indexOf(a), y = ord.indexOf(b); if (x < 0 || y < 0) return false; ord[x] = b; ord[y] = a; M.bo = ord; strCache.key = ''; saveGame(true); return true; }
+  if (M.bo) { const k = M.bo.indexOf(ia >= 0 ? b : a); if (k >= 0) M.bo[k] = ia >= 0 ? a : b; }
   if (ia >= 0 && ib >= 0) { M.sel[ia] = b; M.sel[ib] = a; } else if (ia >= 0) { if (!mgAvail(pl(b))) return false; M.sel[ia] = b; } else { if (!mgAvail(pl(a))) return false; M.sel[ib] = a; }
   strCache.key = ''; saveGame(true); return true;
 }
@@ -6336,6 +6351,8 @@ function d13Fim(S, body) {
 .d13pr .fx{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.d13pr .fx span{padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.08);font-size:13px}.d13pr .fx .up{color:#4fe08f}.d13pr .fx .dn{color:#ff7a7a}
 @keyframes d13fl{0%,86%,100%{opacity:0}90%{opacity:.9}}@keyframes d13bu{0%{opacity:.75}100%{opacity:0}}@keyframes d13in{from{opacity:0;transform:translate(var(--tx,0),12px)}to{opacity:1}}
 .d13pr canvas{--tx:-50%}
+.d13pr .pw{font-size:16px;min-width:0;width:min(100%,760px)}.d13pr .pn{min-height:180px}.d13pr .q{color:#fff}
+@media (max-height:560px){.d13pr .stg{height:120px;min-height:120px}.d13pr canvas{width:100px;height:100px}.d13pr .q{font-size:16px;min-height:0}.d13pr .pn{padding:10px 14px}}
 `; document.head.appendChild(st);
 })();
 D3_PQ.push(
@@ -7689,7 +7706,7 @@ function openControls() {
   $('#modal-box').oninput = cfgInput;
 }
 function openAbout() {
-  modal(`<h2>Sobre</h2><p>Rodix Football · Edição Creators · build 89 · co-op. Escudos, Data Pack e nomes de jogadores por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
+  modal(`<h2>Sobre</h2><p>Rodix Football · Edição Creators · build 90 · co-op. Escudos, Data Pack e nomes de jogadores por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
 }
 async function openProfiles() {
   const all = await refreshSaves();
@@ -8273,11 +8290,11 @@ function kbRelease(kind, held) {
     const dir = kind === 'shot' || E.type === 'pen' ? setPieceAim() : (kbDir() || setPieceAim());
     userKick(dir, Math.max(power, 0.3), E.drill === 'fin' ? 'shot' : E.type === 'pen' ? 'pen' : kind === 'shot' ? 'fk' : kind === 'lob' ? 'lob' : 'pass'); E.slowT = 0.6; return;
   }
-  if (kind === 'shot') { userKick(shotDir(), Math.max(power, 0.35), 'shot'); E.slowT = 0.6; return; }
+  if (kind === 'shot') { userKick(shotDir(), Math.max(power, 0.5), 'shot'); E.slowT = 0.6; return; }
   const dir = kbDir() || [u.fx || 1, u.fy || 0]; const m = snapMate(dir); const quick = !KB.ch || performance.now() - KB.ch.t0 < 200;
   if (m) {
     // antecipa a corrida do companheiro pelo tempo de viagem da bola (como a IA faz)
-    const d0 = Math.hypot(m.x - u.x, m.y - u.y), lead = clamp(0.3 + d0 / 40, 0.35, 0.95);
+    const d0 = Math.hypot(m.x - u.x, m.y - u.y), lead = clamp(0.3 + d0 / 40, 0.35, 0.95) + (quick ? 0 : power * 0.9);
     const tx = m.x + m.vx * lead, ty = m.y + m.vy * lead, dd = Math.hypot(tx - u.x, ty - u.y); const pn = 0.005 + (1 - u.a.pas / 99) * 0.03;
     if (kind === 'lob') { const vh = clamp(11 + dd * 0.22, 12, 22); kick(u, tx - u.x, ty - u.y, vh, 4.9 * (dd / vh) * 0.95 * (quick ? 1 : 0.85 + power * 0.3), 'pass', pn + 0.004); }
     else kick(u, tx - u.x, ty - u.y, clamp(passSpeed(dd) * (quick ? 1 : 0.95 + power * 0.25), 6, 28), 0, 'pass', pn);

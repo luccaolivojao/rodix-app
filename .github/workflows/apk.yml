@@ -1,9 +1,6 @@
 name: Android APK (teste)
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths: ["www/**", ".github/workflows/apk.yml"]
 permissions:
   contents: write
 jobs:

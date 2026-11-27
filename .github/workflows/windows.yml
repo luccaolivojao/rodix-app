@@ -1,9 +1,6 @@
 name: Windows EXE
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths: ["www/**", "desktop/**", ".github/workflows/windows.yml"]
 permissions:
   contents: write
 jobs:

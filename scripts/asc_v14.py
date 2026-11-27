@@ -40,8 +40,8 @@ def do_upload(created,fpath,patch_path,rtype):
 import traceback
 sys.excepthook=lambda t,v,tb:L('EXC',''.join(traceback.format_exception(t,v,tb))[-1500:])
 MODE=os.environ.get('MODE','inspect')
-VS='1.3.2'; MINB=35
-WN='Novidades: Modo Goleiro refeito dentro do campo, com mergulho, saídas e cruzamentos. Goleiro cobrador de pênaltis e faltas. Editar o visual do jogador a qualquer momento. Laterais agora jogam abertos pelas pontas. Novas compras: editor de orçamento, editor de clube e advogado. Restaurar compras na loja.'
+VS='1.3.3'; MINB=36
+WN='Novidades: bicicleta e voleio, cinco cabelos novos e personalização completa do visual (sobrancelhas, olhos, boca, barba, acessórios, meias e chuteira). Treinos novos: toque de bola, um contra um, arrancada e bola aérea. Coletiva antes de jogos grandes, vaias do ex-clube, ataque ao ônibus em clássicos e apresentações diferentes na contratação. Empréstimos com cláusula e opção de compra. No modo técnico: copas jogáveis, propostas de outros clubes e escalação respeitando as posições. Chute livre, passe mais preciso, goleiro adversário ajustado pela dificuldade e várias correções.'
 vs=api('GET',f'/v1/apps/{APP}/appStoreVersions?limit=10')['data']
 for v in vs: L('V',v['id'],v['attributes']['versionString'],v['attributes']['appStoreState'],v['attributes'].get('releaseType'))
 cur=next((v for v in vs if v['attributes']['versionString']==VS),None)

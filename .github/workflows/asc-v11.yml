@@ -17,8 +17,8 @@ jobs:
           ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
           GH_TOKEN: ${{ github.token }}
           MODE: ${{ inputs.mode }}
-          NEEDIAP: '1'
-          PREPARE_ONLY: '1'
+          NEEDIAP: '0'
+          PREPARE_ONLY: '0'
         run: |
           python3 -u scripts/asc_v14.py > /tmp/asc_log.txt 2>&1 || true; echo END >> /tmp/asc_log.txt
           gh release delete asc-v11 -y --cleanup-tag 2>/dev/null || true

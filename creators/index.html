@@ -309,19 +309,19 @@ main#view{min-width:0;padding-bottom:40px}
 .band .lbl{color:#2c3f33}
 .btn.dark{background:#13241a;color:#f1f7f2;border-color:#13241a}
 .btn.dark:hover{border-color:#f1f7f2}
-#lookx{position:fixed;inset:0;z-index:70;background:rgba(3,6,8,.82);display:grid;place-items:center;padding:calc(8px + env(safe-area-inset-top,0px)) calc(10px + env(safe-area-inset-right,0px)) 8px calc(10px + env(safe-area-inset-left,0px));overflow:auto}#lookx[hidden]{display:none}
-.lkbox{width:min(1100px,100%);height:min(calc(100vh - 16px),640px);background:#1d0d11;border:1px solid #5a2129;border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;box-shadow:0 10px 40px rgba(0,0,0,.6)}
+#lookx{position:fixed;inset:0;z-index:70;background:#1d0d11;display:flex;overflow:hidden}#lookx[hidden]{display:none}
+.lkbox{width:100%;height:100%;background:#1d0d11;padding:calc(8px + env(safe-area-inset-top,0px)) calc(12px + env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) calc(12px + env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:8px;}
 .lktop{display:flex;align-items:center;justify-content:space-between;gap:10px}.lktop b{display:block;font-family:var(--display);font-size:18px}.lktop small{color:#d9b9bd;font-size:12px}
 .lktt{margin:0;padding:6px 12px;background:#3a141a;border:1px solid #5a2129;border-radius:8px;font-family:var(--display);font-size:clamp(18px,3.4vh,26px)}
 .lkgrid{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;min-height:0;flex:1}
-.lkprev{border-radius:10px;overflow:hidden;background:#2f8a3e;height:100%;min-height:0}.lkprev canvas{height:100%;width:auto;display:block;max-width:34vw;object-fit:cover}
+.lkprev{border-radius:10px;overflow:hidden;background:#2f8a3e;height:100%;min-height:0}.lkprev canvas{height:100%;width:auto;display:block;max-width:36vw;object-fit:cover}
 .lkcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-content:start;min-height:0;overflow:auto;padding-right:2px}
 .lkc{background:#2b1217;border:1px solid #4a1b22;border-radius:10px;padding:6px 8px}.lkh{display:flex;justify-content:space-between;align-items:baseline;gap:6px;margin-bottom:4px}.lkh b{font-family:var(--display);font-size:15px}.lkh small{color:#d9b9bd;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lkr{display:grid;grid-template-columns:18px repeat(4,minmax(0,1fr)) 18px;gap:5px;align-items:center}
 .lka{background:none;border:0;color:#fff;font-size:22px;line-height:1;padding:0;cursor:pointer}.lka:disabled{opacity:.25}
 .lkth{aspect-ratio:1;border-radius:8px;border:2px solid transparent;background:#c98f62;padding:0;overflow:hidden;cursor:pointer;display:block}.lkth canvas{width:100%;height:100%;display:block;background:linear-gradient(#d9a37a,#b97b51)}
 .lkth[aria-pressed=true]{border-color:#fff;box-shadow:0 0 0 2px #c1121f}.lkempty{background:transparent;cursor:default}
-.lkfoot{display:flex;gap:10px;align-items:stretch;justify-content:flex-end}.lktip{flex:1;background:#2b1217;border:1px solid #4a1b22;border-radius:8px;padding:6px 10px;font-size:12px;color:#f1dfe1}.lktip b{color:#ffd23f}.lkfoot .btn.pri{background:#c1121f;color:#fff;min-width:150px}
+.lkfoot{display:flex;gap:10px;align-items:stretch;justify-content:flex-end}.lktip{flex:1;background:#2b1217;border:1px solid #4a1b22;border-radius:8px;padding:6px 10px;font-size:12px;color:#f1dfe1}.lktip b{color:#ffd23f}.lkconf{background:#c1121f!important;color:#fff!important;min-width:140px}
 @media (max-height:500px){.lktt{display:none}.lktop b{font-size:16px}.lkbox{padding:8px 10px;gap:6px}.lkc{padding:4px 6px}.lkh b{font-size:13px}}
 @media (max-width:620px){.lkgrid{grid-template-columns:1fr}.lkprev{height:200px;justify-self:center}.lkcards{grid-template-columns:1fr}}
 .menu-links{position:absolute;left:calc(14px + env(safe-area-inset-left,0px));bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:6;display:flex;flex-direction:row;align-items:center;gap:8px}.menu-links a{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 14px 0 8px;border-radius:10px;font-size:13px;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.18)}.menu-links a img{height:22px;width:auto;display:block}.menu-links a b{font-weight:800;letter-spacing:.01em;white-space:nowrap}.menu-links .ml-dc{background:#5865f2;color:#fff}.menu-links .ml-dc{padding-left:12px}.menu-links .ml-dc img{height:20px}.menu-links .ml-rx{background:#fff;color:#262624;border-color:rgba(0,0,0,.12)}.menu-links .ml-rx img{height:24px;width:24px;border-radius:6px}.menu-links a:active{filter:brightness(.88)}
@@ -3655,12 +3655,12 @@ function renderCreate() {
       ${CREATOR && c.age <= 20 ? `<div class="card stack"><span class="lbl">Categorias de base</span><div class="seg" id="seg-base"><button type="button" data-base="1" aria-pressed="${c.base !== false}">Começar na base</button><button type="button" data-base="0" aria-pressed="${c.base === false}">Direto no profissional</button></div><p class="fine" style="margin:0">Na base você joga o campeonato Sub-15, Sub-17 ou Sub-20 até ser chamado ao time principal. Dá para entrar ou sair da base depois, em Categorias de base.</p></div>` : ''}
       ${SOC_ENABLED ? `<div class="card stack"><span class="lbl">Rodix Social</span><div class="seg" id="seg-soc"><button type="button" data-soc="1" aria-pressed="${c.soc !== false}">Sim, quero</button><button type="button" data-soc="0" aria-pressed="${c.soc === false}">Não</button></div><p class="fine" style="margin:0">A rede social do jogo: torcida, imprensa e haters reagem à sua carreira. Você pode mudar isso depois em Configurações.</p></div>` : ''}
     </div>
-    <div><div class="card prev"><canvas id="cr-av" width="360" height="440"></canvas><b style="font-family:var(--display);font-size:26px" id="cr-name">${esc(c.fn + ' ' + c.ln)}</b>
+    <div><div class="card prev"><b style="font-family:var(--display);font-size:26px" id="cr-name">${esc(c.fn + ' ' + c.ln)}</b>
       <div class="row">${flagChip(c.nat)}<span class="chip">${POSN[c.pos]}</span><span class="chip">${c.age} anos</span></div>
       <dl class="kv" style="width:100%"><dt>Overall inicial (estimado)</dt><dd>${(REC_MODE_OK && c.rec) ? (c.recOvr || '75–80') : (est - 1) + '–' + (est + 3)}</dd><dt>Potencial</dt><dd>${(REC_MODE_OK && c.rec) ? (c.recPot || 92) : 'revelado ao começar'}</dd><dt>Estilo</dt><dd>${esc(c.style)}</dd></dl>
       <p class="fine">Altura e peso alteram força, velocidade e aceleração. O estilo dá bônus a atributos específicos. O potencial muda com o seu desempenho ao longo da carreira.</p></div></div>
   </div>`;
-  drawAvatar($('#cr-av'), c.look, NATIONS[c.nat], c.num, true);
+  { const av = $('#cr-av'); if (av) drawAvatar(av, c.look, NATIONS[c.nat], c.num, true); }
 }
 function bindCreate() {
   const root = $('#create-root');
@@ -6982,10 +6982,10 @@ function lkRender() {
     const th = []; for (let i = pg * 4; i < Math.min(tot, pg * 4 + 4); i++) th.push(`<button type="button" class="lkth" data-lkc="${k}" data-lki="${i}" aria-pressed="${cur === i}" aria-label="${esc(tr(names[i]))}"><canvas width="96" height="96" data-th="${k}:${i}:${part}"></canvas></button>`);
     while (th.length < 4) th.push('<span class="lkth lkempty"></span>');
     return `<div class="lkc"><div class="lkh"><b>${tr(n)}</b><small>${esc(tr(names[cur] || ''))}</small></div><div class="lkr"><button type="button" class="lka" data-lkp="${k}" data-d="-1" ${pg <= 0 ? 'disabled' : ''} aria-label="Anterior">‹</button>${th.join('')}<button type="button" class="lka" data-lkp="${k}" data-d="1" ${pg >= pages - 1 ? 'disabled' : ''} aria-label="Próximo">›</button></div></div>`; }).join('');
-  el.innerHTML = `<div class="lkbox"><div class="lktop"><div><b>${esc(X.name || '')}</b><small>${esc(X.sub || '')}</small></div><button type="button" class="btn sm" data-lkok="0">${LKX.cancel ? '← Voltar' : 'Fechar'}</button></div>
+  el.innerHTML = `<div class="lkbox"><div class="lktop"><div><b>${esc(X.name || '')}</b><small>${esc(X.sub || '')}</small></div><div class="row" style="gap:8px;flex-wrap:nowrap"><button type="button" class="btn sm" data-lkok="0">${LKX.cancel ? '← Voltar' : 'Fechar'}</button><button type="button" class="btn pri lkconf" data-lkok="1">✔ Confirmar</button></div></div>
     <h2 class="lktt">Personalização do jogador</h2>
     <div class="lkgrid"><div class="lkprev"><canvas id="lkpv" width="420" height="520"></canvas></div><div class="lkcards">${cards}</div></div>
-    <div class="lkfoot"><button type="button" class="btn pri" data-lkok="1">✔ Confirmar</button></div></div>`;
+    </div>`;
   lkDraw();
 }
 function lkStadium(ctx, w, h) {
@@ -7831,7 +7831,7 @@ function openControls() {
   $('#modal-box').oninput = cfgInput;
 }
 function openAbout() {
-  modal(`<h2>Sobre</h2><p>Rodix Football · Edição Creators · build 100 · co-op. Escudos, Data Pack e nomes de jogadores por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
+  modal(`<h2>Sobre</h2><p>Rodix Football · Edição Creators · build 101 · co-op. Escudos, Data Pack e nomes de jogadores por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
 }
 async function openProfiles() {
   const all = await refreshSaves();

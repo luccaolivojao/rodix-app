@@ -321,7 +321,7 @@ main#view{min-width:0;padding-bottom:40px}
 .lka{background:none;border:0;color:#fff;font-size:22px;line-height:1;padding:0;cursor:pointer}.lka:disabled{opacity:.25}
 .lkth{aspect-ratio:1;border-radius:8px;border:2px solid transparent;background:#c98f62;padding:0;overflow:hidden;cursor:pointer;display:block}.lkth canvas{width:100%;height:100%;display:block;background:linear-gradient(#d9a37a,#b97b51)}
 .lkth[aria-pressed=true]{border-color:#fff;box-shadow:0 0 0 2px #c1121f}.lkempty{background:transparent;cursor:default}
-.lkfoot{display:flex;gap:10px;align-items:stretch}.lktip{flex:1;background:#2b1217;border:1px solid #4a1b22;border-radius:8px;padding:6px 10px;font-size:12px;color:#f1dfe1}.lktip b{color:#ffd23f}.lkfoot .btn.pri{background:#c1121f;color:#fff;min-width:150px}
+.lkfoot{display:flex;gap:10px;align-items:stretch;justify-content:flex-end}.lktip{flex:1;background:#2b1217;border:1px solid #4a1b22;border-radius:8px;padding:6px 10px;font-size:12px;color:#f1dfe1}.lktip b{color:#ffd23f}.lkfoot .btn.pri{background:#c1121f;color:#fff;min-width:150px}
 @media (max-height:500px){.lktt{display:none}.lktop b{font-size:16px}.lkbox{padding:8px 10px;gap:6px}.lkc{padding:4px 6px}.lkh b{font-size:13px}}
 @media (max-width:620px){.lkgrid{grid-template-columns:1fr}.lkprev{height:200px;justify-self:center}.lkcards{grid-template-columns:1fr}}
 .menu-links{position:absolute;left:calc(14px + env(safe-area-inset-left,0px));bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:6;display:flex;flex-direction:row;align-items:center;gap:8px}.menu-links a{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 14px 0 8px;border-radius:10px;font-size:13px;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.18)}.menu-links a img{height:22px;width:auto;display:block}.menu-links a b{font-weight:800;letter-spacing:.01em;white-space:nowrap}.menu-links .ml-dc{background:#5865f2;color:#fff}.menu-links .ml-dc{padding-left:12px}.menu-links .ml-dc img{height:20px}.menu-links .ml-rx{background:#fff;color:#262624;border-color:rgba(0,0,0,.12)}.menu-links .ml-rx img{height:24px;width:24px;border-radius:6px}.menu-links a:active{filter:brightness(.88)}
@@ -3636,7 +3636,7 @@ function renderCreate() {
   if (!styles.includes(c.style)) c.style = styles[0];
   const est = startOvr(c.age);
   $('#create-root').innerHTML = `
-  <div class="pagehead"><div><span class="lbl">Nova carreira · passo 1 de 3</span><h2 style="font-size:40px">Crie seu jogador</h2></div><div class="row"><button class="btn ghost" data-act="to-menu">Voltar</button><button class="btn pri" data-act="to-diff">Dificuldade →</button></div></div>
+  <div class="pagehead"><div><span class="lbl">Nova carreira · passo 1 de 3</span><h2 style="font-size:40px">Crie seu jogador</h2></div><div class="row"><button class="btn ghost" data-act="to-menu">Voltar</button><button class="btn pri" data-act="to-look">Aparência →</button></div></div>
   <div class="split">
     <div class="stack">
       <div class="card grid2" style="gap:12px">
@@ -3654,12 +3654,6 @@ function renderCreate() {
       ${REC_MODE_OK ? `<label class="card row" style="gap:12px;cursor:pointer"><input type="checkbox" id="f-rec" ${c.rec ? 'checked' : ''}><span><b>Modo gravação</b><span class="fine" style="display:block">Você define o overall e o potencial e já começa perto da vaga de titular. Ideal para vídeos.</span></span></label>${c.rec ? `<div class="card stack"><div class="field"><label class="lbl" for="f-recovr">Overall inicial: <b id="o-rov">${c.recOvr || 78}</b></label><input type="range" id="f-recovr" min="40" max="99" value="${c.recOvr || 78}"></div><div class="field"><label class="lbl" for="f-recpot">Potencial: <b id="o-rpt">${c.recPot || 92}</b></label><input type="range" id="f-recpot" min="40" max="99" value="${c.recPot || 92}"></div></div>` : ''}` : ''}
       ${CREATOR && c.age <= 20 ? `<div class="card stack"><span class="lbl">Categorias de base</span><div class="seg" id="seg-base"><button type="button" data-base="1" aria-pressed="${c.base !== false}">Começar na base</button><button type="button" data-base="0" aria-pressed="${c.base === false}">Direto no profissional</button></div><p class="fine" style="margin:0">Na base você joga o campeonato Sub-15, Sub-17 ou Sub-20 até ser chamado ao time principal. Dá para entrar ou sair da base depois, em Categorias de base.</p></div>` : ''}
       ${SOC_ENABLED ? `<div class="card stack"><span class="lbl">Rodix Social</span><div class="seg" id="seg-soc"><button type="button" data-soc="1" aria-pressed="${c.soc !== false}">Sim, quero</button><button type="button" data-soc="0" aria-pressed="${c.soc === false}">Não</button></div><p class="fine" style="margin:0">A rede social do jogo: torcida, imprensa e haters reagem à sua carreira. Você pode mudar isso depois em Configurações.</p></div>` : ''}
-      <div class="card stack"><span class="lbl">Aparência</span>
-        <div class="row" id="sw-skin" aria-label="Cor da pele">${SKINS.map((s, i) => `<button class="sw" type="button" data-skin="${i}" style="background:${s}" aria-label="Tom de pele ${i + 1}" aria-pressed="${c.look.skin === i}"></button>`).join('')}</div>
-        <div class="seg" id="seg-hair">${HAIRS.map((h, i) => `<button type="button" data-hair="${i}" aria-pressed="${c.look.hair === i}">${h}</button>`).join('')}</div>
-        <div class="row" id="sw-hairc" aria-label="Cor do cabelo">${HAIRC.map((s, i) => `<button class="sw" type="button" data-hairc="${i}" style="background:${s}" aria-label="Cor de cabelo ${i + 1}" aria-pressed="${c.look.hairC === i}"></button>`).join('')}</div>
-        <button type="button" class="btn pri" data-lkopen="1">Personalizar visual completo</button>
-      </div>
     </div>
     <div><div class="card prev"><canvas id="cr-av" width="360" height="440"></canvas><b style="font-family:var(--display);font-size:26px" id="cr-name">${esc(c.fn + ' ' + c.ln)}</b>
       <div class="row">${flagChip(c.nat)}<span class="chip">${POSN[c.pos]}</span><span class="chip">${c.age} anos</span></div>
@@ -6988,10 +6982,10 @@ function lkRender() {
     const th = []; for (let i = pg * 4; i < Math.min(tot, pg * 4 + 4); i++) th.push(`<button type="button" class="lkth" data-lkc="${k}" data-lki="${i}" aria-pressed="${cur === i}" aria-label="${esc(tr(names[i]))}"><canvas width="96" height="96" data-th="${k}:${i}:${part}"></canvas></button>`);
     while (th.length < 4) th.push('<span class="lkth lkempty"></span>');
     return `<div class="lkc"><div class="lkh"><b>${tr(n)}</b><small>${esc(tr(names[cur] || ''))}</small></div><div class="lkr"><button type="button" class="lka" data-lkp="${k}" data-d="-1" ${pg <= 0 ? 'disabled' : ''} aria-label="Anterior">‹</button>${th.join('')}<button type="button" class="lka" data-lkp="${k}" data-d="1" ${pg >= pages - 1 ? 'disabled' : ''} aria-label="Próximo">›</button></div></div>`; }).join('');
-  el.innerHTML = `<div class="lkbox"><div class="lktop"><div><b>${esc(X.name || '')}</b><small>${esc(X.sub || '')}</small></div><button type="button" class="btn sm" data-lkok="1">Fechar</button></div>
+  el.innerHTML = `<div class="lkbox"><div class="lktop"><div><b>${esc(X.name || '')}</b><small>${esc(X.sub || '')}</small></div><button type="button" class="btn sm" data-lkok="0">${LKX.cancel ? '← Voltar' : 'Fechar'}</button></div>
     <h2 class="lktt">Personalização do jogador</h2>
     <div class="lkgrid"><div class="lkprev"><canvas id="lkpv" width="420" height="520"></canvas></div><div class="lkcards">${cards}</div></div>
-    <div class="lkfoot"><div class="lktip"><b>Dica:</b> <span>Use os acessórios para deixar seu jogador ainda mais único!</span></div><button type="button" class="btn pri" data-lkok="1">✔ Confirmar</button></div></div>`;
+    <div class="lkfoot"><button type="button" class="btn pri" data-lkok="1">✔ Confirmar</button></div></div>`;
   lkDraw();
 }
 function lkStadium(ctx, w, h) {
@@ -7014,7 +7008,7 @@ function lkClick(e) {
   const b = e.target.closest('button'); if (!b || !LKX) return;
   if (b.dataset.lkc) { LKX.lk[b.dataset.lkc] = +b.dataset.lki; lkRender(); try { sfx('tap'); } catch (x) { } }
   else if (b.dataset.lkp) { const k = b.dataset.lkp; LKX.pg[k] = Math.max(0, LKX.pg[k] + (+b.dataset.d)); lkRender(); }
-  else if (b.dataset.lkok) { const el = document.getElementById('lookx'); el.hidden = true; el.innerHTML = ''; const d = LKX.done; LKX = null; if (d) d(); }
+  else if (b.dataset.lkok) { const el = document.getElementById('lookx'); el.hidden = true; el.innerHTML = ''; const d = b.dataset.lkok === '0' && LKX.cancel ? LKX.cancel : LKX.done; LKX = null; if (d) d(); }
 }
 function d15Look() {
   const p = up(), lk = p.look || (p.look = Object.assign({}, lookOf(p)));
@@ -7837,7 +7831,7 @@ function openControls() {
   $('#modal-box').oninput = cfgInput;
 }
 function openAbout() {
-  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.3 (build 99). Escudos, Data Pack e nomes de jogadores por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
+  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.3 (build 100). Escudos, Data Pack e nomes de jogadores por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
 }
 async function openProfiles() {
   const all = await refreshSaves();
@@ -8325,6 +8319,7 @@ async function act(a, el) {
     case 'confirm-del': await Store.del(+el.dataset.slot); closeModal(); openProfiles(); break;
     case 'to-menu': closeModal(); if (G && G.user && curScreen === 's-hub') await saveGame(true); MU = null; E = null; show('s-menu'); refreshSaves(); break;
     case 'to-diff': renderDiff(); show('s-diff'); break;
+    case 'to-look': { try { readCreate(); } catch (e) { } lookEditor(CR.look, { kit: NATIONS[CR.nat] ? { c1: NATIONS[CR.nat].c1, c2: NATIONS[CR.nat].c2 || '#ffffff' } : null, num: CR.num, name: CR.fn + ' ' + CR.ln, sub: POSN[CR.pos], cancel: () => renderCreate(), done: () => { renderDiff(); show('s-diff'); } }); break; }
     case 'to-club': renderClubPick(); show('s-club'); break;
     case 'back-create': renderCreate(); show('s-create'); break;
     case 'start': if (CP.club) beginCareer(); break;

@@ -2816,7 +2816,7 @@ function giveBall(p) {
 function kick(p, dx, dy, speed, vz, kind, noise) {
   const b = E.ball; const a = Math.atan2(dy, dx) + randn() * (noise || 0);
   b.owner = null; b.vx = Math.cos(a) * speed; b.vy = Math.sin(a) * speed; b.vz = vz; b.z = Math.max(b.z, 0.02);
-  b.last = p; b.lastTeam = p.team; b.kicker = p; b.kind = kind; b.dip = kind === 'fk'; b.intended = null; b.fkDec = false; b.refDone = false;
+  b.last = p; b.lastTeam = p.team; b.kicker = p; b.kind = kind; b.dip = kind === 'fk'; b.intended = null; b.fkDec = false; b.fkBeat = null; b.refDone = false;
   p.cd = 0.32; p.kickA = 0.25; touch(p, kind);
   if (FX2()) { if (kind === 'shot' || kind === 'fk' || kind === 'pen' || kind === 'head') { fxRing(b.x, b.y, 0.2, '#ffd23f'); fxSparks(b.x, b.y, 0.3, 12, ['#ffd23f', '#ffffff', '#ff9a3d'], 8); fxShake(0.09); } else if (speed > 14) fxSparks(b.x, b.y, 0.2, 3, ['#ffffff'], 3); } if (typeof sfx === 'function') { sfx('kick'); if (p.user) vib(kind === 'shot' || kind === 'head' || kind === 'fk' || kind === 'pen' ? 'shot' : 'pass'); if (kind === 'shot' || kind === 'head') crowdPulse(0.11, 0.25, 1.0, 1000); }
   b.gkMiss = null; b.gkRoll = null; b.acro = null;
@@ -3056,8 +3056,8 @@ function interactions(dt) {
   for (const g of E.players) {
     if (g.pos !== 'GOL' || g.cd > 0) continue;
     if (b.kind === 'fk' && b.lastTeam !== g.team && !b.fkDec && Math.abs(b.x - g.x) < 1.3 && b.z < 2.4 && Math.abs(b.y - GC) < 3.66) {
-      b.fkDec = true; const dxc = Math.abs(b.y - GC) / 3.66; let pf = clamp(0.8 - dxc * 0.32 + (gkEff(g) - 60) / 300, 0.35, 0.9); if (b.z > 1.9) pf *= 0.65; if (g.team === 1) pf = clamp(pf * dfx().cpu, 0.15, 0.92);
-      if (Math.random() < pf) { gkSave(g, Math.hypot(b.vx, b.vy)); return; }
+      b.fkDec = true; const dxc = Math.abs(b.y - GC) / 3.66, kf = b.kicker && b.kicker.a ? b.kicker.a.fal || 60 : 60; let pf = clamp(0.8 - Math.pow(dxc, 1.4) * 0.62 + (gkEff(g) - 60) / 300 - (kf - 60) / 260, 0.1, 0.85); if (b.z > 1.9) pf *= 0.6; if (g.team === 1) pf = clamp(pf * dfx().cpu, 0.08, 0.88);
+      if (Math.random() < pf) { gkSave(g, Math.hypot(b.vx, b.vy)); return; } if (dxc > 0.5) b.fkBeat = g; /* goleiro vencido: não pega mais por alcance */
     }
     if (b.shot && b.lastTeam !== g.team && !b.refDone && b.kind !== 'fk' && b.kind !== 'pen' && b.z < 2.3 && b.vx * (g.team === 0 ? -1 : 1) > 0 && Math.abs(b.x - g.x) < 3.4 && Math.abs(b.y - g.y) < 1.8 && inBox(g.team, b.x, b.y)) {
       b.refDone = true; const spr = Math.hypot(b.vx, b.vy); /* reflexo: chute de perto também pode ser defendido */
@@ -3065,6 +3065,7 @@ function interactions(dt) {
       if (Math.random() < pr) { gkSave(g, spr); return; }
     }
     const fkb = b.kind === 'fk'; let reach = (g.dive ? (fkb ? FKR[0] : 1.15) : (fkb ? FKR[1] : 0.75)) * gkd(g).r; if (g.user && E.d14 && !fkb) reach = d14Reach(g, b, reach); const d = D(g.x, g.y, b.x, b.y);
+    if (fkb && b.fkBeat === g && b.lastTeam !== g.team) continue;
     if (d < reach && b.lastTeam !== g.team && b.shot && b.gkMiss !== g && d > reach * 0.5 && gkd(g).m > 0) { if (b.gkRoll !== g) { b.gkRoll = g; if (Math.random() < gkd(g).m) { b.gkMiss = g; } } if (b.gkMiss === g) continue; } /* às vezes a bola passa raspando pela luva */
     if (d < reach && b.z < (g.user && E.d14zr ? E.d14zr : 2.4) && inBox(g.team, b.x, b.y)) {
       const sp = Math.hypot(b.vx, b.vy);
@@ -8171,7 +8172,7 @@ function openControls() {
   $('#modal-box').oninput = cfgInput;
 }
 function openAbout() {
-  modal(`<h2>Sobre</h2><p>Rodix Football · Edição Creators · build 107 · co-op. Escudos, Data Pack e nomes de jogadores por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
+  modal(`<h2>Sobre</h2><p>Rodix Football · Edição Creators · build 108 · co-op. Escudos, Data Pack e nomes de jogadores por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
 }
 async function openProfiles() {
   const all = await refreshSaves();

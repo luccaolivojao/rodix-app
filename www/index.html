@@ -742,7 +742,7 @@ if(document.readyState==='complete')ready();else window.addEventListener('load',
 <div class="cintro" id="cintro" hidden></div>
 <canvas id="fxc"></canvas>
 <div id="var" hidden><div class="var-box"><div class="var-scan" id="var-scan"></div><div class="var-logo">VAR</div><div class="var-t" id="var-t"></div><div class="var-s" id="var-s"></div><div class="var-res" id="var-res"></div><button class="btn var-skip" data-act="var-skip">Pular</button></div></div>
-<div id="rp" hidden><canvas id="rpc"></canvas><div class="rp-bar"><span class="rp-tag" id="rp-tag">REPLAY</span><span class="rp-sub" id="rp-sub"></span></div><button class="btn rp-save" data-act="rp-save">Salvar vídeo</button><button class="btn rp-skip" data-act="rp-skip">Pular replay</button><div class="rp-prog"><i id="rp-pb"></i></div></div>
+<div id="rp" hidden><canvas id="rpc"></canvas><div class="rp-bar"><span class="rp-tag" id="rp-tag">REPLAY</span><span class="rp-sub" id="rp-sub"></span></div><button class="btn rp-skip" data-act="rp-skip">Pular replay</button><div class="rp-prog"><i id="rp-pb"></i></div></div>
 <div id="tut" hidden><div class="tut-hole"></div><div class="tut-box" role="dialog" aria-modal="true"></div></div>
 <div class="modal" id="modal" hidden><div class="box" id="modal-box" role="dialog" aria-modal="true"></div></div>
 <div class="toast" id="toast" hidden></div>
@@ -1553,7 +1553,7 @@ function buildMatch(kind) {
   const MC = { reds: [0, 0], cards: [], kind, fx, lid, comp: cmp ? cmp.id : null, neutral, teams, kits, uSide, title, score: [0, 0], min: 0, stop: ri(1, 4), on, off, starter, events: [], st: newSeasonStats(), feed: [], goals: [[], []], userIn: starter, done: false, moments: 0, red: false, final: !!(fx && fx.st === 'F') };
   if (cmp && fx && fx.tie && fx.leg === 2) { const t = cmp.ties.find(x => x.id === fx.tie); const m1 = t && cmp.matches.find(x => x.id === t.m[0]); if (m1 && m1.hg != null) { const g1 = id => (m1.h === id ? m1.hg : m1.ag); MC.leg1 = [g1(fx.h), g1(fx.a)]; } }
   if (loanBan) { MC.starter = false; MC.userIn = false; MC.loanBan = true; }
-  MC.wx = { night: rnd() < 0.38, rain: rnd() < 0.16 };
+  MC.wx = null; /* clima desligado */
   if (!isNat(kind) || kind === 'wc') teams[1 - uSide].str += dfx().opp;
   try { d6RefPre(MC, teams); } catch (e) { }
   MC.tl = makeTimeline(MC); MC.cards = genCards(MC); try { d6RefCards(MC); } catch (e) { }
@@ -7792,7 +7792,6 @@ function startPlayed(kind) {
   else if (MC.on > 0) feedMsg('Você começa no banco.'); else feedMsg('Você não deve sair do banco hoje.');
   $('#hb0').innerHTML = badge(MC.teams[0], 24); $('#hb1').innerHTML = badge(MC.teams[1], 24); FXP = []; $('#goalfx').hidden = true; $('#phasefx').hidden = true;
   idleEngine(); show('s-match'); updateHud(); setHint('ticker'); kickIntro(MC);
-  try { if (MC.wx && MC.wx.rain) feedMsg('Chuva forte: com o gramado molhado, a bola corre mais.'); else if (MC.wx && MC.wx.night) feedMsg('Jogo à noite, sob os refletores.'); } catch (e) { }
 }
 function idleEngine() { const MC = MU.MC, us = MC.uSide; engNew([engTeamOf(MC.teams[us], MU.kits[0], 0), engTeamOf(MC.teams[1 - us], MU.kits[1], 1)], 'idle'); E.ball.x = 52.5; E.ball.y = 34; E.poss = 0; placeAll(); for (const p of E.players) { p.x = p.tgt[0]; p.y = p.tgt[1]; } E.frozen = true; E.cx = 52.5; E.cy = 34; }
 const PC = typeof matchMedia !== 'undefined' && matchMedia('(pointer:fine)').matches;
@@ -8134,7 +8133,7 @@ function openControls() {
   $('#modal-box').oninput = cfgInput;
 }
 function openAbout() {
-  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.3 (build 105). Escudos, Data Pack e nomes de jogadores por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
+  modal(`<h2>Sobre</h2><p>Rodix Football · versão 1.3 (build 106). Escudos, Data Pack e nomes de jogadores por Champholics (uso autorizado no jogo). Jogo de futebol 2D focado na carreira de um jogador.</p><p class="mut"><b style="color:var(--fg)">Dados reais:</b> nomes de clubes, seleções e composição das ligas (base 2025/26 na Europa e 2026 no Brasil; Série C aproximada). Clubes de países sem liga simulada (Ajax, Boca Juniors etc.) aparecem só na Champions League e na Libertadores, com força estimada. Formatos simplificados: 32 clubes em 8 grupos e mata-mata com ida e volta; Copa do Mundo de 48 seleções a cada 4 anos (2030, 2034…), sem eliminatórias.<br><b style="color:var(--fg)">Fictício:</b> todos os atletas, atributos, distintivos e uniformes, gerados pelo jogo.<br><b style="color:var(--fg)">Licenciado:</b> nada. Nenhum arquivo, logo ou código de outros jogos.</p><p class="mut">Ligas: Brasileirão A, B e C; Inglaterra (Premier League, Championship, League One); Espanha (La Liga, LaLiga Hypermotion, Primera Federación); Itália, Alemanha, França, Portugal, Holanda e Bélgica (1ª a 3ª divisão); Süper Lig, Liga Profesional (Argentina), MLS e Saudi Pro League. Copas: Champions League, Libertadores, Copa Sul-Americana, Champions da Ásia, Copa Concacaf, Copa Intercontinental, Mundial de Clubes e Copa do Mundo. Divisões de acesso com composição aproximada.</p><p><a href="https://lighthearted-zabaione-997778.netlify.app" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline">Política de Privacidade</a></p><button class="btn pri" data-act="close-modal">Fechar</button>`);
 }
 async function openProfiles() {
   const all = await refreshSaves();
@@ -8255,7 +8254,6 @@ function renderMatch() {
     if (!any) E.parts = null; }
   if (E.flash) { const a = E.t - E.flash.t; if (a < 0.35) { ctx.save(); ctx.globalAlpha = 0.28 * (1 - a / 0.35); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height); ctx.restore(); } else E.flash = null; }
   ctx.restore();
-  try { wxDraw(ctx, w, h); } catch (e) { }
   if (FX2()) { const g = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.45, w / 2, h / 2, Math.max(w, h) * 0.75); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.2)'); ctx.fillStyle = g; ctx.fillRect(0, 0, w, h); }
   try { d6Overlay(ctx, w, h); } catch (e) { }
   const bn = $('#banner'); bn.textContent = E.bannerT > 0 && E.banner && txtOk(E.banner) && !(E.cele > 0 && MU && MU.MC && !MU.drill) ? E.banner : '';
@@ -8644,7 +8642,6 @@ async function act(a, el) {
     case 'gol-ano': { const N = window.CURPUSK; goalOfYear(N && N[+el.dataset.i]); break; }
     case 'gal-view': { const g = galFind(el.dataset.id); if (g) repStart(g.clip, { tag: 'GOL DO ANO', sub: g.s + ' · ' + g.m + "' · " + g.opp, skippable: true }); break; }
     case 'rp-skip': repEnd(); break;
-    case 'rp-save': rpSave(); break;
     case 'var-skip': varFinish(); break;
     case 'home': closeModal(); hubTab = 'home'; renderHub(); document.querySelector('#s-hub').scrollTop = 0; break;
     case 'drill': startDrill(drillOf(G.user.focus), true); break;
